@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shop - DALI</title>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.5/dist/htmx.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,42 +28,57 @@
     </div>
 </header>
 
+<section class="search-banner">
+    <div class="container">
+        <h2>Stop looking for an item — find it.</h2>
+        <input type="search"
+               name="query"
+               class="main-search-input"
+               placeholder="Product, brand, color..."
+               hx-get="/shop/search"
+               hx-trigger="keyup changed delay:250ms"
+               hx-target="#product-grid-results"
+               hx-swap="innerHTML"
+        >
+    </div>
+</section>
+
 <div class="shop-container container">
     <!-- Filter Sidebar -->
     <aside class="filter-sidebar">
         <h4>Filters</h4>
         <div class="filter-group">
-            <h5>Subcategories</h5>
+            <h5>CATEGORY</h5>
             <ul>
+                <!-- Link for All Products -->
                 <li>
-                    <a th:href="@{/shop}" th:class="${selectedCategory == null} ? 'active-category'">All Products</a>
+                    <a href="#"
+                       hx-get="/shop/search"
+                       hx-target="#product-grid-results"
+                       hx-swap="innerHTML">All</a>
                 </li>
+                <!-- Links for each category -->
                 <li th:each="cat : ${categories}">
-                    <a th:href="@{/shop(category=${cat})}"
+                    <a href="#"
                        th:text="${cat}"
-                       th:class="${cat == selectedCategory} ? 'active-category'">Frozen Meat</a>
+                       hx-get="/shop/search"
+                       th:hx-vals="|category: '${cat}'|"
+                       hx-target="#product-grid-results"
+                       hx-swap="innerHTML">
+                        Category Name
+                    </a>
                 </li>
             </ul>
         </div>
     </aside>
 
     <!-- Product Grid -->
-    <main class="product-grid-container">
-        <div class="product-grid">
-            <div th:each="product : ${products}" class="product-card">
-                <a th:href="@{/product/{id}(id=${product.id})}">
-                    <div class="product-image-container">
-                        <img th:src="@{'/images/products/' + ${product.image}}" th:alt="${product.name}">
-                    </div>
-                    <h3 th:text="${product.name}">Product Name</h3>
-                    <p class="product-price" th:text="${product.getFormattedPrice()}">₱ 199</p>
-                </a>
-                <button th:if="${product.productQuantity > 0}" class="btn btn-primary add-to-cart-btn">Add to Cart</button>
-                <button th:if="${product.productQuantity <= 0}" class="btn btn-disabled" disabled>Out of Stock</button>
-            </div>
-        </div>
+    <main class="product-grid-container" id="product-grid-results">
+        <!-- The initial product list is loaded here -->
+        <div th:replace="~{fragments/product-list :: product-list-fragment}"></div>
     </main>
 </div>
+
 
 <footer class="footer">
     <div class="container">

@@ -20,22 +20,43 @@ public class ProductController {
         this.productRepository = productRepository;
     }
 
+    // This method loads the FULL shop page initially
     @GetMapping("/shop")
-    public String shop(@RequestParam(required = false) String category, Model model) {
-        List<Product> products;
-        if (category != null && !category.isEmpty()) {
-            products = productRepository.findByCategory(category);
-            model.addAttribute("selectedCategory", category);
-        } else {
-            products = productRepository.findAll();
-        }
-
+    public String shop(Model model) {
+        List<Product> products = productRepository.findAll();
         List<String> categories = productRepository.findDistinctCategories();
 
         model.addAttribute("products", products);
         model.addAttribute("categories", categories);
         return "shop";
     }
+
+    // This NEW method handles HTMX search requests and returns ONLY the product list fragment
+    @GetMapping("/shop/search")
+    public String searchProducts(@RequestParam(value = "query", required = false) String query,
+                                 @RequestParam(value = "category", required = false) String category,
+                                 Model model) {
+        List<Product> products;
+
+        boolean hasQuery = query != null && !query.trim().isEmpty();
+        boolean hasCategory = category != null && !category.isEmpty();
+
+        if (hasQuery && hasCategory) {
+            products = productRepository.findByNameContainingIgnoreCaseAndCategory(query, category);
+        } else if (hasQuery) {
+            products = productRepository.findByNameContainingIgnoreCase(query);
+        } else if (hasCategory) {
+            products = productRepository.findByCategory(category);
+        } else {
+            products = productRepository.findAll();
+        }
+
+        model.addAttribute("products", products);
+
+        // Return the fragment name
+        return "fragments/product-list :: product-list-fragment";
+    }
+
 
     @GetMapping("/product/{id}")
     public String productDetail(@PathVariable("id") Integer id, Model model) {
