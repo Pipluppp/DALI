@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${product.name} + ' - DALI'">Product Detail - DALI</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="header">
+    <div class="container">
+        <div class="logo">
+            <a th:href="@{/}"><img th:src="@{/images/dali-logo.png}" alt="DALI Logo" style="height: 40px;"/></a>
+        </div>
+        <nav class="nav">
+            <a th:href="@{/shop}">Shop</a>
+            <a th:href="@{/stores}">Stores</a>
+        </nav>
+        <div class="header-actions">
+            <a href="#">Cart (0)</a>
+            <a href="#">Login</a>
+        </div>
+    </div>
+</header>
+
+<main class="product-detail-container container" th:object="${product}">
+    <div class="product-detail-image">
+        <img th:src="@{'/images/products/' + *{image}}" th:alt="*{name}">
+    </div>
+    <div class="product-detail-info">
+        <h1 th:text="*{name}">Frozen Pork Shoulder 500g</h1>
+        <p class="product-detail-price" th:text="*{getFormattedPrice()}">₱ 199</p>
+
+        <div class="product-actions">
+            <!-- Quantity selector can be added here later -->
+            <button th:if="*{productQuantity > 0}" class="btn btn-primary btn-large">Add to Cart</button>
+            <button th:if="*{productQuantity <= 0}" class="btn btn-disabled btn-large" disabled>Out of Stock</button>
+        </div>
+
+        <div class="product-description">
+            <h3>Description</h3>
+            <p th:text="*{description}">
+                Versatile and affordable choice for your everyday meals. Our pre-cut Frozen Pork Shoulder is perfect for classic dishes like adobo, sinigang, or hearty stews. Tender, flavorful, and conveniently packed to save you time in the kitchen.
+            </p>
+        </div>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p>© 2024 DALI Grocery. All rights reserved.</p>
+    </div>
+</footer>
+
+</body>
+</html>

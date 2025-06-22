@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DALI Online Grocery</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="header">
+    <div class="container">
+        <div class="logo">
+            <img th:src="@{/images/dali-logo.png}" alt="DALI Logo" style="height: 60px;"/>
+        </div>
+        <nav class="nav">
+            <a th:href="@{/shop}">Shop</a>
+            <a th:href="@{/stores}">Stores</a>
+        </nav>
+        <div class="header-actions">
+            <a href="#">Cart (0)</a>
+            <a href="#">Login</a>
+        </div>
+    </div>
+</header>
+
+<main>
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Mas mura sa <br><span>DALI</span></h1>
+                <p>
+                    DALI is an online grocery store where convenience meets quality and affordability.
+                    Value for money is our passion, and we will never compromise on the freshness of products or their variety.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#" class="btn btn-primary">Shop now</a>
+                    <a href="#" class="btn btn-secondary">Learn more</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img th:src="@{/images/grocery-bag.png}" alt="Grocery Bag with Vegetables">
+            </div>
+        </div>
+    </section>
+
+    <section class="product-range-section">
+        <div class="container">
+            <h2>Discover DALI's Wide Product Range</h2>
+            <p class="section-subtitle">Find everything you need in one place — from fresh produce to pantry staples, quality meats, and more.</p>
+            <div class="category-grid">
+                <div class="category-card">
+                    <h3>Frozen Meat</h3>
+                    <p>Quality cuts, kept fresh and ready to cook.</p>
+                </div>
+                <div class="category-card">
+                    <h3>Food Staples</h3>
+                    <p>Your everyday essentials for hearty, home-cooked meals.</p>
+                </div>
+                <div class="category-card">
+                    <h3>Health and Beauty</h3>
+                    <p>Care for yourself, inside and out.</p>
+                </div>
+                <div class="category-card">
+                    <h3>Other Grocery Products</h3>
+                    <p>All the additional essentials you need.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="why-choose-us-section">
+        <div class="container">
+            <div class="features-list">
+                <h3>Why Choose Us</h3>
+                <div class="feature-item">
+                    <h4>Convenience at Your Fingertips</h4>
+                    <p>DALI brings the store closer to you, with flexible delivery or convenient in-store pickup.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Quality You Can Trust</h4>
+                    <p>We select only the best products from trusted suppliers, so you'll be assured of getting only the best.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Exceptional Customer Support</h4>
+                    <p>Our customer support team will assist you with your queries, concerns, or anything else.</p>
+                </div>
+            </div>
+            <div class="why-choose-us-text">
+                <h2>Elevate Your Shopping Journey</h2>
+                <p>DALI is not just another grocery store-it is a shopping experience, convenient, trustworthy, and very tailored to make your life easy. We have high-quality products available at flexible delivery options, an easy-to-use platform, and really great service to offer peace of mind and satisfaction in every order with us.</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p>© 2025 DALI Online. All rights reserved.</p>
+    </div>
+</footer>
+
+</body>
+</html>
