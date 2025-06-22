@@ -4,6 +4,11 @@ import com.dali.ecommerce.model.Store;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface StoreRepository extends JpaRepository<Store, Integer> {
+
+    // Add this for searching
+    List<Store> findByNameContainingIgnoreCaseOrLocationContainingIgnoreCase(String name, String location);
 }

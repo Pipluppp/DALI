@@ -32,7 +32,12 @@ Directory structure:
     │   │           ├── home.html
     │   │           ├── product-detail.html
     │   │           ├── shop.html
-    │   │           └── stores.html
+    │   │           ├── stores.html
+    │   │           └── fragments/
+    │   │               ├── footer.html
+    │   │               ├── header.html
+    │   │               ├── product-list.html
+    │   │               └── store-list.html
     │   └── test/
     │       └── java/
     │           └── com/
@@ -645,21 +650,40 @@ public class ProductController {
         this.productRepository = productRepository;
     }
 
+    // This method now ONLY loads the page shell and initial data.
     @GetMapping("/shop")
-    public String shop(@RequestParam(required = false) String category, Model model) {
+    public String shop(Model model) {
+        // Initial load of all products
+        model.addAttribute("products", productRepository.findAll());
+        // Load categories for the sidebar
+        model.addAttribute("categories", productRepository.findDistinctCategories());
+        return "shop";
+    }
+
+    // THIS IS THE NEW HTMX-DEDICATED ENDPOINT
+    @GetMapping("/shop/products")
+    public String searchAndFilterProducts(
+            @RequestParam(value = "query", required = false) String query,
+            @RequestParam(value = "category", required = false) String category,
+            Model model) {
+
         List<Product> products;
-        if (category != null && !category.isEmpty()) {
+        boolean hasQuery = query != null && !query.trim().isEmpty();
+        boolean hasCategory = category != null && !category.trim().isEmpty();
+
+        if (hasQuery && hasCategory) {
+            products = productRepository.findByNameContainingIgnoreCaseAndCategory(query, category);
+        } else if (hasQuery) {
+            products = productRepository.findByNameContainingIgnoreCase(query);
+        } else if (hasCategory) {
             products = productRepository.findByCategory(category);
-            model.addAttribute("selectedCategory", category);
         } else {
             products = productRepository.findAll();
         }
 
-        List<String> categories = productRepository.findDistinctCategories();
-
         model.addAttribute("products", products);
-        model.addAttribute("categories", categories);
-        return "shop";
+        // This tells Thymeleaf to only render the 'product-list-fragment' part of the specified file
+        return "fragments/product-list :: product-list-fragment";
     }
 
     @GetMapping("/product/{id}")
@@ -685,6 +709,8 @@ import com.dali.ecommerce.repository.StoreRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import java.util.List;
 
 @Controller
@@ -696,11 +722,25 @@ public class StoreController {
         this.storeRepository = storeRepository;
     }
 
+    // Loads the full page shell with initial data
     @GetMapping("/stores")
     public String showStoresPage(Model model) {
         List<Store> stores = storeRepository.findAll();
         model.addAttribute("stores", stores);
         return "stores";
+    }
+
+    // HTMX endpoint for searching stores
+    @GetMapping("/stores/search")
+    public String searchStores(@RequestParam(value = "query", required = false) String query, Model model) {
+        List<Store> stores;
+        if (query != null && !query.trim().isEmpty()) {
+            stores = storeRepository.findByNameContainingIgnoreCaseOrLocationContainingIgnoreCase(query, query);
+        } else {
+            stores = storeRepository.findAll();
+        }
+        model.addAttribute("stores", stores);
+        return "fragments/store-list :: store-list-fragment";
     }
 }
 
@@ -906,6 +946,12 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     List<Product> findByCategory(String category);
 
+    // Add this for the search bar
+    List<Product> findByNameContainingIgnoreCase(String name);
+
+    // Add this for combined search + category filter
+    List<Product> findByNameContainingIgnoreCaseAndCategory(String name, String category);
+
     @Query("SELECT DISTINCT p.category FROM Product p ORDER BY p.category ASC")
     List<String> findDistinctCategories();
 }
@@ -920,8 +966,13 @@ import com.dali.ecommerce.model.Store;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface StoreRepository extends JpaRepository<Store, Integer> {
+
+    // Add this for searching
+    List<Store> findByNameContainingIgnoreCaseOrLocationContainingIgnoreCase(String name, String location);
 }
 
 
@@ -955,7 +1006,9 @@ spring.thymeleaf.cache=false
 ================================================
 File: src/main/resources/static/css/style.css
 ================================================
-/* Basic Reset and Font */
+/* =================================
+   1. Basic Reset and Global Styles
+   ================================= */
 body, h1, h2, h3, h4, p, a {
     margin: 0;
     padding: 0;
@@ -973,7 +1026,9 @@ body {
     padding: 0 20px;
 }
 
-/* Header */
+/* =================================
+   2. Reusable Components (Header, Footer, Buttons)
+   ================================= */
 .header {
     background-color: #fff;
     padding: 20px 0;
@@ -993,7 +1048,51 @@ body {
     font-weight: 600;
 }
 
-/* Hero Section */
+.footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.footer p {
+    color: #fff;
+}
+
+.btn {
+    display: inline-block;
+    padding: 12px 25px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    margin-right: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: #b21984;
+    color: #fff;
+}
+
+.btn-secondary {
+    background-color: #fff;
+    color: #b21984;
+    border: 1px solid #b21984;
+}
+
+.btn-disabled {
+    padding: 12px 25px;
+    border-radius: 8px;
+    background-color: #e9ecef;
+    color: #6c757d;
+    border: 1px solid #ced4da;
+    cursor: not-allowed;
+}
+
+/* =================================
+   3. Homepage Specific Styles
+   ================================= */
 .hero-section {
     background: linear-gradient(to right, #fff, #fdeff5);
     padding: 60px 0;
@@ -1030,27 +1129,6 @@ body {
     max-width: 450px;
 }
 
-.btn {
-    display: inline-block;
-    padding: 12px 25px;
-    border-radius: 25px;
-    text-decoration: none;
-    font-weight: 600;
-    margin-right: 10px;
-}
-
-.btn-primary {
-    background-color: #b21984;
-    color: #fff;
-}
-
-.btn-secondary {
-    background-color: #fff;
-    color: #b21984;
-    border: 1px solid #b21984;
-}
-
-/* Product Range Section */
 .product-range-section {
     padding: 80px 0;
     text-align: center;
@@ -1096,7 +1174,6 @@ body {
     font-weight: 600;
 }
 
-/* Why Choose Us Section */
 .why-choose-us-section {
     padding: 80px 0;
     background-color: #fff;
@@ -1133,22 +1210,13 @@ body {
     margin-bottom: 20px;
 }
 
-/* Footer */
-.footer {
-    background-color: #333;
-    color: #fff;
-    text-align: center;
-    padding: 20px 0;
-}
 
-.footer p {
-    color: #fff;
-}
-
-/* Store Finder Page */
+/* =================================
+   4. Store Finder Page Styles
+   ================================= */
 .store-finder-container {
     display: flex;
-    min-height: calc(100vh - 81px - 61px); /* Full height minus header and footer */
+    min-height: calc(100vh - 81px - 61px);
 }
 
 .store-list-panel {
@@ -1174,7 +1242,7 @@ body {
     font-size: 1rem;
     border-radius: 30px;
     border: 1px solid #ccc;
-    box-sizing: border-box; /* Important for padding and width */
+    box-sizing: border-box;
 }
 
 .store-count {
@@ -1213,32 +1281,42 @@ body {
 
 .map-panel {
     flex-grow: 1;
-    background-color: #e9e9e9; /* Placeholder background */
+    background-color: #e9e9e9;
 }
 
-/* Update hero color to match store page */
-.hero-content h1 span, .product-range-section h2, .why-choose-us-text h2 {
-    color: #b21984;
-}
 
-.btn-primary {
+/* =================================
+   5. Shop Page & HTMX Search Styles
+   ================================= */
+.search-banner {
     background-color: #b21984;
+    padding: 60px 20px;
+    text-align: center;
 }
 
-.btn-secondary {
-    color: #b21984;
-    border: 1px solid #b21984;
-}
-.feature-item {
-    border-left: 4px solid #b21984;
+.search-banner h2 {
+    font-size: 2.5rem;
+    color: #ccc;
+    font-weight: 600;
+    margin-bottom: 20px;
 }
 
-/* Shop Page Layout */
+.main-search-input {
+    width: 100%;
+    max-width: 600px;
+    padding: 15px 20px;
+    font-size: 1.1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
 .shop-container {
     display: flex;
     padding-top: 40px;
     padding-bottom: 40px;
     gap: 30px;
+    align-items: flex-start;
 }
 
 .filter-sidebar {
@@ -1251,8 +1329,12 @@ body {
     margin-bottom: 20px;
 }
 .filter-sidebar h5 {
-    font-size: 1.1rem;
-    margin-bottom: 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
 }
 
 .filter-sidebar ul {
@@ -1262,14 +1344,14 @@ body {
 
 .filter-sidebar ul li a {
     text-decoration: none;
-    color: #555;
+    color: #333;
     display: block;
     padding: 8px 0;
+    font-size: 0.9rem;
 }
 
 .filter-sidebar ul li a:hover, .filter-sidebar ul li a.active-category {
-    color: #b21984;
-    font-weight: 600;
+    color: #007bff;
 }
 
 .product-grid-container {
@@ -1278,32 +1360,33 @@ body {
 
 .product-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 30px;
 }
 
 .product-card {
     background-color: #fff;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    text-align: center;
-    padding: 20px;
+    border: 1px solid #eee;
+    text-align: left;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
 }
 
 .product-card a {
     text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
 
 .product-image-container {
-    height: 200px;
+    height: 220px;
+    padding: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 15px;
+    background-color: #fff;
 }
 
 .product-card img {
@@ -1312,37 +1395,42 @@ body {
     object-fit: contain;
 }
 
-.product-card h3 {
+.product-card-info {
+    padding: 20px;
+    border-top: 1px solid #eee;
+}
+
+.product-card-category {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.product-card-name {
     font-size: 1rem;
     font-weight: 600;
-    margin-bottom: 5px;
     color: #333;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 2.4em;
+    line-height: 1.2;
+    margin-bottom: 10px;
 }
 
 .product-price {
     font-size: 1.2rem;
     font-weight: 700;
-    color: #b21984;
-    margin-bottom: 15px;
+    color: #333;
 }
 
-.add-to-cart-btn {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-}
 
-.btn-disabled {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    background-color: #e9ecef;
-    color: #6c757d;
-    border: 1px solid #ced4da;
-    cursor: not-allowed;
-}
-
-/* Product Detail Page */
+/* =================================
+   6. Product Detail Page Styles
+   ================================= */
 .product-detail-container {
     display: flex;
     gap: 50px;
@@ -1415,21 +1503,7 @@ File: src/main/resources/templates/home.html
 </head>
 <body>
 
-<header class="header">
-    <div class="container">
-        <div class="logo">
-            <img th:src="@{/images/dali-logo.png}" alt="DALI Logo" style="height: 60px;"/>
-        </div>
-        <nav class="nav">
-            <a th:href="@{/shop}">Shop</a>
-            <a th:href="@{/stores}">Stores</a>
-        </nav>
-        <div class="header-actions">
-            <a href="#">Cart (0)</a>
-            <a href="#">Login</a>
-        </div>
-    </div>
-</header>
+<header class="header" th:replace="~{fragments/header :: header}"></header>
 
 <main>
     <section class="hero-section">
@@ -1501,11 +1575,7 @@ File: src/main/resources/templates/home.html
     </section>
 </main>
 
-<footer class="footer">
-    <div class="container">
-        <p>Â© 2025 DALI Online. All rights reserved.</p>
-    </div>
-</footer>
+<footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
 
 </body>
 </html>
@@ -1527,21 +1597,7 @@ File: src/main/resources/templates/product-detail.html
 </head>
 <body>
 
-<header class="header">
-    <div class="container">
-        <div class="logo">
-            <a th:href="@{/}"><img th:src="@{/images/dali-logo.png}" alt="DALI Logo" style="height: 40px;"/></a>
-        </div>
-        <nav class="nav">
-            <a th:href="@{/shop}">Shop</a>
-            <a th:href="@{/stores}">Stores</a>
-        </nav>
-        <div class="header-actions">
-            <a href="#">Cart (0)</a>
-            <a href="#">Login</a>
-        </div>
-    </div>
-</header>
+<header class="header" th:replace="~{fragments/header :: header}"></header>
 
 <main class="product-detail-container container" th:object="${product}">
     <div class="product-detail-image">
@@ -1566,11 +1622,7 @@ File: src/main/resources/templates/product-detail.html
     </div>
 </main>
 
-<footer class="footer">
-    <div class="container">
-        <p>Â© 2024 DALI Grocery. All rights reserved.</p>
-    </div>
-</footer>
+<footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
 
 </body>
 </html>
@@ -1585,6 +1637,7 @@ File: src/main/resources/templates/shop.html
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shop - DALI</title>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.5/dist/htmx.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1592,64 +1645,65 @@ File: src/main/resources/templates/shop.html
 </head>
 <body>
 
-<header class="header">
-    <div class="container">
-        <div class="logo">
-            <a th:href="@{/}"><img th:src="@{/images/dali-logo.png}" alt="DALI Logo" style="height: 60px;"/></a>
-        </div>
-        <nav class="nav">
-            <a th:href="@{/shop}">Shop</a>
-            <a th:href="@{/stores}">Stores</a>
-        </nav>
-        <div class="header-actions">
-            <a href="#">Cart (0)</a>
-            <a href="#">Login</a>
-        </div>
-    </div>
-</header>
+<header class="header" th:replace="~{fragments/header :: header}"></header>
 
-<div class="shop-container container">
+<!-- This form wrapper helps group the inputs for HTMX -->
+<form id="search-form" class="shop-container container">
+
     <!-- Filter Sidebar -->
     <aside class="filter-sidebar">
         <h4>Filters</h4>
         <div class="filter-group">
-            <h5>Subcategories</h5>
+            <h5>CATEGORY</h5>
+            <!-- We use a hidden input to hold the selected category -->
+            <input type="hidden" name="category" id="category-input" value="">
             <ul>
+                <!-- "All" link clears the category -->
                 <li>
-                    <a th:href="@{/shop}" th:class="${selectedCategory == null} ? 'active-category'">All Products</a>
+                    <a href="#"
+                       onclick="document.getElementById('category-input').value=''; htmx.trigger('#search-input', 'keyup'); return false;">
+                        All
+                    </a>
                 </li>
+                <!-- Category links now use data-* attributes -->
                 <li th:each="cat : ${categories}">
-                    <a th:href="@{/shop(category=${cat})}"
+                    <a href="#"
                        th:text="${cat}"
-                       th:class="${cat == selectedCategory} ? 'active-category'">Frozen Meat</a>
+                       th:data-category="${cat}"
+                       onclick="document.getElementById('category-input').value=this.getAttribute('data-category'); htmx.trigger('#search-input', 'keyup'); return false;">
+                        Category Name
+                    </a>
                 </li>
             </ul>
         </div>
     </aside>
 
-    <!-- Product Grid -->
+    <!-- Main Content Area -->
     <main class="product-grid-container">
-        <div class="product-grid">
-            <div th:each="product : ${products}" class="product-card">
-                <a th:href="@{/product/{id}(id=${product.id})}">
-                    <div class="product-image-container">
-                        <img th:src="@{'/images/products/' + ${product.image}}" th:alt="${product.name}">
-                    </div>
-                    <h3 th:text="${product.name}">Product Name</h3>
-                    <p class="product-price" th:text="${product.getFormattedPrice()}">â‚± 199</p>
-                </a>
-                <button th:if="${product.productQuantity > 0}" class="btn btn-primary add-to-cart-btn">Add to Cart</button>
-                <button th:if="${product.productQuantity <= 0}" class="btn btn-disabled" disabled>Out of Stock</button>
-            </div>
+        <section class="search-banner">
+            <input type="search"
+                   id="search-input"
+                   name="query"
+                   class="main-search-input"
+                   placeholder="Search products..."
+                   hx-get="/shop/products"
+                   hx-trigger="keyup changed delay:300ms"
+                   hx-target="#product-grid-results"
+                   hx-swap="innerHTML"
+                   hx-include="#category-input"
+            >
+        </section>
+
+        <!-- Product Grid Results -->
+        <div id="product-grid-results">
+            <!-- The initial product list is loaded via a fragment -->
+            <div th:replace="~{fragments/product-list :: product-list-fragment}"></div>
         </div>
     </main>
-</div>
 
-<footer class="footer">
-    <div class="container">
-        <p>Â© 2024 DALI Grocery. All rights reserved.</p>
-    </div>
-</footer>
+</form>
+
+<footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
 
 </body>
 </html>
@@ -1664,6 +1718,7 @@ File: src/main/resources/templates/stores.html
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Find a DALI Store</title>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.5/dist/htmx.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1671,39 +1726,28 @@ File: src/main/resources/templates/stores.html
 </head>
 <body>
 
-<header class="header">
-    <div class="container">
-        <div class="logo">
-            <a th:href="@{/}">
-                <img th:src="@{/images/dali-logo.png}" alt="DALI Logo" style="height: 60px;"/>
-            </a>
-        </div>
-        <nav class="nav">
-            <a th:href="@{/stores}">Stores</a>
-            <a th:href="@{/shop}">Shop</a>
-        </nav>
-        <div class="header-actions">
-            <a href="#">Cart (0)</a>
-            <a href="#">Login</a>
-        </div>
-    </div>
-</header>
+<header class="header" th:replace="~{fragments/header :: header}"></header>
 
 <main class="store-finder-container">
     <div class="store-list-panel">
         <h1>Find a DALI Store</h1>
         <div class="search-bar">
-            <input type="text" placeholder="Search Maui Oasis">
+            <input type="search"
+                   name="query"
+                   placeholder="Search store name or location..."
+                   hx-get="/stores/search"
+                   hx-trigger="keyup changed delay:300ms"
+                   hx-target="#store-list-results"
+                   hx-swap="innerHTML"
+            >
         </div>
-        <p class="store-count" th:text="${stores.size()} + ' Stores near you'">10 Stores near you</p>
-        <div class="store-list">
-            <!-- Loop through stores from the database -->
-            <div th:each="store : ${stores}" class="store-item">
-                <h3 th:text="${store.name}">DALI Everyday Grocery â€“ PUREZA</h3>
-                <p th:text="${store.location}">Pureza, Sampaloc, City Of Manila</p>
-            </div>
+
+        <!-- This div is the target for HTMX updates -->
+        <div id="store-list-results">
+            <!-- Load the initial list via fragment -->
+            <div th:replace="~{fragments/store-list :: store-list-fragment}"></div>
         </div>
-        <a href="#" class="view-all-stores">View all stores</a>
+
     </div>
     <div class="map-panel">
         <!-- Placeholder for the map -->
@@ -1711,11 +1755,99 @@ File: src/main/resources/templates/stores.html
     </div>
 </main>
 
-<footer class="footer">
+<footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>
+
+
+================================================
+File: src/main/resources/templates/fragments/footer.html
+================================================
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<footer class="footer" th:fragment="footer">
     <div class="container">
-        <p>Â© 2024 DALI Grocery. All rights reserved.</p>
+        <p>Â© 2025 DALI Online. All rights reserved.</p>
     </div>
 </footer>
+</body>
+</html>
+
+
+================================================
+File: src/main/resources/templates/fragments/header.html
+================================================
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header class="header" th:fragment="header">
+    <div class="container">
+        <div class="logo">
+            <a th:href="@{/}"><img th:src="@{/images/dali-logo.png}" alt="DALI Logo" style="height: 40px;"/></a>
+        </div>
+        <nav class="nav">
+            <a th:href="@{/shop}">Shop</a>
+            <a th:href="@{/stores}">Stores</a>
+            <a href="#">About</a>
+        </nav>
+        <div class="header-actions">
+            <a href="#">Cart (0)</a>
+            <a href="#">Login</a>
+        </div>
+    </div>
+</header>
+</body>
+</html>
+
+
+================================================
+File: src/main/resources/templates/fragments/product-list.html
+================================================
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- This is the fragment that will be updated by HTMX -->
+<div th:fragment="product-list-fragment" class="product-grid">
+    <div th:each="product : ${products}" class="product-card">
+        <a th:href="@{/product/{id}(id=${product.id})}">
+            <div class="product-image-container">
+                <img th:src="@{'/images/products/' + ${product.image}}" th:alt="${product.name}">
+            </div>
+            <div class="product-card-info">
+                <p class="product-card-category" th:text="${product.category}">CATEGORY</p>
+                <h3 class="product-card-name" th:text="${product.name}">Product Name</h3>
+                <p class="product-price" th:text="${product.getFormattedPrice()}">â‚± 199</p>
+            </div>
+        </a>
+    </div>
+</div>
+
+</body>
+</html>
+
+
+================================================
+File: src/main/resources/templates/fragments/store-list.html
+================================================
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="store-list-fragment">
+    <p class="store-count" th:text="${stores.size()} + ' Stores found'">3 Stores near you</p>
+    <div class="store-list">
+        <div th:if="${#lists.isEmpty(stores)}" class="store-item">
+            <p>No stores found matching your search.</p>
+        </div>
+        <div th:each="store : ${stores}" class="store-item">
+            <h3 th:text="${store.name}">DALI Everyday Grocery â€“ PUREZA</h3>
+            <p th:text="${store.location}">Pureza, Sampaloc, City Of Manila</p>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

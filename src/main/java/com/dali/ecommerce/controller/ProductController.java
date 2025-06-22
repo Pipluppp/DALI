@@ -20,26 +20,26 @@ public class ProductController {
         this.productRepository = productRepository;
     }
 
-    // This method loads the FULL shop page initially
+    // This method now ONLY loads the page shell and initial data.
     @GetMapping("/shop")
     public String shop(Model model) {
-        List<Product> products = productRepository.findAll();
-        List<String> categories = productRepository.findDistinctCategories();
-
-        model.addAttribute("products", products);
-        model.addAttribute("categories", categories);
+        // Initial load of all products
+        model.addAttribute("products", productRepository.findAll());
+        // Load categories for the sidebar
+        model.addAttribute("categories", productRepository.findDistinctCategories());
         return "shop";
     }
 
-    // This NEW method handles HTMX search requests and returns ONLY the product list fragment
-    @GetMapping("/shop/search")
-    public String searchProducts(@RequestParam(value = "query", required = false) String query,
-                                 @RequestParam(value = "category", required = false) String category,
-                                 Model model) {
-        List<Product> products;
+    // THIS IS THE NEW HTMX-DEDICATED ENDPOINT
+    @GetMapping("/shop/products")
+    public String searchAndFilterProducts(
+            @RequestParam(value = "query", required = false) String query,
+            @RequestParam(value = "category", required = false) String category,
+            Model model) {
 
+        List<Product> products;
         boolean hasQuery = query != null && !query.trim().isEmpty();
-        boolean hasCategory = category != null && !category.isEmpty();
+        boolean hasCategory = category != null && !category.trim().isEmpty();
 
         if (hasQuery && hasCategory) {
             products = productRepository.findByNameContainingIgnoreCaseAndCategory(query, category);
@@ -52,11 +52,9 @@ public class ProductController {
         }
 
         model.addAttribute("products", products);
-
-        // Return the fragment name
+        // This tells Thymeleaf to only render the 'product-list-fragment' part of the specified file
         return "fragments/product-list :: product-list-fragment";
     }
-
 
     @GetMapping("/product/{id}")
     public String productDetail(@PathVariable("id") Integer id, Model model) {

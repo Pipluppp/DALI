@@ -12,79 +12,57 @@
 </head>
 <body>
 
-<header class="header">
-    <div class="container">
-        <div class="logo">
-            <a th:href="@{/}"><img th:src="@{/images/dali-logo.png}" alt="DALI Logo" style="height: 60px;"/></a>
-        </div>
-        <nav class="nav">
-            <a th:href="@{/shop}">Shop</a>
-            <a th:href="@{/stores}">Stores</a>
-        </nav>
-        <div class="header-actions">
-            <a href="#">Cart (0)</a>
-            <a href="#">Login</a>
-        </div>
-    </div>
-</header>
+<header class="header" th:replace="~{fragments/header :: header}"></header>
 
-<section class="search-banner">
-    <div class="container">
-        <h2>Stop looking for an item — find it.</h2>
-        <input type="search"
-               name="query"
-               class="main-search-input"
-               placeholder="Product, brand, color..."
-               hx-get="/shop/search"
-               hx-trigger="keyup changed delay:250ms"
-               hx-target="#product-grid-results"
-               hx-swap="innerHTML"
-        >
-    </div>
-</section>
+<!-- The form now controls the HTMX requests for both search and filtering -->
+<form class="shop-container container"
+      hx-get="/shop/products"
+      hx-trigger="keyup changed delay:200ms from:#search-input, change from:[name='category']"
+      hx-target="#product-grid-results"
+      hx-swap="innerHTML">
 
-<div class="shop-container container">
     <!-- Filter Sidebar -->
     <aside class="filter-sidebar">
         <h4>Filters</h4>
         <div class="filter-group">
             <h5>CATEGORY</h5>
+            <!-- We now use radio buttons for filtering. They are semantically correct and work great with HTMX -->
             <ul>
-                <!-- Link for All Products -->
+                <!-- "All" option -->
                 <li>
-                    <a href="#"
-                       hx-get="/shop/search"
-                       hx-target="#product-grid-results"
-                       hx-swap="innerHTML">All</a>
+                    <input type="radio" name="category" value="" id="cat-all" checked="checked">
+                    <label for="cat-all">All</label>
                 </li>
-                <!-- Links for each category -->
-                <li th:each="cat : ${categories}">
-                    <a href="#"
-                       th:text="${cat}"
-                       hx-get="/shop/search"
-                       th:hx-vals="|category: '${cat}'|"
-                       hx-target="#product-grid-results"
-                       hx-swap="innerHTML">
-                        Category Name
-                    </a>
+                <!-- Category options from the model -->
+                <li th:each="cat, iterStat : ${categories}">
+                    <input type="radio" name="category" th:value="${cat}" th:id="'cat-' + ${iterStat.index}">
+                    <label th:for="'cat-' + ${iterStat.index}" th:text="${cat}">Category Name</label>
                 </li>
             </ul>
         </div>
     </aside>
 
-    <!-- Product Grid -->
-    <main class="product-grid-container" id="product-grid-results">
-        <!-- The initial product list is loaded here -->
-        <div th:replace="~{fragments/product-list :: product-list-fragment}"></div>
+    <!-- Main Content Area -->
+    <main class="product-grid-container">
+        <section class="search-banner">
+            <!-- The search input is now just a standard input. The form handles the HTMX. -->
+            <input type="search"
+                   id="search-input"
+                   name="query"
+                   class="main-search-input"
+                   placeholder="Search products..."
+            >
+        </section>
+
+        <!-- Product Grid Results -->
+        <div id="product-grid-results">
+            <!-- The initial product list is loaded via a fragment -->
+            <div th:replace="~{fragments/product-list :: product-list-fragment}"></div>
+        </div>
     </main>
-</div>
+</form>
 
-
-<footer class="footer">
-    <div class="container">
-        <p>© 2024 DALI Grocery. All rights reserved.</p>
-    </div>
-</footer>
+<footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
 
 </body>
 </html>
