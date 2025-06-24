@@ -13,7 +13,6 @@ INSERT INTO stores (store_name, store_location) VALUES
 -- =================================================================
 --  Seed the 'products' table
 -- =================================================================
--- Note: The image filenames here must exactly match the files in 'static/images/products/'
 INSERT INTO products (product_name, product_description, product_price, product_category, product_quantity, image) VALUES
                                                                                                                        ('Frozen Pork Shoulder 500g', 'Versatile and affordable choice for your everyday meals. Perfect for classic dishes like adobo, sinigang, or hearty stews. Tender, flavorful, and conveniently packed.', 199.00, 'Pork', 55, 'frozen-pork-shoulder.png'),
                                                                                                                        ('Beef Cubes for Stew 500g', 'Ideal for slow-cooking, caldereta, or mechado. These tender beef cubes will make your stews rich and flavorful.', 280.00, 'Beef', 40, 'beef-cubes.png'),

@@ -443,3 +443,182 @@ body {
     padding-bottom: 50px;
     min-height: calc(100vh - 81px - 61px); /* Ensures content area fills the screen, pushing footer down */
 }
+
+/* =================================
+   7. Authentication Page Styles (NEW)
+   ================================= */
+.auth-page-wrapper {
+    background-color: #b21984;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+    box-sizing: border-box;
+}
+
+.auth-card {
+    display: flex;
+    max-width: 960px;
+    width: 100%;
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.auth-image-panel {
+    flex: 1;
+    background-color: #fce9d3;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.auth-image-panel img {
+    max-width: 80%;
+    margin-top: 30px;
+}
+
+.back-to-shop-btn {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 20px;
+    border-radius: 20px;
+    background-color: #fff;
+    border: 1px solid #eee;
+    text-decoration: none;
+    color: #333;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.back-to-shop-btn:hover {
+    background-color: #f8f8f8;
+}
+
+.auth-form-panel {
+    flex: 1;
+    padding: 25px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.auth-form-panel h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.auth-form-panel .sub-heading {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.auth-form-panel .sub-heading a {
+    color: #b21984;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-form-panel .form-group {
+    margin-bottom: 20px;
+}
+
+.auth-form-panel label {
+    display: block;
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.auth-form-panel input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 1rem;
+}
+
+.auth-form-panel input:focus {
+    outline: none;
+    border-color: #b21984;
+    box-shadow: 0 0 0 2px rgba(178, 25, 132, 0.2);
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    background-color: #b21984;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.2s;
+}
+
+.auth-btn:hover {
+    background-color: #9e1673;
+}
+
+.forgot-password-link {
+    display: block;
+    text-align: right;
+    font-size: 0.9rem;
+    color: #555;
+    text-decoration: none;
+    margin-top: -10px;
+    margin-bottom: 20px;
+}
+
+.or-separator {
+    text-align: center;
+    margin: 30px 0;
+    color: #aaa;
+    position: relative;
+}
+.or-separator::before,
+.or-separator::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+    background-color: #ddd;
+}
+.or-separator::before { left: 0; }
+.or-separator::after { right: 0; }
+
+
+.switch-auth-link {
+    text-align: center;
+    margin-top: 30px;
+    color: #555;
+}
+
+.switch-auth-link a {
+    color: #b21984;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.auth-error { color: #dc3545; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center; font-size: 0.9rem; }
+.auth-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center; font-size: 0.9rem; }
+
+/* The personal information label for sign up page */
+.form-section-label {
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 15px;
+    display: block;
+}

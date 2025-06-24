@@ -1,5 +1,6 @@
 Directory structure:
 └── DALI/
+    ├── README.md
     ├── HELP.md
     ├── mvnw
     ├── mvnw.cmd
@@ -23,6 +24,8 @@ Directory structure:
     │   │   │                   └── StoreRepository.java
     │   │   └── resources/
     │   │       ├── application.properties
+    │   │       ├── data.sql
+    │   │       ├── schema.sql
     │   │       ├── static/
     │   │       │   ├── css/
     │   │       │   │   └── style.css
@@ -47,6 +50,51 @@ Directory structure:
     └── .mvn/
         └── wrapper/
             └── maven-wrapper.properties
+
+================================================
+File: README.md
+================================================
+# DALI E-commerce Application
+
+This is a Spring Boot application for the DALI e-commerce site.
+
+## Getting Started
+
+### Prerequisites
+- Java 21
+- Apache Maven
+- PostgreSQL
+
+### Local Setup Instructions
+
+1.  **Clone the repository:**
+    ```bash
+    git clone <your-repo-url>
+    cd DALI
+    ```
+
+2.  **Set up the PostgreSQL Database:**
+    - Make sure PostgreSQL is installed and running.
+    - Create a database named `dali_db`.
+    ```sql
+    CREATE DATABASE dali_db;
+    ```
+
+3.  **Configure Environment Variables:**
+    The application requires database credentials to be set as environment variables.
+
+    - **On Windows (Command Prompt):**
+      ```cmd
+      set DB_PASSWORD=your_postgres_password
+      ```
+
+4.  **Run the Application:**
+    You can run the application using the Maven wrapper:
+    ```bash
+    ./mvnw spring-boot:run
+    ```
+    The application will be available at `http://localhost:8080`. The database schema and initial data will be automatically loaded on the first run.
+
 
 ================================================
 File: HELP.md
@@ -985,15 +1033,17 @@ spring.application.name=DALI
 # PostgreSQL Database Configuration
 # Replace 'your_username' and 'your_password' with your PostgreSQL credentials.
 # Make sure you have a database named 'dali_db' created.
+# Run set DB_PASSWORD=your_secret_password
 spring.datasource.url=jdbc:postgresql://localhost:5432/dali_db
-spring.datasource.username=postgres
-spring.datasource.password=sundae
+spring.datasource.username=${DB_USERNAME:postgres}
+spring.datasource.password=${DB_PASSWORD}
 spring.datasource.driver-class-name=org.postgresql.Driver
+
 
 # JPA/Hibernate Configuration
 # 'update' will create/update the database schema automatically based on your entities.
 # Use 'validate' in production.
-spring.jpa.hibernate.ddl-auto=update
+spring.jpa.hibernate.ddl-auto=none
 # Show SQL queries in the console for debugging.
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
@@ -1001,6 +1051,65 @@ spring.jpa.properties.hibernate.format_sql=true
 
 # Thymeleaf Configuration
 spring.thymeleaf.cache=false
+
+# --- SQL Initialization ---
+# Always initialize the database on startup.
+spring.sql.init.mode=always
+
+
+================================================
+File: src/main/resources/data.sql
+================================================
+-- This script seeds the database with initial data.
+-- It is run automatically by Spring Boot on application startup.
+
+-- =================================================================
+--  Seed the 'stores' table
+-- =================================================================
+INSERT INTO stores (store_name, store_location) VALUES
+                                                    ('DALI Everyday Grocery - Pureza', 'Pureza, Sampaloc, City Of Manila'),
+                                                    ('DALI Convenience Store - Katipunan', 'Katipunan Ave, Quezon City'),
+                                                    ('DALI Supermart - Makati CBD', 'Ayala Avenue, Makati City');
+
+
+-- =================================================================
+--  Seed the 'products' table
+-- =================================================================
+-- Note: The image filenames here must exactly match the files in 'static/images/products/'
+INSERT INTO products (product_name, product_description, product_price, product_category, product_quantity, image) VALUES
+                                                                                                                       ('Frozen Pork Shoulder 500g', 'Versatile and affordable choice for your everyday meals. Perfect for classic dishes like adobo, sinigang, or hearty stews. Tender, flavorful, and conveniently packed.', 199.00, 'Pork', 55, 'frozen-pork-shoulder.png'),
+                                                                                                                       ('Beef Cubes for Stew 500g', 'Ideal for slow-cooking, caldereta, or mechado. These tender beef cubes will make your stews rich and flavorful.', 280.00, 'Beef', 40, 'beef-cubes.png'),
+                                                                                                                       ('Pork Liempo (Belly) 500g', 'The perfect cut for grilling or frying to a crispy perfection. Marinate it for an unforgettable inihaw na liempo.', 225.50, 'Pork', 75, 'pork-liempo.png'),
+                                                                                                                       ('Fresh Chicken Drumsticks 1kg', 'Juicy and meaty, perfect for your favorite fried chicken recipe, grilling, or tinola. A family favorite.', 250.00, 'Chicken', 80, 'chicken-drumstick.png'),
+                                                                                                                       ('Choice Ground Beef 500g', 'Versatile ground beef for making burgers, spaghetti sauce, or picadillo. Lean and full of flavor.', 275.00, 'Beef', 60, 'ground-beef.png'),
+                                                                                                                       ('Whole Dressed Chicken (1.2kg)', 'A whole chicken ready for roasting, lechon manok style, or for a hearty chicken soup. A versatile centerpiece for any meal.', 290.00, 'Chicken', 30, 'whole-chicken.png');
+
+
+================================================
+File: src/main/resources/schema.sql
+================================================
+-- Drop tables if they exist to ensure a clean slate on each run.
+-- This is useful for development.
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS stores CASCADE;
+
+-- Create the 'stores' table
+CREATE TABLE stores (
+                        store_id        SERIAL PRIMARY KEY,
+                        store_name      VARCHAR(255) NOT NULL,
+                        store_location  VARCHAR(255)
+);
+
+-- Create the 'products' table
+CREATE TABLE products (
+                          product_id          SERIAL PRIMARY KEY,
+                          product_name        VARCHAR(255) NOT NULL,
+                          product_description TEXT,
+                          product_price       NUMERIC(10, 2) NOT NULL, -- Use NUMERIC for currency
+                          product_category    VARCHAR(255),
+                          product_quantity    INTEGER NOT NULL,
+                          image               VARCHAR(255)
+);
 
 
 ================================================
@@ -1342,17 +1451,31 @@ body {
     padding: 0;
 }
 
-.filter-sidebar ul li a {
+/* START: Updated styles for category filter */
+.filter-sidebar ul li input[type="radio"] {
+    display: none; /* Hide the actual radio button */
+}
+
+.filter-sidebar ul li label {
     text-decoration: none;
     color: #333;
     display: block;
     padding: 8px 0;
     font-size: 0.9rem;
+    cursor: pointer;
+    transition: color 0.2s;
 }
 
-.filter-sidebar ul li a:hover, .filter-sidebar ul li a.active-category {
-    color: #007bff;
+.filter-sidebar ul li label:hover {
+    color: #b21984; /* Use theme color for hover */
 }
+
+.filter-sidebar ul li input[type="radio"]:checked + label {
+    color: #b21984; /* Use theme color for selected */
+    font-weight: 700;
+}
+/* END: Updated styles for category filter */
+
 
 .product-grid-container {
     flex-grow: 1;
@@ -1427,7 +1550,6 @@ body {
     color: #333;
 }
 
-
 /* =================================
    6. Product Detail Page Styles
    ================================= */
@@ -1436,53 +1558,7 @@ body {
     gap: 50px;
     padding-top: 50px;
     padding-bottom: 50px;
-}
-
-.product-detail-image {
-    flex: 1;
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.product-detail-image img {
-    max-width: 100%;
-    max-height: 450px;
-}
-
-.product-detail-info {
-    flex: 1;
-}
-
-.product-detail-info h1 {
-    font-size: 2.5rem;
-    font-weight: 600;
-}
-
-.product-detail-price {
-    font-size: 2.2rem;
-    color: #b21984;
-    font-weight: 700;
-    margin: 20px 0;
-}
-
-.product-actions {
-    margin-bottom: 30px;
-}
-
-.btn-large {
-    padding: 15px 40px;
-    font-size: 1.1rem;
-}
-
-.product-description h3 {
-    font-size: 1.3rem;
-    margin-bottom: 10px;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 10px;
+    min-height: calc(100vh - 81px - 61px); /* Ensures content area fills the screen, pushing footer down */
 }
 
 
@@ -1647,32 +1723,29 @@ File: src/main/resources/templates/shop.html
 
 <header class="header" th:replace="~{fragments/header :: header}"></header>
 
-<!-- This form wrapper helps group the inputs for HTMX -->
-<form id="search-form" class="shop-container container">
+<!-- The form now controls the HTMX requests for both search and filtering -->
+<form class="shop-container container"
+      hx-get="/shop/products"
+      hx-trigger="keyup changed delay:200ms from:#search-input, change from:[name='category']"
+      hx-target="#product-grid-results"
+      hx-swap="innerHTML">
 
     <!-- Filter Sidebar -->
     <aside class="filter-sidebar">
         <h4>Filters</h4>
         <div class="filter-group">
             <h5>CATEGORY</h5>
-            <!-- We use a hidden input to hold the selected category -->
-            <input type="hidden" name="category" id="category-input" value="">
+            <!-- We now use radio buttons for filtering. They are semantically correct and work great with HTMX -->
             <ul>
-                <!-- "All" link clears the category -->
+                <!-- "All" option -->
                 <li>
-                    <a href="#"
-                       onclick="document.getElementById('category-input').value=''; htmx.trigger('#search-input', 'keyup'); return false;">
-                        All
-                    </a>
+                    <input type="radio" name="category" value="" id="cat-all" checked="checked">
+                    <label for="cat-all">All</label>
                 </li>
-                <!-- Category links now use data-* attributes -->
-                <li th:each="cat : ${categories}">
-                    <a href="#"
-                       th:text="${cat}"
-                       th:data-category="${cat}"
-                       onclick="document.getElementById('category-input').value=this.getAttribute('data-category'); htmx.trigger('#search-input', 'keyup'); return false;">
-                        Category Name
-                    </a>
+                <!-- Category options from the model -->
+                <li th:each="cat, iterStat : ${categories}">
+                    <input type="radio" name="category" th:value="${cat}" th:id="'cat-' + ${iterStat.index}">
+                    <label th:for="'cat-' + ${iterStat.index}" th:text="${cat}">Category Name</label>
                 </li>
             </ul>
         </div>
@@ -1681,16 +1754,12 @@ File: src/main/resources/templates/shop.html
     <!-- Main Content Area -->
     <main class="product-grid-container">
         <section class="search-banner">
+            <!-- The search input is now just a standard input. The form handles the HTMX. -->
             <input type="search"
                    id="search-input"
                    name="query"
                    class="main-search-input"
                    placeholder="Search products..."
-                   hx-get="/shop/products"
-                   hx-trigger="keyup changed delay:300ms"
-                   hx-target="#product-grid-results"
-                   hx-swap="innerHTML"
-                   hx-include="#category-input"
             >
         </section>
 
@@ -1700,7 +1769,6 @@ File: src/main/resources/templates/shop.html
             <div th:replace="~{fragments/product-list :: product-list-fragment}"></div>
         </div>
     </main>
-
 </form>
 
 <footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
@@ -1736,7 +1804,7 @@ File: src/main/resources/templates/stores.html
                    name="query"
                    placeholder="Search store name or location..."
                    hx-get="/stores/search"
-                   hx-trigger="keyup changed delay:300ms"
+                   hx-trigger="keyup changed delay:200ms"
                    hx-target="#store-list-results"
                    hx-swap="innerHTML"
             >
@@ -1785,12 +1853,11 @@ File: src/main/resources/templates/fragments/header.html
 <header class="header" th:fragment="header">
     <div class="container">
         <div class="logo">
-            <a th:href="@{/}"><img th:src="@{/images/dali-logo.png}" alt="DALI Logo" style="height: 40px;"/></a>
+            <a th:href="@{/}"><img th:src="@{/images/dali-logo.png}" alt="DALI Logo" style="height: 60px;"/></a>
         </div>
         <nav class="nav">
             <a th:href="@{/shop}">Shop</a>
             <a th:href="@{/stores}">Stores</a>
-            <a href="#">About</a>
         </nav>
         <div class="header-actions">
             <a href="#">Cart (0)</a>

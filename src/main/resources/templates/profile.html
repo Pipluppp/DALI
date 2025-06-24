@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>My Account - DALI</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .profile-page { background-color: #f7f3f6; min-height: calc(100vh - 81px - 61px); padding: 50px 0; }
+        .profile-page .container { max-width: 900px; }
+        .profile-header h1 { font-size: 2rem; color: #b21984; font-weight: 700; }
+        .profile-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
+        .profile-section { background: #fff; border-radius: 8px; padding: 30px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        .section-header h2 { font-size: 1.5rem; color: #333; }
+        .edit-link { color: #b21984; text-decoration: none; font-weight: 600; }
+        .details-grid { display: grid; grid-template-columns: 150px 1fr; gap: 10px; color: #555; }
+        .details-grid dt { font-weight: 600; color: #888; }
+        .address-box { border: 1px solid #eee; padding: 20px; border-radius: 5px; margin-bottom: 15px; }
+        .address-box p { margin: 0 0 5px; }
+        .address-tags span { display: inline-block; padding: 4px 10px; font-size: 0.75rem; border-radius: 15px; margin-right: 10px; font-weight: 600; }
+        .tag-home { background-color: #e9ecef; color: #495057; }
+        .tag-default { border: 1px solid #b21984; color: #b21984; background-color: #fff; }
+        .order-card { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; overflow: hidden; }
+        .order-header { background-color: #f8f9fa; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .order-header-info { font-weight: 600; }
+        .order-body { padding: 20px; }
+        .order-footer { padding: 15px 20px; text-align: right; }
+        .btn-track { background-color: #b21984; color: #fff; padding: 10px 25px; border-radius: 5px; text-decoration: none; }
+    </style>
+</head>
+<body>
+<header class="header" th:replace="~{fragments/header :: header}"></header>
+
+<main class="profile-page">
+    <div class="container" th:if="${account}">
+        <div class="profile-header">
+            <div>
+                <p>Hello,</p>
+                <h1 th:text="${account.getFullName()}">Duncan Bandojo</h1>
+            </div>
+        </div>
+
+        <!-- Personal Details Section -->
+        <section class="profile-section">
+            <div class="section-header">
+                <h2>Personal details</h2>
+                <a href="#" class="edit-link">Edit</a>
+            </div>
+            <dl class="details-grid">
+                <dt>First Name:</dt> <dd th:text="${account.firstName}">Duncan</dd>
+                <dt>Last Name:</dt> <dd th:text="${account.lastName}">Bandojo</dd>
+                <dt>Phone Number:</dt> <dd th:text="${account.phoneNumber}">09123456789</dd>
+                <dt>Email:</dt> <dd th:text="${account.email}">duncanbandojo@gmail.com</dd>
+            </dl>
+        </section>
+
+        <!-- Address Section -->
+        <section class="profile-section">
+            <div class="section-header">
+                <h2>Address</h2>
+                <a href="#" class="edit-link">Edit</a>
+            </div>
+            <div th:each="address : ${account.addresses}" class="address-box">
+                <p th:text="${address.phoneNumber}">09123456789</p>
+                <p th:text="${address.getFullAddress()}">Unit 4B Greenfield Residences, ...</p>
+                <div class="address-tags">
+                    <span class="tag-home">HOME</span>
+                    <span th:if="${address.isDefault()}" class="tag-default">Default Address</span>
+                </div>
+            </div>
+            <a href="#" class="edit-link" style="margin-top: 10px; display: inline-block;">Add new address</a>
+        </section>
+
+        <!-- Orders Section -->
+        <section class="profile-section">
+            <div class="section-header">
+                <h2>Orders</h2>
+            </div>
+            <div th:if="${hasOrders}">
+                <div class="order-card">
+                    <div class="order-header">
+                        <span class="order-header-info">Sta. Mesa • DALI Online</span>
+                        <span>Friday, October 8, 2025</span>
+                    </div>
+                    <div class="order-body">
+                        <p>3 products</p>
+                        <p>Total: <strong>₱750</strong></p>
+                    </div>
+                    <div class="order-footer">
+                        <a href="#" class="btn-track">Track Order</a>
+                    </div>
+                </div>
+            </div>
+            <div th:if="!${hasOrders}">
+                <p>You have no orders yet.</p>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

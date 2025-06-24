@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - DALI</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="auth-page-wrapper">
+    <div class="auth-card">
+        <!-- Image Panel -->
+        <div class="auth-image-panel">
+            <a th:href="@{/shop}" class="back-to-shop-btn">
+                <span><</span>   Back to shop
+            </a>
+            <img th:src="@{/images/login.png}" alt="Shopping cart with groceries">
+        </div>
+
+        <!-- Form Panel -->
+        <div class="auth-form-panel">
+            <h2>Sign up</h2>
+            <p class="sub-heading">
+                <br>Already have account? <a th:href="@{/login}">Login here</a>
+            </p>
+
+            <div th:if="${error}" class="auth-error" th:text="${error}">
+                Error message will go here.
+            </div>
+
+            <form th:action="@{/register}" th:object="${account}" method="post">
+                <span class="form-section-label">Personal Information</span>
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" th:field="*{firstName}" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" id="lastName" th:field="*{lastName}" required>
+                </div>
+                <div class="form-group">
+                    <label for="phoneNumber">Phone number</label>
+                    <input type="tel" id="phoneNumber" th:field="*{phoneNumber}" placeholder="PH (+63)">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" th:field="*{email}" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" th:field="*{passwordHash}" required>
+                </div>
+                <button type="submit" class="auth-btn">Next</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
