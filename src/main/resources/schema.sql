@@ -2,6 +2,7 @@
 
 -- Drop tables if they exist to ensure a clean slate on each run.
 -- This is useful for development.
+DROP TABLE IF EXISTS admin_accounts CASCADE;
 DROP TABLE IF EXISTS order_items CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
 DROP TABLE IF EXISTS cart_items CASCADE;
@@ -33,6 +34,13 @@ CREATE TABLE accounts (
                           account_email       VARCHAR(255) UNIQUE NOT NULL,
                           password_hash       VARCHAR(255) NOT NULL,
                           phone_number        VARCHAR(50)
+);
+
+CREATE TABLE admin_accounts (
+                                account_id      SERIAL PRIMARY KEY,
+                                store_id        INTEGER NOT NULL REFERENCES stores(store_id),
+                                account_email   VARCHAR(255) UNIQUE NOT NULL,
+                                password_hash   VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE addresses (

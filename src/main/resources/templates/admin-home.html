@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - DALI</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<header th:replace="~{fragments/admin-header :: header}"></header>
+<main class="container" style="padding-top: 40px; padding-bottom: 40px;">
+    <h1>Admin Dashboard</h1>
+    <p>Welcome to the DALI Admin Dashboard. Select an option from the header to get started.</p>
+</main>
+<footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

@@ -20,3 +20,10 @@ INSERT INTO products (product_name, product_description, product_price, product_
                                                                                                                        ('Fresh Chicken Drumsticks 1kg', 'Juicy and meaty, perfect for your favorite fried chicken recipe, grilling, or tinola. A family favorite.', 250.00, 'Chicken', 80, 'chicken-drumstick.png'),
                                                                                                                        ('Choice Ground Beef 500g', 'Versatile ground beef for making burgers, spaghetti sauce, or picadillo. Lean and full of flavor.', 275.00, 'Beef', 60, 'ground-beef.png'),
                                                                                                                        ('Whole Dressed Chicken (1.2kg)', 'A whole chicken ready for roasting, lechon manok style, or for a hearty chicken soup. A versatile centerpiece for any meal.', 290.00, 'Chicken', 30, 'whole-chicken.png');
+
+-- =================================================================
+--  Seed the 'admin_accounts' table
+-- =================================================================
+-- Password for this user is 'password'
+INSERT INTO admin_accounts (store_id, account_email, password_hash) VALUES
+    (1, 'admin@dali.com', '$2a$10$XAwzdPJuPap2hfdGXWuF0u/mM0rZ8PIEHox9ySOgXrBoP4JibYXPC');

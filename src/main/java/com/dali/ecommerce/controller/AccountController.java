@@ -8,6 +8,7 @@ import com.dali.ecommerce.service.AccountService;
 import com.dali.ecommerce.service.CartService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -37,7 +38,11 @@ public class AccountController {
 
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
-    public AccountController(AccountRepository accountRepository, AccountService accountService, OrderRepository orderRepository, UserDetailsService userDetailsService, CartService cartService) {
+    public AccountController(AccountRepository accountRepository,
+                             AccountService accountService,
+                             OrderRepository orderRepository,
+                             @Qualifier("customUserDetailsService") UserDetailsService userDetailsService,
+                             CartService cartService) {
         this.accountRepository = accountRepository;
         this.accountService = accountService;
         this.orderRepository = orderRepository;

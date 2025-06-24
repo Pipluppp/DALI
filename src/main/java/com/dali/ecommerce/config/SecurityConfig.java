@@ -1,8 +1,11 @@
 package com.dali.ecommerce.config;
 
+import com.dali.ecommerce.service.AdminUserDetailsService;
 import com.dali.ecommerce.service.CustomUserDetailsService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -17,10 +20,17 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final AuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    private final AdminUserDetailsService adminUserDetailsService;
+    private final AuthenticationSuccessHandler adminAuthenticationSuccessHandler;
 
-    public SecurityConfig(CustomUserDetailsService customUserDetailsService, AuthenticationSuccessHandler customAuthenticationSuccessHandler) {
+    public SecurityConfig(CustomUserDetailsService customUserDetailsService,
+                          @Qualifier("customAuthenticationSuccessHandler") AuthenticationSuccessHandler customAuthenticationSuccessHandler,
+                          AdminUserDetailsService adminUserDetailsService,
+                          @Qualifier("adminAuthenticationSuccessHandler") AuthenticationSuccessHandler adminAuthenticationSuccessHandler) {
         this.customUserDetailsService = customUserDetailsService;
         this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
+        this.adminUserDetailsService = adminUserDetailsService;
+        this.adminAuthenticationSuccessHandler = adminAuthenticationSuccessHandler;
     }
 
     @Bean
@@ -29,7 +39,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
+    public DaoAuthenticationProvider customerAuthenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(customUserDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
@@ -37,26 +47,63 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public DaoAuthenticationProvider adminAuthenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(adminUserDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    // The @Bean definition for the handler was removed from here.
+
+    @Bean
+    @Order(1)
+    public SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/admin/**")
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/admin/login").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/admin/login")
+                        .loginProcessingUrl("/admin/login")
+                        .successHandler(this.adminAuthenticationSuccessHandler) // Use the injected field
+                        .failureUrl("/admin/login?error=true")
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/admin/logout")
+                        .logoutSuccessUrl("/admin/login")
+                        .permitAll()
+                )
+                .authenticationProvider(adminAuthenticationProvider());
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
+    public SecurityFilterChain customerFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/register", "/shop/**", "/stores/**", "/product/**", "/css/**", "/images/**", "/login", "/cart/**").permitAll()
+                        .requestMatchers("/", "/register", "/shop/**", "/stores/**", "/product/**", "/css/**", "/images/**", "/login", "/cart/**", "/admin/login").permitAll()
                         .requestMatchers("/profile", "/checkout/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
-                        .successHandler(customAuthenticationSuccessHandler) // Use custom handler
+                        .successHandler(this.customAuthenticationSuccessHandler) // Use the injected field
                         .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/")
                         .permitAll()
-                );
-
-        http.authenticationProvider(authenticationProvider());
+                )
+                .authenticationProvider(customerAuthenticationProvider());
 
         return http.build();
     }

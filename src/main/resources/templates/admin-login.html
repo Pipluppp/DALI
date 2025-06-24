@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Login - DALI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #b21984;
+            font-family: 'Poppins', sans-serif;
+        }
+        .admin-login-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .admin-login-card {
+            display: flex;
+            max-width: 800px;
+            width: 100%;
+            background-color: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            overflow: hidden;
+        }
+        .admin-image-panel {
+            flex-basis: 45%;
+            padding: 24px;
+            background: linear-gradient(160deg, #fef08a, #f9a8d4, #a5f3fc); /* Yellow, Pink, Teal */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .admin-image-panel .back-to-shop-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            border: 1px solid rgba(0,0,0,0.1);
+            text-decoration: none;
+            color: #1e293b;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(4px);
+            font-size: 0.875rem;
+        }
+        .admin-image-panel .cart-image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* We assume an image exists at /images/mini-cart.png */
+        .admin-image-panel .cart-image-container img {
+            max-width: 90%;
+            height: auto;
+            filter: drop-shadow(0 10px 8px rgba(0,0,0,0.2));
+        }
+        .admin-form-panel {
+            flex-basis: 55%;
+            padding: 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .admin-form-panel h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #111827;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .form-group { margin-bottom: 1rem; }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        .form-control::placeholder {
+            color: #9ca3af;
+        }
+        .forgot-password-link {
+            display: block;
+            text-align: right;
+            font-size: 0.875rem;
+            color: #6b7280;
+            text-decoration: none;
+            margin-top: -8px; /* Pull it up a bit */
+            margin-bottom: 24px;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background-color: #b21984;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .login-btn:hover { background-color: #b21984; }
+        .auth-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+<div class="admin-login-wrapper">
+    <div class="admin-login-card">
+        <!-- Image Panel -->
+        <div class="admin-image-panel">
+            <a th:href="@{/}" class="back-to-shop-btn">
+                <span><</span> Back to shop
+            </a>
+            <div class="cart-image-container">
+                <img th:src="@{/images/login.png}" alt="Shopping Cart">
+            </div>
+            <div></div> <!-- Spacer -->
+        </div>
+
+        <!-- Form Panel -->
+        <div class="admin-form-panel">
+            <h2>Admin Login</h2>
+            <div th:if="${param.error}" class="auth-error">
+                Invalid credentials provided.
+            </div>
+            <form th:action="@{/admin/login}" method="post">
+                <div class="form-group">
+                    <input type="text" id="username" name="username" placeholder="Email" class="form-control" required autofocus>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="storeId" name="storeId" placeholder="Store ID" class="form-control">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="password" name="password" placeholder="Password" class="form-control" required>
+                </div>
+                <a href="#" class="forgot-password-link">Forgot Password?</a>
+                <button type="submit" class="login-btn">Login</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
