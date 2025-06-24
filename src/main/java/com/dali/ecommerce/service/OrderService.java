@@ -6,4 +6,5 @@ import java.util.Map;
 
 public interface OrderService {
     Order createOrder(String username, Map<String, Object> checkoutDetails);
+    Order findOrderById(Integer orderId);
 }

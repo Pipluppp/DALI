@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Order #' + ${order.orderId} + ' - DALI'">Order Details</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<header class="header" th:replace="~{fragments/header :: header}"></header>
+
+<main class="order-detail-page">
+    <div class="container" th:object="${order}">
+        <a th:href="@{/profile}" class="order-detail-back-link">
+            <span>←</span>  Back to all orders
+        </a>
+        <div class="order-detail-card">
+            <div class="order-detail-header">
+                <h1 th:text="'Order #' + *{orderId}">Order #2200113271</h1>
+                <p class="order-meta">
+                    <span>Online Purchase</span> •
+                    <span th:text="${#temporals.format(order.createdAt, 'EEEE, MMMM d, yyyy')}"></span> •
+                    <span th:text="*{account.getFullName()}"></span> •
+                    <span th:text="*{address.phoneNumber}"></span>
+                </p>
+            </div>
+
+            <div class="order-detail-grid">
+                <div class="payment-method-section">
+                    <h3>Payment Method</h3>
+                    <div class="payment-box">
+                        <img th:if="*{paymentMethod.contains('GCash')}" th:src="@{/images/gcash.png}" alt="GCash">
+                        <img th:if="*{paymentMethod.contains('COD')}" th:src="@{/images/cod.png}" alt="COD">
+                        <img th:if="*{paymentMethod.contains('Card')}" th:src="@{/images/credit-card.png}" alt="Card">
+                        <span th:text="*{paymentMethod}">GCash e-Wallet</span>
+                    </div>
+                </div>
+                <div class="order-summary-section">
+                    <h3>Order Summary</h3>
+                    <div class="summary-details">
+                        <!-- Using ₱ for the Philippine Peso Symbol -->
+                        <div class="summary-line"><span>Subtotal</span> <span th:text="'₱' + ${#numbers.formatDecimal(order.getSubtotal(), 0, 'COMMA', 0, 'POINT')}"></span></div>
+                        <div class="summary-line"><span>Discount</span> <span>₱0</span></div>
+                        <div class="summary-line"><span>Shipping</span> <span th:text="'₱' + ${#numbers.formatDecimal(order.getShippingFee(), 0, 'COMMA', 0, 'POINT')}"></span></div>
+                        <div class="summary-line total"><span>Total</span> <span th:text="'₱' + ${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')}"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="order-status-section">
+                <h3>Order Status</h3>
+                <div class="status-display">
+                    <span class="status-dot" th:classappend="*{status.toLowerCase()}"></span>
+                    <span th:text="*{status}">Processing</span>
+                </div>
+            </div>
+
+            <div class="order-products-section">
+                <h3>Products</h3>
+                <div class="product-list-header">
+                    <div class="product-col"></div>
+                    <div>Price</div>
+                    <div>Quantity</div>
+                    <div>Total Price</div>
+                </div>
+                <div class="product-list-item" th:each="item : *{orderItems}">
+                    <div class="product-col">
+                        <img th:src="@{'/images/products/' + ${item.product.image}}">
+                        <span th:text="${item.product.name}"></span>
+                    </div>
+                    <div th:text="'₱' + ${#numbers.formatDecimal(item.product.price, 0, 'COMMA', 0, 'POINT')}"></div>
+                    <div th:text="${item.quantity}"></div>
+                    <div th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 0, 'COMMA', 0, 'POINT')}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

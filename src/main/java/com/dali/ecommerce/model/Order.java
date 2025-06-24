@@ -44,7 +44,8 @@ public class Order {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    // Change FetchType to EAGER and add orphanRemoval
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private List<OrderItem> orderItems;
 
     @PrePersist
@@ -57,6 +58,29 @@ public class Order {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    // Add these transient helper methods
+    @Transient
+    public double getSubtotal() {
+        if (orderItems == null) {
+            return 0.0;
+        }
+        return orderItems.stream()
+                .mapToDouble(OrderItem::getSubtotal)
+                .sum();
+    }
+
+    @Transient
+    public double getShippingFee() {
+        // This is a calculated value based on what's stored
+        if (totalPrice == null) {
+            return 0.0;
+        }
+        double subtotal = getSubtotal();
+        // Ensure shipping isn't negative if there are rounding issues
+        return Math.max(0, totalPrice - subtotal);
+    }
+
 
     // Getters and Setters
     public Integer getOrderId() { return orderId; }

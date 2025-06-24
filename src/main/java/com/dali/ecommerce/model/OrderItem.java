@@ -16,12 +16,21 @@ public class OrderItem {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    // Change FetchType to EAGER
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     @Column(nullable = false)
     private int quantity;
+
+    @Transient
+    public double getSubtotal() {
+        if (product != null && product.getPrice() != null) {
+            return product.getPrice() * quantity;
+        }
+        return 0.0;
+    }
 
     // Getters and Setters
     public Integer getOrderItemId() { return orderItemId; }

@@ -98,7 +98,7 @@
                         <p>Total: <strong th:text="'₱' + ${#numbers.formatDecimal(order.totalPrice, 1, 2)}"></strong></p>
                     </div>
                     <div class="order-footer">
-                        <a href="#" class="btn-track">Track Order</a>
+                        <a th:href="@{/order/{id}(id=${order.orderId})}" class="btn-track">Track Order</a>
                     </div>
                 </div>
             </div>

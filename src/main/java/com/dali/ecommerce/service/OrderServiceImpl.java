@@ -48,10 +48,10 @@ public class OrderServiceImpl implements OrderService {
         order.setAddress(address);
         order.setDeliveryMethod((String) checkoutDetails.get("deliveryMethod"));
         order.setPaymentMethod((String) checkoutDetails.get("paymentMethod"));
-        order.setStatus("Pending");
+        order.setStatus("Processing");
 
         double subtotal = cartItems.stream().mapToDouble(CartItem::getSubtotal).sum();
-        double shippingFee = 50.0; // Example shipping fee
+        double shippingFee = 100.0; // Updated to match design
         order.setTotalPrice(subtotal + shippingFee);
 
         Order savedOrder = orderRepository.save(order);
@@ -81,5 +81,11 @@ public class OrderServiceImpl implements OrderService {
         cartItemRepository.deleteByAccountAccountId(account.getAccountId());
 
         return savedOrder;
+    }
+
+    @Override
+    public Order findOrderById(Integer orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
     }
 }
