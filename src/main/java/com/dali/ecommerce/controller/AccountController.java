@@ -5,8 +5,18 @@ import com.dali.ecommerce.model.Order;
 import com.dali.ecommerce.repository.AccountRepository;
 import com.dali.ecommerce.repository.OrderRepository;
 import com.dali.ecommerce.service.AccountService;
+import com.dali.ecommerce.service.CartService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,11 +32,17 @@ public class AccountController {
     private final AccountRepository accountRepository;
     private final AccountService accountService;
     private final OrderRepository orderRepository;
+    private final UserDetailsService userDetailsService;
+    private final CartService cartService;
 
-    public AccountController(AccountRepository accountRepository, AccountService accountService, OrderRepository orderRepository) {
+    private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
+
+    public AccountController(AccountRepository accountRepository, AccountService accountService, OrderRepository orderRepository, UserDetailsService userDetailsService, CartService cartService) {
         this.accountRepository = accountRepository;
         this.accountService = accountService;
         this.orderRepository = orderRepository;
+        this.userDetailsService = userDetailsService;
+        this.cartService = cartService;
     }
 
     @GetMapping("/register")
@@ -36,15 +52,37 @@ public class AccountController {
     }
 
     @PostMapping("/register")
-    public String registerUserAccount(@ModelAttribute("account") Account account, RedirectAttributes redirectAttributes) {
+    public String registerUserAccount(@ModelAttribute("account") Account account,
+                                      HttpServletRequest request,
+                                      HttpServletResponse response,
+                                      RedirectAttributes redirectAttributes) {
+        Account registeredUser;
         try {
-            accountService.registerNewUser(account);
+            registeredUser = accountService.registerNewUser(account);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/register";
         }
-        redirectAttributes.addFlashAttribute("success", "Registration successful! Please log in.");
-        return "redirect:/login";
+
+        // Automatically log the user in after successful registration
+        try {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(registeredUser.getEmail());
+            Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
+            SecurityContextHolder.setContext(context);
+            securityContextRepository.saveContext(context, request, response);
+
+            // Merge the session cart with the new user's DB cart
+            cartService.mergeSessionCartWithDbCart(request.getSession(), registeredUser.getEmail());
+
+            // Redirect to home page as a logged-in user
+            return "redirect:/";
+        } catch (Exception e) {
+            // If auto-login fails for any reason, fall back to the old flow
+            redirectAttributes.addFlashAttribute("success", "Registration successful! Please log in.");
+            return "redirect:/login";
+        }
     }
 
     @GetMapping("/login")

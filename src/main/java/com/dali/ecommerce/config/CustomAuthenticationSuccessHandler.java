@@ -17,22 +17,18 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
 
     public CustomAuthenticationSuccessHandler(CartService cartService) {
         this.cartService = cartService;
+        // Set the default URL to redirect to after a successful login if no saved request is found.
+        super.setDefaultTargetUrl("/");
     }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws ServletException, IOException {
-        // Merge session cart with DB cart
+        // Our custom logic: Merge session cart with the user's DB cart.
         cartService.mergeSessionCartWithDbCart(request.getSession(), authentication.getName());
 
-        // Check if the original destination was the cart or checkout
-        String targetUrl = getTargetUrlParameter();
-        if (targetUrl != null && (request.getRequestURI().contains("/cart") || request.getRequestURI().contains("/checkout"))) {
-            clearAuthenticationAttributes(request);
-            getRedirectStrategy().sendRedirect(request, response, "/cart");
-            return;
-        }
-
-        // Default behavior (e.g., redirect to home or saved request)
+        // Let the parent class handle the redirection. It will redirect to the original
+        // requested URL if one was saved, or to the default target URL ("/") otherwise.
+        // This is a much more robust and standard way to handle login redirection.
         super.onAuthenticationSuccess(request, response, authentication);
     }
 }
