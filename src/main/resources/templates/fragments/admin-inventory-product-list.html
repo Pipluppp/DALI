@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- This is the fragment that will be updated by HTMX -->
+<div th:fragment="product-list-fragment" class="product-grid">
+    <div th:each="product : ${products}" class="product-card">
+        <a class="product-card-body" th:href="@{/admin/product/{id}(id=${product.id})}">
+            <div class="product-image-container">
+                <img th:src="@{'/images/products/' + ${product.image}}" th:alt="${product.name}">
+            </div>
+            <div class="product-card-info">
+                <p class="product-card-category" th:text="${product.category}">CATEGORY</p>
+                <h3 class="product-card-name" th:text="${product.name}">Product Name</h3>
+                <p class="product-price" th:text="'Stock: ' + ${product.productQuantity}">Stock: 55</p>
+            </div>
+        </a>
+        <div class="product-card-actions">
+            <form th:action="@{/admin/inventory/update}" method="post" class="inventory-update-form">
+                <input type="hidden" name="productId" th:value="${product.id}" />
+                <input type="number" name="quantity" th:value="${product.productQuantity}" min="0" class="stock-input">
+                <button type="submit" class="update-stock-btn">Update</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

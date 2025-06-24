@@ -13,10 +13,11 @@
 <header th:replace="~{fragments/admin-header :: header}"></header>
 
 <main class="product-detail-container container">
-    <div style="width:100%; position: absolute; top: 100px; left: 0; padding: 0 20px;">
-        <!-- CORRECTED: Access flash attributes directly from the model -->
-        <div th:if="${successMessage}" class="auth-success" th:text="${successMessage}"></div>
-        <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}"></div>
+<div style="width:100%; position: absolute; top: 100px; left: 0; padding: 0 20px;">
+        <div th:if="${session.successMessage}" class="auth-success" th:text="${session.successMessage}"></div>
+        <div th:if="${session.errorMessage}" class="auth-error" th:text="${session.errorMessage}"></div>
+        <span th:text="${#session.removeAttribute('successMessage')}" style="display:none;"></span>
+        <span th:text="${#session.removeAttribute('errorMessage')}" style="display:none;"></span>
     </div>
 
     <div class="product-detail-image">

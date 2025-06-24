@@ -2,18 +2,68 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Inventory Management - DALI</title>
+    <title>Inventory - DALI Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.5/dist/htmx.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+
 <header th:replace="~{fragments/admin-header :: header}"></header>
-<main class="container" style="padding-top: 40px; padding-bottom: 40px;">
-    <h1>Inventory</h1>
-    <p>This page will be used to manage product inventory.</p>
-</main>
+
+<!-- The form now controls the HTMX requests for both search and filtering -->
+<form class="shop-container container"
+      hx-get="/admin/inventory/products"
+      hx-trigger="keyup changed delay:200ms from:#search-input, change from:[name='category']"
+      hx-target="#product-grid-results"
+      hx-swap="innerHTML">
+
+    <!-- Filter Sidebar -->
+    <aside class="filter-sidebar">
+        <h4>Filters</h4>
+        <div class="filter-group">
+            <h5>CATEGORY</h5>
+            <ul>
+                <!-- "All" option -->
+                <li>
+                    <input type="radio" name="category" value="" id="cat-all" checked="checked">
+                    <label for="cat-all">All</label>
+                </li>
+                <!-- Category options from the model -->
+                <li th:each="cat, iterStat : ${categories}">
+                    <input type="radio" name="category" th:value="${cat}" th:id="'cat-' + ${iterStat.index}">
+                    <label th:for="'cat-' + ${iterStat.index}" th:text="${cat}">Category Name</label>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="product-grid-container">
+        <section class="search-banner" style="background-color: #86198f;"> <!-- Admin color -->
+            <!-- CORRECTED: Access flash attributes directly from the model -->
+            <div th:if="${successMessage}" class="auth-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}"></div>
+
+            <input type="search"
+                   id="search-input"
+                   name="query"
+                   class="main-search-input"
+                   placeholder="Search products..."
+            >
+        </section>
+
+        <!-- Product Grid Results -->
+        <div id="product-grid-results">
+            <!-- The initial product list is loaded via a fragment -->
+            <div th:replace="~{fragments/admin-inventory-product-list :: product-list-fragment}"></div>
+        </div>
+    </main>
+</form>
+
 <footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
+
 </body>
 </html>

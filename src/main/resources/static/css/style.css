@@ -875,3 +875,38 @@ body {
 .product-list-item .product-col {
     text-align: left;
 }
+
+/* =================================
+   13. Admin Inventory Page Styles (NEW)
+   ================================= */
+.inventory-update-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.stock-input {
+    width: 70px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+}
+.update-stock-btn {
+    flex-grow: 1;
+    padding: 9px;
+    background: #86198f; /* Admin theme purple */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.update-stock-btn:hover {
+    background: #701a75;
+}
+.product-stock-level {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+}
