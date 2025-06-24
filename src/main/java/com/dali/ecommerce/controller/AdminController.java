@@ -1,8 +1,13 @@
+// DALI/src/main/java/com/dali/ecommerce/controller/AdminController.java
 package com.dali.ecommerce.controller;
 
+import com.dali.ecommerce.model.Order;
 import com.dali.ecommerce.model.Product;
+import com.dali.ecommerce.repository.OrderRepository;
 import com.dali.ecommerce.repository.ProductRepository;
+import com.dali.ecommerce.service.OrderService;
 import com.dali.ecommerce.service.ProductService;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -17,10 +22,15 @@ public class AdminController {
 
     private final ProductRepository productRepository;
     private final ProductService productService;
+    private final OrderRepository orderRepository;
+    private final OrderService orderService;
 
-    public AdminController(ProductRepository productRepository, ProductService productService) {
+
+    public AdminController(ProductRepository productRepository, ProductService productService, OrderRepository orderRepository, OrderService orderService) {
         this.productRepository = productRepository;
         this.productService = productService;
+        this.orderRepository = orderRepository;
+        this.orderService = orderService;
     }
 
     @GetMapping("/login")
@@ -91,7 +101,28 @@ public class AdminController {
 
 
     @GetMapping("/orders")
-    public String showOrdersPage() {
+    public String showOrdersPage(Model model) {
+        List<Order> orders = orderRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+        model.addAttribute("orders", orders);
         return "admin-orders";
+    }
+
+    @GetMapping("/orders/search")
+    public String searchOrders(@RequestParam(value = "query", required = false) String query, Model model) {
+        List<Order> orders;
+        if (query == null || query.trim().isEmpty()) {
+            orders = orderRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+        } else {
+            orders = orderRepository.searchOrders(query.trim());
+        }
+        model.addAttribute("orders", orders);
+        return "fragments/admin-order-list :: order-list-fragment";
+    }
+
+    @GetMapping("/order/{id}")
+    public String adminOrderDetail(@PathVariable("id") Integer id, Model model) {
+        Order order = orderService.findOrderById(id);
+        model.addAttribute("order", order);
+        return "admin-order-detail";
     }
 }

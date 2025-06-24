@@ -26,4 +26,5 @@ INSERT INTO products (product_name, product_description, product_price, product_
 -- =================================================================
 -- Password for this user is 'password'
 INSERT INTO admin_accounts (store_id, account_email, password_hash) VALUES
-    (1, 'admin@dali.com', '$2a$10$XAwzdPJuPap2hfdGXWuF0u/mM0rZ8PIEHox9ySOgXrBoP4JibYXPC');
+    (1, 'admin@dali.com', '$2a$10$XAwzdPJuPap2hfdGXWuF0u/mM0rZ8PIEHox9ySOgXrBoP4JibYXPC'),
+    (2, 'admin2@dali.com', '$2a$10$XAwzdPJuPap2hfdGXWuF0u/mM0rZ8PIEHox9ySOgXrBoP4JibYXPC');

@@ -2,7 +2,8 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Order Management - DALI</title>
+    <title>Order Management - DALI Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.5/dist/htmx.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,10 +11,29 @@
 </head>
 <body>
 <header th:replace="~{fragments/admin-header :: header}"></header>
-<main class="container" style="padding-top: 40px; padding-bottom: 40px;">
-    <h1>Orders</h1>
-    <p>This page will be used to track and manage customer orders.</p>
+
+<main class="container admin-orders-page-container">
+    <div class="admin-orders-header">
+        <h1 class="page-title">Track Orders</h1>
+        <div class="search-bar-container">
+            <input type="search"
+                   name="query"
+                   class="admin-order-search"
+                   placeholder="Search by Order ID or Customer Name"
+                   hx-get="/admin/orders/search"
+                   hx-trigger="keyup changed delay:200ms"
+                   hx-target="#order-grid-results"
+                   hx-swap="innerHTML">
+        </div>
+    </div>
+
+    <!-- This div is the target for HTMX updates -->
+    <div id="order-grid-results">
+        <!-- The initial order list is loaded via this fragment -->
+        <div th:replace="~{fragments/admin-order-list :: order-list-fragment}"></div>
+    </div>
 </main>
+
 <footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

@@ -876,6 +876,87 @@ body {
     text-align: left;
 }
 /* =================================
+   13. Admin Inventory & Order Page Styles (NEW)
+   ================================= */
+.inventory-update-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.stock-input {
+    width: 70px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+}
+.update-stock-btn {
+    flex-grow: 1;
+    padding: 9px;
+    background: #b21984;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.update-stock-btn:hover {
+    background: #b21984;
+}
+.product-stock-level {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.admin-order-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.admin-order-table th, .admin-order-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+.admin-order-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #666;
+}
+.admin-order-table tr:hover {
+    background-color: #fafafa;
+}
+.order-status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+.status-processing { background-color: #fff0c2; color: #7a5a00; }
+.status-shipped { background-color: #d1ecf1; color: #0c5460; }
+.status-delivered { background-color: #d4edda; color: #155724; }
+.status-cancelled { background-color: #f8d7da; color: #721c24; }
+.view-order-link {
+    text-decoration: none;
+    color: #b21984;
+    font-weight: 600;
+    padding: 8px 16px;
+    border: 1px solid #b21984;
+    border-radius: 20px;
+    transition: all 0.2s ease-in-out;
+}
+.view-order-link:hover {
+    background-color: #b21984;
+    color: #fff;
+}
+/* =================================
    13. Admin Inventory Page Styles (NEW)
    ================================= */
 .inventory-update-form {
@@ -908,4 +989,91 @@ body {
     font-weight: 600;
     color: #333;
     margin-bottom: 20px;
+}
+
+/* =================================
+   14. Admin Orders Page Styles (NEW)
+   ================================= */
+.admin-orders-page-container {
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+.admin-orders-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+.page-title {
+    font-size: 2.5rem;
+    color: #b21984;
+    font-weight: 700;
+}
+.search-bar-container {
+    width: 350px;
+}
+.admin-order-search {
+    width: 100%;
+    padding: 12px 20px;
+    border: 1px solid #ddd;
+    border-radius: 30px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+.admin-order-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 25px;
+}
+.admin-order-card {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+    padding: 25px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 20px;
+    align-items: center;
+}
+.order-card-icon img {
+    width: 48px;
+    height: 48px;
+}
+.order-card-details h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+.order-card-meta {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 8px;
+}
+.order-card-price {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #b21984;
+}
+.order-card-footer {
+    grid-column: 1 / -1; /* Span full width */
+    padding-top: 20px;
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.order-card-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+.no-orders-found {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 50px;
+    background-color: #fff;
+    border-radius: 12px;
+    color: #666;
 }
