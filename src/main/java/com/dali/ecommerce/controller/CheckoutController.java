@@ -61,6 +61,7 @@ public class CheckoutController {
     @GetMapping("/address")
     public String selectAddress(Model model, Authentication authentication, HttpSession session) {
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow();
+        model.addAttribute("account", account);
         model.addAttribute("addresses", account.getAddresses());
         model.addAttribute("step", "address");
         populateCheckoutModel(model, authentication, session);

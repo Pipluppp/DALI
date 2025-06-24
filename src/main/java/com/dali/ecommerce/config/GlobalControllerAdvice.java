@@ -2,6 +2,7 @@ package com.dali.ecommerce.config;
 
 import com.dali.ecommerce.service.CartService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -19,9 +20,13 @@ public class GlobalControllerAdvice {
     @ModelAttribute("cartItemCount")
     public int getCartItemCount(HttpSession session) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
+
+        // A more robust check to distinguish a real user from an anonymous one.
+        if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)) {
             return cartService.getCartItemCount(authentication, session);
         }
+
+        // For anonymous users, calculate cart count from session.
         return cartService.getCartItemCount(null, session);
     }
 }

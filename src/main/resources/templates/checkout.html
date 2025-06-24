@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Checkout - DALI</title>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.5/dist/htmx.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,27 +21,52 @@
             </div>
         </div>
 
-        <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}">Error message</div>
+        <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}"></div>
 
         <!-- Address Step -->
         <div th:if="${step == 'address'}" class="checkout-content">
-            <h2>Shipping Information</h2>
+            <div class="checkout-section-header">
+                <h2>Shipping Information</h2>
+                <p class="sub-header">Select Saved Addresses</p>
+            </div>
             <form th:action="@{/checkout/address}" method="post">
                 <div class="address-selection">
+                    <div th:if="${addresses.isEmpty()}" class="no-address-notice">
+                        <p>You have no saved addresses. Please add one below to continue.</p>
+                    </div>
                     <div th:each="addr : ${addresses}" class="address-option">
+                        <!-- FIX: Use bracket notation for map access -->
                         <input type="radio" name="addressId" th:value="${addr.addressId}" th:id="'addr-' + ${addr.addressId}" required
-                               th:checked="${checkoutDetails.addressId == addr.addressId or (addr.isDefault() and checkoutDetails.addressId == null)}">
+                               th:checked="${checkoutDetails['addressId'] == addr.addressId or (addr.isDefault() and checkoutDetails['addressId'] == null and !addresses.isEmpty())}">
                         <label th:for="'addr-' + ${addr.addressId}">
-                            <strong th:text="${session.SPRING_SECURITY_CONTEXT.authentication.principal.username}"></strong>
-                            <span th:text="' | ' + ${addr.phoneNumber}"></span>
-                            <p th:text="${addr.getFullAddress()}"></p>
-                            <span th:if="${addr.isDefault()}" class="tag-default">Default</span>
+                            <div class="address-line-1">
+                                <div>
+                                    <strong th:text="${account.getFullName()}"></strong>
+                                    <span th:text="${addr.phoneNumber}"></span>
+                                </div>
+                                <a href="#" class="edit-link-inline">Edit</a>
+                            </div>
+                            <p class="address-line-2" th:text="${addr.getFullAddress()}"></p>
+                            <div class="address-tags">
+                                <span class="tag-home">HOME</span>
+                                <span th:if="${addr.isDefault()}" class="tag-default">Default Address</span>
+                            </div>
                         </label>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary checkout-btn">Proceed</button>
+
+                <!-- HTMX Target & Trigger -->
+                <div id="add-address-target">
+                    <a hx-get="/address/new"
+                       hx-target="#add-address-target"
+                       hx-swap="innerHTML"
+                       class="add-new-address-link">Add new address +</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary checkout-btn" th:disabled="${addresses.isEmpty()}">Proceed</button>
             </form>
         </div>
+
 
         <!-- Shipping Step -->
         <div th:if="${step == 'shipping'}" class="checkout-content">
@@ -48,24 +74,27 @@
             <form th:action="@{/checkout/shipping}" method="post">
                 <div class="delivery-selection">
                     <div class="delivery-option">
+                        <!-- FIX: Use bracket notation for map access -->
                         <input type="radio" name="deliveryMethod" value="Standard Delivery" id="del-standard" required
-                               th:checked="${checkoutDetails.deliveryMethod == 'Standard Delivery'}">
+                               th:checked="${checkoutDetails['deliveryMethod'] == 'Standard Delivery'}">
                         <label for="del-standard">
                             <strong>Standard Delivery</strong>
                             <p>Within the day</p>
                         </label>
                     </div>
                     <div class="delivery-option">
+                        <!-- FIX: Use bracket notation for map access -->
                         <input type="radio" name="deliveryMethod" value="Priority Delivery" id="del-priority" required
-                               th:checked="${checkoutDetails.deliveryMethod == 'Priority Delivery'}">
+                               th:checked="${checkoutDetails['deliveryMethod'] == 'Priority Delivery'}">
                         <label for="del-priority">
                             <strong>Priority Delivery</strong>
                             <p>Within hours</p>
                         </label>
                     </div>
                     <div class="delivery-option">
+                        <!-- FIX: Use bracket notation for map access -->
                         <input type="radio" name="deliveryMethod" value="Pickup Delivery" id="del-pickup" required
-                               th:checked="${checkoutDetails.deliveryMethod == 'Pickup Delivery'}">
+                               th:checked="${checkoutDetails['deliveryMethod'] == 'Pickup Delivery'}">
                         <label for="del-pickup">
                             <strong>Pickup Delivery</strong>
                             <p>Pickup after 2-3 hours</p>
@@ -82,8 +111,9 @@
             <form th:action="@{/checkout/payment}" method="post">
                 <div class="payment-selection">
                     <div class="payment-option">
+                        <!-- FIX: Use bracket notation for map access -->
                         <input type="radio" name="paymentMethod" value="Cash on delivery (COD)" id="pay-cod" required
-                               th:checked="${checkoutDetails.paymentMethod == 'Cash on delivery (COD)'}">
+                               th:checked="${checkoutDetails['paymentMethod'] == 'Cash on delivery (COD)'}">
                         <label for="pay-cod">
                             <img th:src="@{/images/cod.png}" alt="COD">
                             <div>
@@ -93,8 +123,9 @@
                         </label>
                     </div>
                     <div class="payment-option">
+                        <!-- FIX: Use bracket notation for map access -->
                         <input type="radio" name="paymentMethod" value="GCash e-Wallet" id="pay-gcash" required
-                               th:checked="${checkoutDetails.paymentMethod == 'GCash e-Wallet'}">
+                               th:checked="${checkoutDetails['paymentMethod'] == 'GCash e-Wallet'}">
                         <label for="pay-gcash">
                             <img th:src="@{/images/gcash.png}" alt="GCash">
                             <div>
@@ -104,8 +135,9 @@
                         </label>
                     </div>
                     <div class="payment-option">
+                        <!-- FIX: Use bracket notation for map access -->
                         <input type="radio" name="paymentMethod" value="Credit/Debit Card" id="pay-card" required
-                               th:checked="${checkoutDetails.paymentMethod == 'Credit/Debit Card'}">
+                               th:checked="${checkoutDetails['paymentMethod'] == 'Credit/Debit Card'}">
                         <label for="pay-card">
                             <img th:src="@{/images/credit-card.png}" alt="Card">
                             <div>
@@ -125,25 +157,25 @@
             <div th:each="item : ${cartItems}" class="cart-item-summary-row">
                 <img th:src="@{'/images/products/' + ${item.product.image}}">
                 <div class="item-details">
-                    <p class="name" th:text="${item.product.name}">Product Name</p>
-                    <p class="qty" th:text="'Qty: ' + ${item.quantity}">Qty: 1</p>
+                    <p class="name" th:text="${item.product.name}"></p>
+                    <p class="qty" th:text="'Qty: ' + ${item.quantity}"></p>
                 </div>
-                <p class="price" th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 2)}">₱199.00</p>
+                <p class="price" th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 2)}"></p>
             </div>
         </div>
         <hr>
         <div class="summary-row">
             <span>Subtotal</span>
-            <span th:text="'₱' + ${#numbers.formatDecimal(subtotal, 1, 2)}">₱650.00</span>
+            <span th:text="'₱' + ${#numbers.formatDecimal(subtotal, 1, 2)}"></span>
         </div>
         <div class="summary-row">
             <span>Shipping</span>
-            <span th:text="'₱' + ${#numbers.formatDecimal(shipping, 1, 2)}">₱50.00</span>
+            <span th:text="'₱' + ${#numbers.formatDecimal(shipping, 1, 2)}"></span>
         </div>
         <hr>
         <div class="summary-row total-row">
             <span>Total</span>
-            <span th:text="'₱' + ${#numbers.formatDecimal(total, 1, 2)}">₱700.00</span>
+            <span th:text="'₱' + ${#numbers.formatDecimal(total, 1, 2)}"></span>
         </div>
     </div>
 </div>

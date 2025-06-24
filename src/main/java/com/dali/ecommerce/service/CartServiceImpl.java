@@ -7,6 +7,7 @@ import com.dali.ecommerce.repository.AccountRepository;
 import com.dali.ecommerce.repository.CartItemRepository;
 import com.dali.ecommerce.repository.ProductRepository;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,11 +29,36 @@ public class CartServiceImpl implements CartService {
         this.accountRepository = accountRepository;
     }
 
+    /**
+     * Helper method to safely find an account by email.
+     * Returns an Optional, which is empty if the user is not found or the email is null.
+     */
+    private Optional<Account> findAccountByEmail(String email) {
+        if (email == null) {
+            return Optional.empty();
+        }
+        return accountRepository.findByEmail(email.trim());
+    }
+
+    /**
+     * Safely resolves the current user account from the Authentication object.
+     * Returns an empty Optional if the user is anonymous or not found in the database.
+     */
+    private Optional<Account> resolveAuthenticatedAccount(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() || (authentication instanceof AnonymousAuthenticationToken)) {
+            return Optional.empty();
+        }
+        return findAccountByEmail(authentication.getName());
+    }
+
     @Override
     @Transactional
     public void addToCart(Integer productId, int quantity, Authentication authentication, HttpSession session) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            Account account = getAccount(authentication.getName());
+        Optional<Account> accountOpt = resolveAuthenticatedAccount(authentication);
+
+        if (accountOpt.isPresent()) {
+            // DB-based cart for logged-in, existing user
+            Account account = accountOpt.get();
             Optional<CartItem> existingItem = cartItemRepository.findByAccountAccountIdAndProductId(account.getAccountId(), productId);
             if (existingItem.isPresent()) {
                 CartItem cartItem = existingItem.get();
@@ -47,6 +73,7 @@ public class CartServiceImpl implements CartService {
                 cartItemRepository.save(newItem);
             }
         } else {
+            // Session-based cart for anonymous or non-existent user
             Map<Integer, Integer> cart = getSessionCart(session);
             cart.put(productId, cart.getOrDefault(productId, 0) + quantity);
             session.setAttribute(SESSION_CART, cart);
@@ -55,9 +82,10 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public List<CartItem> getCartItems(Authentication authentication, HttpSession session) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            Account account = getAccount(authentication.getName());
-            return cartItemRepository.findByAccountAccountId(account.getAccountId());
+        Optional<Account> accountOpt = resolveAuthenticatedAccount(authentication);
+
+        if (accountOpt.isPresent()) {
+            return cartItemRepository.findByAccountAccountId(accountOpt.get().getAccountId());
         } else {
             Map<Integer, Integer> sessionCart = getSessionCart(session);
             return sessionCart.entrySet().stream()
@@ -81,9 +109,10 @@ public class CartServiceImpl implements CartService {
             removeFromCart(productId, authentication, session);
             return;
         }
-        if (authentication != null && authentication.isAuthenticated()) {
-            Account account = getAccount(authentication.getName());
-            cartItemRepository.findByAccountAccountIdAndProductId(account.getAccountId(), productId)
+
+        Optional<Account> accountOpt = resolveAuthenticatedAccount(authentication);
+        if (accountOpt.isPresent()) {
+            cartItemRepository.findByAccountAccountIdAndProductId(accountOpt.get().getAccountId(), productId)
                     .ifPresent(item -> {
                         item.setQuantity(quantity);
                         cartItemRepository.save(item);
@@ -100,9 +129,9 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public void removeFromCart(Integer productId, Authentication authentication, HttpSession session) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            Account account = getAccount(authentication.getName());
-            cartItemRepository.findByAccountAccountIdAndProductId(account.getAccountId(), productId)
+        Optional<Account> accountOpt = resolveAuthenticatedAccount(authentication);
+        if (accountOpt.isPresent()) {
+            cartItemRepository.findByAccountAccountIdAndProductId(accountOpt.get().getAccountId(), productId)
                     .ifPresent(cartItemRepository::delete);
         } else {
             Map<Integer, Integer> cart = getSessionCart(session);
@@ -114,9 +143,9 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public void clearCart(Authentication authentication, HttpSession session) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            Account account = getAccount(authentication.getName());
-            cartItemRepository.deleteByAccountAccountId(account.getAccountId());
+        Optional<Account> accountOpt = resolveAuthenticatedAccount(authentication);
+        if (accountOpt.isPresent()) {
+            cartItemRepository.deleteByAccountAccountId(accountOpt.get().getAccountId());
         } else {
             session.removeAttribute(SESSION_CART);
         }
@@ -130,9 +159,10 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public int getCartItemCount(Authentication authentication, HttpSession session) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            Account account = getAccount(authentication.getName());
-            return cartItemRepository.findByAccountAccountId(account.getAccountId()).stream()
+        Optional<Account> accountOpt = resolveAuthenticatedAccount(authentication);
+
+        if (accountOpt.isPresent()) {
+            return cartItemRepository.findByAccountAccountId(accountOpt.get().getAccountId()).stream()
                     .mapToInt(CartItem::getQuantity)
                     .sum();
         } else {
@@ -146,7 +176,13 @@ public class CartServiceImpl implements CartService {
         Map<Integer, Integer> sessionCart = getSessionCart(session);
         if (sessionCart.isEmpty()) return;
 
-        Account account = getAccount(username);
+        Optional<Account> accountOpt = findAccountByEmail(username);
+        if (accountOpt.isEmpty()) {
+            // Should not happen in a normal login flow, but a good safeguard.
+            return;
+        }
+        Account account = accountOpt.get();
+
         sessionCart.forEach((productId, quantity) -> {
             Optional<CartItem> existingItem = cartItemRepository.findByAccountAccountIdAndProductId(account.getAccountId(), productId);
             if (existingItem.isPresent()) {
@@ -154,14 +190,13 @@ public class CartServiceImpl implements CartService {
                 dbItem.setQuantity(dbItem.getQuantity() + quantity); // Merge quantities
                 cartItemRepository.save(dbItem);
             } else {
-                Product product = productRepository.findById(productId).orElse(null);
-                if (product != null) {
+                productRepository.findById(productId).ifPresent(product -> {
                     CartItem newItem = new CartItem();
                     newItem.setAccount(account);
                     newItem.setProduct(product);
                     newItem.setQuantity(quantity);
                     cartItemRepository.save(newItem);
-                }
+                });
             }
         });
         session.removeAttribute(SESSION_CART);
@@ -174,10 +209,5 @@ public class CartServiceImpl implements CartService {
             session.setAttribute(SESSION_CART, cart);
         }
         return cart;
-    }
-
-    private Account getAccount(String email) {
-        return accountRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
     }
 }

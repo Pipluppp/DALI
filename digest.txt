@@ -13,26 +13,43 @@ Directory structure:
     │   │   │           └── ecommerce/
     │   │   │               ├── DaliApplication.java
     │   │   │               ├── config/
+    │   │   │               │   ├── CustomAuthenticationSuccessHandler.java
+    │   │   │               │   ├── GlobalControllerAdvice.java
     │   │   │               │   └── SecurityConfig.java
     │   │   │               ├── controller/
     │   │   │               │   ├── AccountController.java
+    │   │   │               │   ├── AddressController.java
+    │   │   │               │   ├── CartController.java
+    │   │   │               │   ├── CheckoutController.java
     │   │   │               │   ├── HomeController.java
     │   │   │               │   ├── ProductController.java
     │   │   │               │   └── StoreController.java
     │   │   │               ├── model/
     │   │   │               │   ├── Account.java
     │   │   │               │   ├── Address.java
+    │   │   │               │   ├── CartItem.java
+    │   │   │               │   ├── Order.java
+    │   │   │               │   ├── OrderItem.java
     │   │   │               │   ├── Product.java
     │   │   │               │   └── Store.java
     │   │   │               ├── repository/
     │   │   │               │   ├── AccountRepository.java
     │   │   │               │   ├── AddressRepository.java
+    │   │   │               │   ├── CartItemRepository.java
+    │   │   │               │   ├── OrderItemRepository.java
+    │   │   │               │   ├── OrderRepository.java
     │   │   │               │   ├── ProductRepository.java
     │   │   │               │   └── StoreRepository.java
     │   │   │               └── service/
     │   │   │                   ├── AccountService.java
     │   │   │                   ├── AccountServiceImpl.java
-    │   │   │                   └── CustomUserDetailsService.java
+    │   │   │                   ├── AddressService.java
+    │   │   │                   ├── AddressServiceImpl.java
+    │   │   │                   ├── CartService.java
+    │   │   │                   ├── CartServiceImpl.java
+    │   │   │                   ├── CustomUserDetailsService.java
+    │   │   │                   ├── OrderService.java
+    │   │   │                   └── OrderServiceImpl.java
     │   │   └── resources/
     │   │       ├── application.properties
     │   │       ├── data.sql
@@ -43,14 +60,18 @@ Directory structure:
     │   │       │   └── images/
     │   │       │       └── products/
     │   │       └── templates/
+    │   │           ├── cart.html
+    │   │           ├── checkout.html
     │   │           ├── home.html
     │   │           ├── login.html
+    │   │           ├── order-success.html
     │   │           ├── product-detail.html
     │   │           ├── profile.html
     │   │           ├── register.html
     │   │           ├── shop.html
     │   │           ├── stores.html
     │   │           └── fragments/
+    │   │               ├── address-form.html
     │   │               ├── footer.html
     │   │               ├── header.html
     │   │               ├── product-list.html
@@ -675,6 +696,86 @@ public class DaliApplication {
 
 
 ================================================
+File: src/main/java/com/dali/ecommerce/config/CustomAuthenticationSuccessHandler.java
+================================================
+package com.dali.ecommerce.config;
+
+import com.dali.ecommerce.service.CartService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+
+@Component
+public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
+
+    private final CartService cartService;
+
+    public CustomAuthenticationSuccessHandler(CartService cartService) {
+        this.cartService = cartService;
+    }
+
+    @Override
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws ServletException, IOException {
+        // Merge session cart with DB cart
+        cartService.mergeSessionCartWithDbCart(request.getSession(), authentication.getName());
+
+        // Check if the original destination was the cart or checkout
+        String targetUrl = getTargetUrlParameter();
+        if (targetUrl != null && (request.getRequestURI().contains("/cart") || request.getRequestURI().contains("/checkout"))) {
+            clearAuthenticationAttributes(request);
+            getRedirectStrategy().sendRedirect(request, response, "/cart");
+            return;
+        }
+
+        // Default behavior (e.g., redirect to home or saved request)
+        super.onAuthenticationSuccess(request, response, authentication);
+    }
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/config/GlobalControllerAdvice.java
+================================================
+package com.dali.ecommerce.config;
+
+import com.dali.ecommerce.service.CartService;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ModelAttribute;
+
+@ControllerAdvice
+public class GlobalControllerAdvice {
+
+    private final CartService cartService;
+
+    public GlobalControllerAdvice(CartService cartService) {
+        this.cartService = cartService;
+    }
+
+    @ModelAttribute("cartItemCount")
+    public int getCartItemCount(HttpSession session) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // A more robust check to distinguish a real user from an anonymous one.
+        if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)) {
+            return cartService.getCartItemCount(authentication, session);
+        }
+
+        // For anonymous users, calculate cart count from session.
+        return cartService.getCartItemCount(null, session);
+    }
+}
+
+
+================================================
 File: src/main/java/com/dali/ecommerce/config/SecurityConfig.java
 ================================================
 package com.dali.ecommerce.config;
@@ -688,15 +789,18 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
+    private final AuthenticationSuccessHandler customAuthenticationSuccessHandler;
 
-    public SecurityConfig(CustomUserDetailsService customUserDetailsService) {
+    public SecurityConfig(CustomUserDetailsService customUserDetailsService, AuthenticationSuccessHandler customAuthenticationSuccessHandler) {
         this.customUserDetailsService = customUserDetailsService;
+        this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
     }
 
     @Bean
@@ -716,14 +820,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        // Add "/register" to the list of public URLs
-                        .requestMatchers("/", "/register", "/shop/**", "/stores/**", "/product/**", "/css/**", "/images/**", "/login").permitAll()
+                        .requestMatchers("/", "/register", "/shop/**", "/stores/**", "/product/**", "/css/**", "/images/**", "/login", "/cart/**").permitAll()
+                        .requestMatchers("/profile", "/checkout/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/", true)
+                        .successHandler(customAuthenticationSuccessHandler) // Use custom handler
                         .permitAll()
                 )
                 .logout(logout -> logout
@@ -745,7 +849,9 @@ File: src/main/java/com/dali/ecommerce/controller/AccountController.java
 package com.dali.ecommerce.controller;
 
 import com.dali.ecommerce.model.Account;
+import com.dali.ecommerce.model.Order;
 import com.dali.ecommerce.repository.AccountRepository;
+import com.dali.ecommerce.repository.OrderRepository;
 import com.dali.ecommerce.service.AccountService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -756,15 +862,19 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
+
 @Controller
 public class AccountController {
 
     private final AccountRepository accountRepository;
     private final AccountService accountService;
+    private final OrderRepository orderRepository;
 
-    public AccountController(AccountRepository accountRepository, AccountService accountService) {
+    public AccountController(AccountRepository accountRepository, AccountService accountService, OrderRepository orderRepository) {
         this.accountRepository = accountRepository;
         this.accountService = accountService;
+        this.orderRepository = orderRepository;
     }
 
     @GetMapping("/register")
@@ -800,10 +910,277 @@ public class AccountController {
         Account account = accountRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
+        List<Order> orders = orderRepository.findByAccountAccountIdOrderByCreatedAtDesc(account.getAccountId());
+
         model.addAttribute("account", account);
-        model.addAttribute("hasOrders", false); // Default to false for new users
+        model.addAttribute("orders", orders);
+        model.addAttribute("hasOrders", !orders.isEmpty());
 
         return "profile";
+    }
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/controller/AddressController.java
+================================================
+package com.dali.ecommerce.controller;
+
+import com.dali.ecommerce.model.Account;
+import com.dali.ecommerce.model.Address;
+import com.dali.ecommerce.repository.AccountRepository;
+import com.dali.ecommerce.service.AddressService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+
+@Controller
+public class AddressController {
+
+    private final AddressService addressService;
+    private final AccountRepository accountRepository;
+
+    public AddressController(AddressService addressService, AccountRepository accountRepository) {
+        this.addressService = addressService;
+        this.accountRepository = accountRepository;
+    }
+
+    @GetMapping("/address/new")
+    public String getAddressForm(Model model) {
+        model.addAttribute("address", new Address());
+        return "fragments/address-form :: address-form";
+    }
+
+    @PostMapping("/address/add")
+    public String addNewAddress(@ModelAttribute("address") Address address,
+                                Authentication authentication,
+                                @RequestHeader("Referer") String referer) {
+        String email = authentication.getName();
+        Account account = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        addressService.addAddress(account, address);
+
+        // Redirect back to the page that initiated the request
+        return "redirect:" + referer;
+    }
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/controller/CartController.java
+================================================
+package com.dali.ecommerce.controller;
+
+import com.dali.ecommerce.model.CartItem;
+import com.dali.ecommerce.service.CartService;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
+
+@Controller
+public class CartController {
+
+    private final CartService cartService;
+
+    public CartController(CartService cartService) {
+        this.cartService = cartService;
+    }
+
+    @GetMapping("/cart")
+    public String viewCart(Model model, Authentication authentication, HttpSession session) {
+        List<CartItem> cartItems = cartService.getCartItems(authentication, session);
+        double subtotal = cartService.getCartTotal(cartItems);
+        double shipping = cartItems.isEmpty() ? 0 : 50.0; // Example shipping fee
+
+        model.addAttribute("cartItems", cartItems);
+        model.addAttribute("subtotal", subtotal);
+        model.addAttribute("shipping", shipping);
+        model.addAttribute("total", subtotal + shipping);
+
+        return "cart";
+    }
+
+    @PostMapping("/cart/add")
+    public String addToCart(@RequestParam("productId") Integer productId,
+                            @RequestParam(value = "quantity", defaultValue = "1") int quantity,
+                            Authentication authentication,
+                            HttpSession session,
+                            RedirectAttributes redirectAttributes) {
+        cartService.addToCart(productId, quantity, authentication, session);
+        redirectAttributes.addFlashAttribute("successMessage", "Item added to cart!");
+        return "redirect:/shop"; // Or could redirect back to the product page
+    }
+
+    @PostMapping("/cart/update")
+    public String updateCartItem(@RequestParam("productId") Integer productId,
+                                 @RequestParam("quantity") int quantity,
+                                 Authentication authentication,
+                                 HttpSession session) {
+        cartService.updateQuantity(productId, quantity, authentication, session);
+        return "redirect:/cart";
+    }
+
+    @PostMapping("/cart/remove")
+    public String removeCartItem(@RequestParam("productId") Integer productId,
+                                 Authentication authentication,
+                                 HttpSession session) {
+        cartService.removeFromCart(productId, authentication, session);
+        return "redirect:/cart";
+    }
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/controller/CheckoutController.java
+================================================
+package com.dali.ecommerce.controller;
+
+import com.dali.ecommerce.model.Account;
+import com.dali.ecommerce.model.Address;
+import com.dali.ecommerce.model.CartItem;
+import com.dali.ecommerce.model.Order;
+import com.dali.ecommerce.repository.AccountRepository;
+import com.dali.ecommerce.service.CartService;
+import com.dali.ecommerce.service.OrderService;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.support.SessionStatus;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequestMapping("/checkout")
+@SessionAttributes("checkoutDetails")
+public class CheckoutController {
+
+    private final AccountRepository accountRepository;
+    private final CartService cartService;
+    private final OrderService orderService;
+
+    public CheckoutController(AccountRepository accountRepository, CartService cartService, OrderService orderService) {
+        this.accountRepository = accountRepository;
+        this.cartService = cartService;
+        this.orderService = orderService;
+    }
+
+    @ModelAttribute("checkoutDetails")
+    public Map<String, Object> checkoutDetails() {
+        return new HashMap<>();
+    }
+
+    private void populateCheckoutModel(Model model, Authentication authentication, HttpSession session) {
+        List<CartItem> cartItems = cartService.getCartItems(authentication, session);
+        double subtotal = cartService.getCartTotal(cartItems);
+        double shipping = cartItems.isEmpty() ? 0 : 50.0;
+        model.addAttribute("cartItems", cartItems);
+        model.addAttribute("subtotal", subtotal);
+        model.addAttribute("shipping", shipping);
+        model.addAttribute("total", subtotal + shipping);
+    }
+
+    @GetMapping
+    public String checkout(Authentication authentication, HttpSession session, Model model) {
+        List<CartItem> cartItems = cartService.getCartItems(authentication, session);
+        if (cartItems.isEmpty()) {
+            return "redirect:/cart";
+        }
+        return "redirect:/checkout/address";
+    }
+
+    @GetMapping("/address")
+    public String selectAddress(Model model, Authentication authentication, HttpSession session) {
+        Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow();
+        model.addAttribute("account", account);
+        model.addAttribute("addresses", account.getAddresses());
+        model.addAttribute("step", "address");
+        populateCheckoutModel(model, authentication, session);
+        return "checkout";
+    }
+
+    @PostMapping("/address")
+    public String saveAddress(@RequestParam("addressId") Integer addressId,
+                              @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails) {
+        checkoutDetails.put("addressId", addressId);
+        return "redirect:/checkout/shipping";
+    }
+
+    @GetMapping("/shipping")
+    public String selectDelivery(Model model, Authentication authentication, HttpSession session,
+                                 @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails) {
+        if (checkoutDetails.get("addressId") == null) {
+            return "redirect:/checkout/address";
+        }
+        model.addAttribute("step", "shipping");
+        populateCheckoutModel(model, authentication, session);
+        return "checkout";
+    }
+
+    @PostMapping("/shipping")
+    public String saveDelivery(@RequestParam("deliveryMethod") String deliveryMethod,
+                               @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails) {
+        checkoutDetails.put("deliveryMethod", deliveryMethod);
+        return "redirect:/checkout/payment";
+    }
+
+    @GetMapping("/payment")
+    public String selectPayment(Model model, Authentication authentication, HttpSession session,
+                                @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails) {
+        if (checkoutDetails.get("deliveryMethod") == null) {
+            return "redirect:/checkout/shipping";
+        }
+        model.addAttribute("step", "payment");
+        populateCheckoutModel(model, authentication, session);
+        return "checkout";
+    }
+
+    @PostMapping("/payment")
+    public String savePayment(@RequestParam("paymentMethod") String paymentMethod,
+                              @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails) {
+        checkoutDetails.put("paymentMethod", paymentMethod);
+        return "redirect:/checkout/finish";
+    }
+
+    @GetMapping("/finish")
+    public String finishOrder(Authentication authentication,
+                              @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails,
+                              SessionStatus status,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            Order order = orderService.createOrder(authentication.getName(), checkoutDetails);
+            status.setComplete(); // Clears the @SessionAttributes
+            redirectAttributes.addFlashAttribute("orderId", order.getOrderId());
+            return "redirect:/checkout/success";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Could not place order: " + e.getMessage());
+            return "redirect:/checkout/payment";
+        }
+    }
+
+    @GetMapping("/success")
+    public String orderSuccess(Model model) {
+        if (!model.containsAttribute("orderId")) {
+            return "redirect:/";
+        }
+        return "order-success";
     }
 }
 
@@ -985,6 +1362,13 @@ public class Account {
     @OrderBy("isDefault DESC, addressId ASC")
     private List<Address> addresses;
 
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CartItem> cartItems;
+
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("createdAt DESC")
+    private List<Order> orders;
+
     // Getters and Setters
     public Integer getAccountId() { return accountId; }
     public void setAccountId(Integer accountId) { this.accountId = accountId; }
@@ -1000,6 +1384,10 @@ public class Account {
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
     public List<Address> getAddresses() { return addresses; }
     public void setAddresses(List<Address> addresses) { this.addresses = addresses; }
+    public List<CartItem> getCartItems() { return cartItems; }
+    public void setCartItems(List<CartItem> cartItems) { this.cartItems = cartItems; }
+    public List<Order> getOrders() { return orders; }
+    public void setOrders(List<Order> orders) { this.orders = orders; }
 
     public String getFullName() {
         return firstName + " " + lastName;
@@ -1072,6 +1460,179 @@ public class Address {
     public String getFullAddress() {
         return String.join(", ", additionalInfo, barangay, city, province);
     }
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/model/CartItem.java
+================================================
+package com.dali.ecommerce.model;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "cart_items")
+public class CartItem {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "cart_item_id")
+    private Integer cartItemId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
+
+    @Column(nullable = false)
+    private int quantity;
+
+    // Getters and Setters
+    public Integer getCartItemId() { return cartItemId; }
+    public void setCartItemId(Integer cartItemId) { this.cartItemId = cartItemId; }
+    public Account getAccount() { return account; }
+    public void setAccount(Account account) { this.account = account; }
+    public Product getProduct() { return product; }
+    public void setProduct(Product product) { this.product = product; }
+    public int getQuantity() { return quantity; }
+    public void setQuantity(int quantity) { this.quantity = quantity; }
+
+    @Transient
+    public double getSubtotal() {
+        return product.getPrice() * quantity;
+    }
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/model/Order.java
+================================================
+// DALI/src/main/java/com/dali/ecommerce/model/Order.java
+package com.dali.ecommerce.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = "orders")
+public class Order {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "order_id")
+    private Integer orderId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id")
+    private Store store;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "address_id", nullable = false)
+    private Address address;
+
+    @Column(nullable = false)
+    private String status;
+
+    @Column(name = "delivery_method", nullable = false)
+    private String deliveryMethod;
+
+    @Column(name = "payment_method", nullable = false)
+    private String paymentMethod;
+
+    @Column(name = "total_price", nullable = false)
+    private Double totalPrice;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    private List<OrderItem> orderItems;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    // Getters and Setters
+    public Integer getOrderId() { return orderId; }
+    public void setOrderId(Integer orderId) { this.orderId = orderId; }
+    public Store getStore() { return store; }
+    public void setStore(Store store) { this.store = store; }
+    public Account getAccount() { return account; }
+    public void setAccount(Account account) { this.account = account; }
+    public Address getAddress() { return address; }
+    public void setAddress(Address address) { this.address = address; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public String getDeliveryMethod() { return deliveryMethod; }
+    public void setDeliveryMethod(String deliveryMethod) { this.deliveryMethod = deliveryMethod; }
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+    public Double getTotalPrice() { return totalPrice; }
+    public void setTotalPrice(Double totalPrice) { this.totalPrice = totalPrice; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public List<OrderItem> getOrderItems() { return orderItems; }
+    public void setOrderItems(List<OrderItem> orderItems) { this.orderItems = orderItems; }
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/model/OrderItem.java
+================================================
+// DALI/src/main/java/com/dali/ecommerce/model/OrderItem.java
+package com.dali.ecommerce.model;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "order_items")
+public class OrderItem {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "order_item_id")
+    private Integer orderItemId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
+
+    @Column(nullable = false)
+    private int quantity;
+
+    // Getters and Setters
+    public Integer getOrderItemId() { return orderItemId; }
+    public void setOrderItemId(Integer orderItemId) { this.orderItemId = orderItemId; }
+    public Order getOrder() { return order; }
+    public void setOrder(Order order) { this.order = order; }
+    public Product getProduct() { return product; }
+    public void setProduct(Product product) { this.product = product; }
+    public int getQuantity() { return quantity; }
+    public void setQuantity(int quantity) { this.quantity = quantity; }
 }
 
 
@@ -1291,6 +1852,59 @@ public interface AddressRepository extends JpaRepository<Address, Integer> {
 
 
 ================================================
+File: src/main/java/com/dali/ecommerce/repository/CartItemRepository.java
+================================================
+// DALI/src/main/java/com/dali/ecommerce/repository/CartItemRepository.java
+package com.dali.ecommerce.repository;
+
+import com.dali.ecommerce.model.CartItem;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface CartItemRepository extends JpaRepository<CartItem, Integer> {
+    List<CartItem> findByAccountAccountId(Integer accountId);
+    Optional<CartItem> findByAccountAccountIdAndProductId(Integer accountId, Integer productId);
+    void deleteByAccountAccountId(Integer accountId);
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/repository/OrderItemRepository.java
+================================================
+// DALI/src/main/java/com/dali/ecommerce/repository/OrderItemRepository.java
+package com.dali.ecommerce.repository;
+
+import com.dali.ecommerce.model.OrderItem;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/repository/OrderRepository.java
+================================================
+package com.dali.ecommerce.repository;
+
+import com.dali.ecommerce.model.Order;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface OrderRepository extends JpaRepository<Order, Integer> {
+    List<Order> findByAccountAccountIdOrderByCreatedAtDesc(Integer accountId);
+}
+
+
+================================================
 File: src/main/java/com/dali/ecommerce/repository/ProductRepository.java
 ================================================
 package com.dali.ecommerce.repository;
@@ -1372,12 +1986,282 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account registerNewUser(Account account) throws Exception {
-        if (accountRepository.findByEmail(account.getEmail()).isPresent()) {
-            throw new Exception("There is already an account with that email address: " + account.getEmail());
+        if (account.getEmail() == null || account.getEmail().isBlank()) {
+            throw new Exception("Email cannot be empty.");
         }
+        String trimmedEmail = account.getEmail().trim();
+        if (accountRepository.findByEmail(trimmedEmail).isPresent()) {
+            throw new Exception("There is already an account with that email address: " + trimmedEmail);
+        }
+        account.setEmail(trimmedEmail);
         // Encode the raw password before saving
         account.setPasswordHash(passwordEncoder.encode(account.getPasswordHash()));
         return accountRepository.save(account);
+    }
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/service/AddressService.java
+================================================
+package com.dali.ecommerce.service;
+
+import com.dali.ecommerce.model.Account;
+import com.dali.ecommerce.model.Address;
+
+public interface AddressService {
+    void addAddress(Account account, Address address);
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/service/AddressServiceImpl.java
+================================================
+package com.dali.ecommerce.service;
+
+import com.dali.ecommerce.model.Account;
+import com.dali.ecommerce.model.Address;
+import com.dali.ecommerce.repository.AddressRepository;
+import org.springframework.stereotype.Service;
+
+@Service
+public class AddressServiceImpl implements AddressService {
+    private final AddressRepository addressRepository;
+
+    public AddressServiceImpl(AddressRepository addressRepository) {
+        this.addressRepository = addressRepository;
+    }
+
+    @Override
+    public void addAddress(Account account, Address address) {
+        address.setAccount(account);
+        // If this is the first address, make it the default
+        if (account.getAddresses() == null || account.getAddresses().isEmpty()) {
+            address.setDefault(true);
+        }
+        addressRepository.save(address);
+    }
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/service/CartService.java
+================================================
+package com.dali.ecommerce.service;
+
+import com.dali.ecommerce.model.CartItem;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.security.core.Authentication;
+
+import java.util.List;
+
+public interface CartService {
+
+    void addToCart(Integer productId, int quantity, Authentication authentication, HttpSession session);
+
+    List<CartItem> getCartItems(Authentication authentication, HttpSession session);
+
+    void updateQuantity(Integer productId, int quantity, Authentication authentication, HttpSession session);
+
+    void removeFromCart(Integer productId, Authentication authentication, HttpSession session);
+
+    void clearCart(Authentication authentication, HttpSession session);
+
+    double getCartTotal(List<CartItem> cartItems);
+
+    int getCartItemCount(Authentication authentication, HttpSession session);
+
+    void mergeSessionCartWithDbCart(HttpSession session, String username);
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/service/CartServiceImpl.java
+================================================
+package com.dali.ecommerce.service;
+
+import com.dali.ecommerce.model.Account;
+import com.dali.ecommerce.model.CartItem;
+import com.dali.ecommerce.model.Product;
+import com.dali.ecommerce.repository.AccountRepository;
+import com.dali.ecommerce.repository.CartItemRepository;
+import com.dali.ecommerce.repository.ProductRepository;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+public class CartServiceImpl implements CartService {
+
+    private final CartItemRepository cartItemRepository;
+    private final ProductRepository productRepository;
+    private final AccountRepository accountRepository;
+    private static final String SESSION_CART = "sessionCart";
+
+    public CartServiceImpl(CartItemRepository cartItemRepository, ProductRepository productRepository, AccountRepository accountRepository) {
+        this.cartItemRepository = cartItemRepository;
+        this.productRepository = productRepository;
+        this.accountRepository = accountRepository;
+    }
+
+    @Override
+    @Transactional
+    public void addToCart(Integer productId, int quantity, Authentication authentication, HttpSession session) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            Account account = getAccount(authentication.getName());
+            Optional<CartItem> existingItem = cartItemRepository.findByAccountAccountIdAndProductId(account.getAccountId(), productId);
+            if (existingItem.isPresent()) {
+                CartItem cartItem = existingItem.get();
+                cartItem.setQuantity(cartItem.getQuantity() + quantity);
+                cartItemRepository.save(cartItem);
+            } else {
+                Product product = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
+                CartItem newItem = new CartItem();
+                newItem.setAccount(account);
+                newItem.setProduct(product);
+                newItem.setQuantity(quantity);
+                cartItemRepository.save(newItem);
+            }
+        } else {
+            Map<Integer, Integer> cart = getSessionCart(session);
+            cart.put(productId, cart.getOrDefault(productId, 0) + quantity);
+            session.setAttribute(SESSION_CART, cart);
+        }
+    }
+
+    @Override
+    public List<CartItem> getCartItems(Authentication authentication, HttpSession session) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            Account account = getAccount(authentication.getName());
+            return cartItemRepository.findByAccountAccountId(account.getAccountId());
+        } else {
+            Map<Integer, Integer> sessionCart = getSessionCart(session);
+            return sessionCart.entrySet().stream()
+                    .map(entry -> {
+                        Product product = productRepository.findById(entry.getKey()).orElse(null);
+                        if (product == null) return null;
+                        CartItem item = new CartItem();
+                        item.setProduct(product);
+                        item.setQuantity(entry.getValue());
+                        return item;
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void updateQuantity(Integer productId, int quantity, Authentication authentication, HttpSession session) {
+        if (quantity <= 0) {
+            removeFromCart(productId, authentication, session);
+            return;
+        }
+        if (authentication != null && authentication.isAuthenticated()) {
+            Account account = getAccount(authentication.getName());
+            cartItemRepository.findByAccountAccountIdAndProductId(account.getAccountId(), productId)
+                    .ifPresent(item -> {
+                        item.setQuantity(quantity);
+                        cartItemRepository.save(item);
+                    });
+        } else {
+            Map<Integer, Integer> cart = getSessionCart(session);
+            if (cart.containsKey(productId)) {
+                cart.put(productId, quantity);
+                session.setAttribute(SESSION_CART, cart);
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void removeFromCart(Integer productId, Authentication authentication, HttpSession session) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            Account account = getAccount(authentication.getName());
+            cartItemRepository.findByAccountAccountIdAndProductId(account.getAccountId(), productId)
+                    .ifPresent(cartItemRepository::delete);
+        } else {
+            Map<Integer, Integer> cart = getSessionCart(session);
+            cart.remove(productId);
+            session.setAttribute(SESSION_CART, cart);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void clearCart(Authentication authentication, HttpSession session) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            Account account = getAccount(authentication.getName());
+            cartItemRepository.deleteByAccountAccountId(account.getAccountId());
+        } else {
+            session.removeAttribute(SESSION_CART);
+        }
+    }
+
+
+    @Override
+    public double getCartTotal(List<CartItem> cartItems) {
+        return cartItems.stream().mapToDouble(CartItem::getSubtotal).sum();
+    }
+
+    @Override
+    public int getCartItemCount(Authentication authentication, HttpSession session) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            Account account = getAccount(authentication.getName());
+            return cartItemRepository.findByAccountAccountId(account.getAccountId()).stream()
+                    .mapToInt(CartItem::getQuantity)
+                    .sum();
+        } else {
+            return getSessionCart(session).values().stream().mapToInt(Integer::intValue).sum();
+        }
+    }
+
+    @Override
+    @Transactional
+    public void mergeSessionCartWithDbCart(HttpSession session, String username) {
+        Map<Integer, Integer> sessionCart = getSessionCart(session);
+        if (sessionCart.isEmpty()) return;
+
+        Account account = getAccount(username);
+        sessionCart.forEach((productId, quantity) -> {
+            Optional<CartItem> existingItem = cartItemRepository.findByAccountAccountIdAndProductId(account.getAccountId(), productId);
+            if (existingItem.isPresent()) {
+                CartItem dbItem = existingItem.get();
+                dbItem.setQuantity(dbItem.getQuantity() + quantity); // Merge quantities
+                cartItemRepository.save(dbItem);
+            } else {
+                Product product = productRepository.findById(productId).orElse(null);
+                if (product != null) {
+                    CartItem newItem = new CartItem();
+                    newItem.setAccount(account);
+                    newItem.setProduct(product);
+                    newItem.setQuantity(quantity);
+                    cartItemRepository.save(newItem);
+                }
+            }
+        });
+        session.removeAttribute(SESSION_CART);
+    }
+
+    private Map<Integer, Integer> getSessionCart(HttpSession session) {
+        Map<Integer, Integer> cart = (Map<Integer, Integer>) session.getAttribute(SESSION_CART);
+        if (cart == null) {
+            cart = new HashMap<>();
+            session.setAttribute(SESSION_CART, cart);
+        }
+        return cart;
+    }
+
+    private Account getAccount(String email) {
+        if (email == null) {
+            throw new IllegalArgumentException("Email cannot be null");
+        }
+        return accountRepository.findByEmail(email.trim())
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
     }
 }
 
@@ -1412,6 +2296,110 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         return new User(account.getEmail(), account.getPasswordHash(), new ArrayList<>());
+    }
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/service/OrderService.java
+================================================
+package com.dali.ecommerce.service;
+
+import com.dali.ecommerce.model.Order;
+
+import java.util.Map;
+
+public interface OrderService {
+    Order createOrder(String username, Map<String, Object> checkoutDetails);
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/service/OrderServiceImpl.java
+================================================
+package com.dali.ecommerce.service;
+
+import com.dali.ecommerce.model.*;
+import com.dali.ecommerce.repository.*;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@Service
+public class OrderServiceImpl implements OrderService {
+
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final AccountRepository accountRepository;
+    private final AddressRepository addressRepository;
+    private final CartItemRepository cartItemRepository;
+    private final ProductRepository productRepository; // To update stock
+
+    public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, AccountRepository accountRepository, AddressRepository addressRepository, CartItemRepository cartItemRepository, ProductRepository productRepository) {
+        this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
+        this.accountRepository = accountRepository;
+        this.addressRepository = addressRepository;
+        this.cartItemRepository = cartItemRepository;
+        this.productRepository = productRepository;
+    }
+
+    @Override
+    @Transactional
+    public Order createOrder(String username, Map<String, Object> checkoutDetails) {
+        Account account = accountRepository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<CartItem> cartItems = cartItemRepository.findByAccountAccountId(account.getAccountId());
+        if (cartItems.isEmpty()) {
+            throw new IllegalStateException("Cannot create an order with an empty cart.");
+        }
+
+        Integer addressId = (Integer) checkoutDetails.get("addressId");
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new RuntimeException("Address not found"));
+
+        Order order = new Order();
+        order.setAccount(account);
+        order.setAddress(address);
+        order.setDeliveryMethod((String) checkoutDetails.get("deliveryMethod"));
+        order.setPaymentMethod((String) checkoutDetails.get("paymentMethod"));
+        order.setStatus("Pending");
+
+        double subtotal = cartItems.stream().mapToDouble(CartItem::getSubtotal).sum();
+        double shippingFee = 50.0; // Example shipping fee
+        order.setTotalPrice(subtotal + shippingFee);
+
+        Order savedOrder = orderRepository.save(order);
+
+        List<OrderItem> orderItems = new ArrayList<>();
+        for (CartItem cartItem : cartItems) {
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(savedOrder);
+            orderItem.setProduct(cartItem.getProduct());
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItems.add(orderItem);
+
+            // Decrease product stock
+            Product product = cartItem.getProduct();
+            int newQuantity = product.getProductQuantity() - cartItem.getQuantity();
+            if (newQuantity < 0) {
+                throw new IllegalStateException("Not enough stock for product: " + product.getName());
+            }
+            product.setProductQuantity(newQuantity);
+            productRepository.save(product);
+        }
+
+        orderItemRepository.saveAll(orderItems);
+        savedOrder.setOrderItems(orderItems);
+
+        // Clear user's cart
+        cartItemRepository.deleteByAccountAccountId(account.getAccountId());
+
+        return savedOrder;
     }
 }
 
@@ -1479,21 +2467,24 @@ INSERT INTO products (product_name, product_description, product_price, product_
 ================================================
 File: src/main/resources/schema.sql
 ================================================
+-- DALI/src/main/resources/schema.sql
+
 -- Drop tables if they exist to ensure a clean slate on each run.
 -- This is useful for development.
+DROP TABLE IF EXISTS order_items CASCADE;
+DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS cart_items CASCADE;
 DROP TABLE IF EXISTS addresses CASCADE;
 DROP TABLE IF EXISTS accounts CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS stores CASCADE;
 
--- Create the 'stores' table
 CREATE TABLE stores (
                         store_id        SERIAL PRIMARY KEY,
                         store_name      VARCHAR(255) NOT NULL,
                         store_location  VARCHAR(255)
 );
 
--- Create the 'products' table
 CREATE TABLE products (
                           product_id          SERIAL PRIMARY KEY,
                           product_name        VARCHAR(255) NOT NULL,
@@ -1504,7 +2495,6 @@ CREATE TABLE products (
                           image               VARCHAR(255)
 );
 
--- Table 3: accounts
 CREATE TABLE accounts (
                           account_id          SERIAL PRIMARY KEY,
                           account_first_name  VARCHAR(255),
@@ -1514,10 +2504,9 @@ CREATE TABLE accounts (
                           phone_number        VARCHAR(50)
 );
 
--- Table 8: addresses
 CREATE TABLE addresses (
                            address_id      SERIAL PRIMARY KEY,
-                           account_id      INTEGER NOT NULL REFERENCES accounts(account_id),
+                           account_id      INTEGER NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
                            province        VARCHAR(255),
                            city            VARCHAR(255),
                            barangay        VARCHAR(255),
@@ -1525,6 +2514,34 @@ CREATE TABLE addresses (
                            phone_number    VARCHAR(50),
                            created_at      TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                            is_default      BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE cart_items (
+                            cart_item_id SERIAL PRIMARY KEY,
+                            account_id INTEGER NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
+                            product_id INTEGER NOT NULL REFERENCES products(product_id) ON DELETE CASCADE,
+                            quantity INTEGER NOT NULL,
+                            UNIQUE(account_id, product_id)
+);
+
+CREATE TABLE orders (
+                        order_id         SERIAL PRIMARY KEY,
+                        store_id         INTEGER REFERENCES stores(store_id),
+                        account_id       INTEGER NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
+                        address_id       INTEGER NOT NULL REFERENCES addresses(address_id),
+                        status           VARCHAR(255) NOT NULL,
+                        delivery_method  VARCHAR(255) NOT NULL,
+                        payment_method   VARCHAR(255) NOT NULL,
+                        total_price      NUMERIC(10, 2) NOT NULL,
+                        created_at       TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        updated_at       TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE order_items (
+                             order_item_id SERIAL PRIMARY KEY,
+                             order_id      INTEGER NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+                             product_id    INTEGER NOT NULL REFERENCES products(product_id),
+                             quantity      INTEGER NOT NULL
 );
 
 
@@ -1911,7 +2928,7 @@ body {
     flex-direction: column;
 }
 
-.product-card a {
+.product-card-body {
     text-decoration: none;
     color: inherit;
     display: flex;
@@ -1964,6 +2981,29 @@ body {
     font-size: 1.2rem;
     font-weight: 700;
     color: #333;
+}
+.product-card-actions {
+    padding: 0 20px 20px;
+}
+.add-to-cart-btn {
+    width: 100%;
+    padding: 10px;
+    background: #b21984;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.add-to-cart-btn-disabled {
+    width: 100%;
+    padding: 10px;
+    background: #ccc;
+    color: #666;
+    border: none;
+    border-radius: 5px;
+    cursor: not-allowed;
+    font-weight: 600;
 }
 
 /* =================================
@@ -2157,6 +3197,366 @@ body {
 }
 
 
+/* =================================
+   8. Cart Page Styles
+   ================================= */
+.cart-page { padding: 50px 0; }
+.cart-page h1 { margin-bottom: 30px; }
+.cart-container { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; align-items: flex-start; }
+.cart-items-panel { background: #fff; padding: 20px; border-radius: 8px; }
+.cart-item-header { display: grid; grid-template-columns: 3fr 1fr 1fr 0.5fr; padding: 10px 20px; font-weight: 600; color: #888; border-bottom: 1px solid #eee; }
+.cart-item-row { display: grid; grid-template-columns: 3fr 1fr 1fr 0.5fr; align-items: center; padding: 20px; border-bottom: 1px solid #eee; }
+.cart-product-info { display: flex; align-items: center; gap: 20px; }
+.cart-product-info img { width: 80px; height: 80px; object-fit: cover; border-radius: 5px; }
+.cart-product-info .product-name { font-weight: 600; margin-bottom: 5px; }
+.cart-product-info .product-price { color: #666; }
+.cart-quantity-selector input { width: 60px; text-align: center; padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
+.cart-item-total { font-weight: 600; }
+.remove-btn { background: none; border: none; font-size: 1.5rem; color: #aaa; cursor: pointer; }
+.cart-summary-panel { background: #fff; padding: 30px; border-radius: 8px; position: sticky; top: 20px; }
+.cart-summary-panel h2 { margin-bottom: 20px; }
+.summary-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
+.total-row { font-weight: 700; font-size: 1.2rem; }
+.checkout-btn { width: 100%; text-align: center; margin-top: 20px; padding: 15px; }
+.cart-empty { text-align: center; padding: 80px 0; }
+.cart-empty h2 { font-size: 2rem; margin-bottom: 20px; }
+.cart-empty p { margin-bottom: 30px; color: #666; }
+
+/* =================================
+   9. Checkout Page Styles
+   ================================= */
+.checkout-page-wrapper { display: flex; min-height: 100vh; background-color: #fff; }
+.checkout-main-panel { flex: 3; padding: 40px 60px; overflow-y: auto; }
+.checkout-summary-panel { flex: 2; background-color: #f8f9fa; padding: 40px; border-left: 1px solid #e0e0e0; }
+.checkout-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+.checkout-steps { font-size: 0.9rem; color: #888; }
+.checkout-steps .active { color: #333; font-weight: 600; }
+.checkout-content h2 { margin-bottom: 25px; }
+.address-selection .address-option, .delivery-selection .delivery-option, .payment-selection .payment-option {
+    border: 1px solid #ccc; border-radius: 8px; margin-bottom: 15px; display: flex;
+}
+.address-selection input, .delivery-selection input, .payment-selection input { display: none; }
+.address-selection label, .delivery-selection label, .payment-selection label {
+    padding: 20px; width: 100%; cursor: pointer;
+}
+.payment-selection label { display: flex; align-items: center; gap: 20px; }
+.payment-selection img { width: 40px; }
+.address-selection input:checked + label, .delivery-selection input:checked + label, .payment-selection input:checked + label {
+    border-color: #b21984; box-shadow: 0 0 0 2px rgba(178, 25, 132, 0.2);
+}
+.checkout-summary-panel h3 { margin-bottom: 20px; }
+.cart-items-summary .cart-item-summary-row { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+.cart-items-summary img { width: 60px; height: 60px; border-radius: 5px; }
+.cart-items-summary .item-details { flex-grow: 1; }
+.cart-items-summary .item-details .name { font-weight: 600; font-size: 0.9rem; }
+.cart-items-summary .item-details .qty { color: #666; font-size: 0.8rem; }
+.cart-items-summary .price { font-weight: 600; }
+.tag-default { border: 1px solid #b21984; color: #b21984; background-color: #fff; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; }
+
+
+/* =================================
+   10. Order Success Page Styles
+   ================================= */
+.order-success-page { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f8f9fa; }
+.success-card { background: #fff; padding: 50px; border-radius: 15px; text-align: center; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+.success-card img { max-width: 150px; margin-bottom: 20px; }
+.success-card h2 { font-size: 2rem; color: #333; margin-bottom: 15px; }
+.success-card p { color: #666; line-height: 1.6; margin-bottom: 30px; }
+.success-actions { display: flex; justify-content: center; gap: 15px; }
+.success-actions .btn { border-radius: 8px; }
+
+/* =================================
+   11. New Address Form & Layout Styles
+   ================================= */
+.checkout-section-header { margin-bottom: 20px; }
+.checkout-section-header h2 { font-size: 1.8rem; }
+.checkout-section-header .sub-header { color: #888; font-weight: 600; margin-top: 5px; font-size: 0.9rem; }
+.address-option label { display: flex; flex-direction: column; }
+.address-line-1 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.address-line-1 strong { font-size: 1.1rem; }
+.address-line-1 span { color: #666; margin-left: 10px; }
+.edit-link-inline { color: #b21984; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+.address-line-2 { color: #555; margin-bottom: 15px; }
+.address-tags span { display: inline-block; padding: 4px 10px; font-size: 0.75rem; border-radius: 15px; margin-right: 10px; font-weight: 600; }
+.tag-home { background-color: #e9ecef; color: #495057; border: 1px solid #ddd; }
+.add-new-address-link { color: #b21984; font-weight: 700; text-decoration: none; display: inline-block; margin: 20px 0; cursor: pointer; }
+.no-address-notice { padding: 20px; background-color: #fef3cd; border: 1px solid #ffeeba; color: #856404; border-radius: 8px; margin-bottom: 20px; }
+.address-form-container { margin-top: 10px; padding: 20px; border: 1px dashed #ccc; border-radius: 8px; }
+.address-form .form-group { margin-bottom: 15px; }
+.address-form label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
+.address-form input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+
+
+
+================================================
+File: src/main/resources/templates/cart.html
+================================================
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Cart - DALI</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="header" th:replace="~{fragments/header :: header}"></header>
+
+<main class="cart-page container">
+    <h1>Your Cart</h1>
+    <div class="cart-container" th:if="${!cartItems.isEmpty()}">
+        <div class="cart-items-panel">
+            <div class="cart-item-header">
+                <div class="header-product">Product</div>
+                <div class="header-quantity">Quantity</div>
+                <div class="header-total">Total</div>
+                <div class="header-action"></div>
+            </div>
+
+            <div th:each="item : ${cartItems}" class="cart-item-row">
+                <div class="cart-product-info">
+                    <img th:src="@{'/images/products/' + ${item.product.image}}" th:alt="${item.product.name}">
+                    <div>
+                        <p class="product-name" th:text="${item.product.name}">Product Name</p>
+                        <p class="product-price" th:text="'â‚±' + ${#numbers.formatDecimal(item.product.price, 1, 2)}">â‚±199.00</p>
+                    </div>
+                </div>
+
+                <div class="cart-quantity-selector">
+                    <form th:action="@{/cart/update}" method="post">
+                        <input type="hidden" name="productId" th:value="${item.product.id}"/>
+                        <input type="number" name="quantity" th:value="${item.quantity}" min="1" onchange="this.form.submit()">
+                    </form>
+                </div>
+
+                <div class="cart-item-total" th:text="'â‚±' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 2)}">
+                    â‚±199.00
+                </div>
+
+                <div class="cart-item-remove">
+                    <form th:action="@{/cart/remove}" method="post">
+                        <input type="hidden" name="productId" th:value="${item.product.id}"/>
+                        <button type="submit" class="remove-btn">Ã—</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="cart-summary-panel">
+            <h2>Order Summary</h2>
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span th:text="'â‚±' + ${#numbers.formatDecimal(subtotal, 1, 2)}">â‚±650.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Shipping</span>
+                <span th:text="${shipping == 0.0} ? 'FREE' : 'â‚±' + ${#numbers.formatDecimal(shipping, 1, 2)}">â‚±50.00</span>
+            </div>
+            <hr>
+            <div class="summary-row total-row">
+                <span>Total</span>
+                <span th:text="'â‚±' + ${#numbers.formatDecimal(total, 1, 2)}">â‚±700.00</span>
+            </div>
+            <a th:href="@{/checkout}" class="btn btn-primary checkout-btn">Continue to checkout</a>
+        </div>
+    </div>
+
+    <div class="cart-empty" th:if="${cartItems.isEmpty()}">
+        <h2>Your cart is empty.</h2>
+        <p>Looks like you haven't added anything to your cart yet.</p>
+        <a th:href="@{/shop}" class="btn btn-primary">Continue Shopping</a>
+    </div>
+</main>
+
+<footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>
+
+
+================================================
+File: src/main/resources/templates/checkout.html
+================================================
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkout - DALI</title>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.5/dist/htmx.min.js"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="checkout-page-wrapper">
+    <div class="checkout-main-panel">
+        <div class="checkout-header">
+            <a th:href="@{/}" class="logo"><img th:src="@{/images/dali-logo.png}" alt="DALI Logo" style="height: 50px;"/></a>
+            <div class="checkout-steps">
+                <span th:classappend="${step == 'address'} ? 'active'">Address</span> >
+                <span th:classappend="${step == 'shipping'} ? 'active'">Shipping</span> >
+                <span th:classappend="${step == 'payment'} ? 'active'">Payment</span>
+            </div>
+        </div>
+
+        <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}"></div>
+
+        <!-- Address Step -->
+        <div th:if="${step == 'address'}" class="checkout-content">
+            <div class="checkout-section-header">
+                <h2>Shipping Information</h2>
+                <p class="sub-header">Select Saved Addresses</p>
+            </div>
+            <form th:action="@{/checkout/address}" method="post">
+                <div class="address-selection">
+                    <div th:if="${addresses.isEmpty()}" class="no-address-notice">
+                        <p>You have no saved addresses. Please add one below to continue.</p>
+                    </div>
+                    <div th:each="addr : ${addresses}" class="address-option">
+                        <input type="radio" name="addressId" th:value="${addr.addressId}" th:id="'addr-' + ${addr.addressId}" required
+                               th:checked="${checkoutDetails.addressId == addr.addressId or (addr.isDefault() and checkoutDetails.addressId == null and !addresses.isEmpty())}">
+                        <label th:for="'addr-' + ${addr.addressId}">
+                            <div class="address-line-1">
+                                <div>
+                                    <strong th:text="${account.getFullName()}"></strong>
+                                    <span th:text="${addr.phoneNumber}"></span>
+                                </div>
+                                <a href="#" class="edit-link-inline">Edit</a>
+                            </div>
+                            <p class="address-line-2" th:text="${addr.getFullAddress()}"></p>
+                            <div class="address-tags">
+                                <span class="tag-home">HOME</span>
+                                <span th:if="${addr.isDefault()}" class="tag-default">Default Address</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- HTMX Target & Trigger -->
+                <div id="add-address-target">
+                    <a hx-get="/address/new"
+                       hx-target="#add-address-target"
+                       hx-swap="innerHTML"
+                       class="add-new-address-link">Add new address +</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary checkout-btn" th:disabled="${addresses.isEmpty()}">Proceed</button>
+            </form>
+        </div>
+
+
+        <!-- Shipping Step -->
+        <div th:if="${step == 'shipping'}" class="checkout-content">
+            <h2>Delivery Option</h2>
+            <form th:action="@{/checkout/shipping}" method="post">
+                <div class="delivery-selection">
+                    <div class="delivery-option">
+                        <input type="radio" name="deliveryMethod" value="Standard Delivery" id="del-standard" required
+                               th:checked="${checkoutDetails.deliveryMethod == 'Standard Delivery'}">
+                        <label for="del-standard">
+                            <strong>Standard Delivery</strong>
+                            <p>Within the day</p>
+                        </label>
+                    </div>
+                    <div class="delivery-option">
+                        <input type="radio" name="deliveryMethod" value="Priority Delivery" id="del-priority" required
+                               th:checked="${checkoutDetails.deliveryMethod == 'Priority Delivery'}">
+                        <label for="del-priority">
+                            <strong>Priority Delivery</strong>
+                            <p>Within hours</p>
+                        </label>
+                    </div>
+                    <div class="delivery-option">
+                        <input type="radio" name="deliveryMethod" value="Pickup Delivery" id="del-pickup" required
+                               th:checked="${checkoutDetails.deliveryMethod == 'Pickup Delivery'}">
+                        <label for="del-pickup">
+                            <strong>Pickup Delivery</strong>
+                            <p>Pickup after 2-3 hours</p>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary checkout-btn">Proceed</button>
+            </form>
+        </div>
+
+        <!-- Payment Step -->
+        <div th:if="${step == 'payment'}" class="checkout-content">
+            <h2>Payment Methods</h2>
+            <form th:action="@{/checkout/payment}" method="post">
+                <div class="payment-selection">
+                    <div class="payment-option">
+                        <input type="radio" name="paymentMethod" value="Cash on delivery (COD)" id="pay-cod" required
+                               th:checked="${checkoutDetails.paymentMethod == 'Cash on delivery (COD)'}">
+                        <label for="pay-cod">
+                            <img th:src="@{/images/cod.png}" alt="COD">
+                            <div>
+                                <strong>Cash on delivery (COD)</strong>
+                                <p>Cash on Delivery</p>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="payment-option">
+                        <input type="radio" name="paymentMethod" value="GCash e-Wallet" id="pay-gcash" required
+                               th:checked="${checkoutDetails.paymentMethod == 'GCash e-Wallet'}">
+                        <label for="pay-gcash">
+                            <img th:src="@{/images/gcash.png}" alt="GCash">
+                            <div>
+                                <strong>GCash e-Wallet</strong>
+                                <p>GCash account required</p>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="payment-option">
+                        <input type="radio" name="paymentMethod" value="Credit/Debit Card" id="pay-card" required
+                               th:checked="${checkoutDetails.paymentMethod == 'Credit/Debit Card'}">
+                        <label for="pay-card">
+                            <img th:src="@{/images/credit-card.png}" alt="Card">
+                            <div>
+                                <strong>Credit/Debit Card</strong>
+                                <p>Credit/Debit Card</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary checkout-btn">Finish Order</button>
+            </form>
+        </div>
+    </div>
+    <div class="checkout-summary-panel">
+        <h3>Your Cart</h3>
+        <div class="cart-items-summary">
+            <div th:each="item : ${cartItems}" class="cart-item-summary-row">
+                <img th:src="@{'/images/products/' + ${item.product.image}}">
+                <div class="item-details">
+                    <p class="name" th:text="${item.product.name}"></p>
+                    <p class="qty" th:text="'Qty: ' + ${item.quantity}"></p>
+                </div>
+                <p class="price" th:text="'â‚±' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 2)}"></p>
+            </div>
+        </div>
+        <hr>
+        <div class="summary-row">
+            <span>Subtotal</span>
+            <span th:text="'â‚±' + ${#numbers.formatDecimal(subtotal, 1, 2)}"></span>
+        </div>
+        <div class="summary-row">
+            <span>Shipping</span>
+            <span th:text="'â‚±' + ${#numbers.formatDecimal(shipping, 1, 2)}"></span>
+        </div>
+        <hr>
+        <div class="summary-row total-row">
+            <span>Total</span>
+            <span th:text="'â‚±' + ${#numbers.formatDecimal(total, 1, 2)}"></span>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
 
 ================================================
 File: src/main/resources/templates/home.html
@@ -2318,6 +3718,36 @@ File: src/main/resources/templates/login.html
 
 
 ================================================
+File: src/main/resources/templates/order-success.html
+================================================
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Successful - DALI</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="order-success-page">
+    <div class="success-card">
+        <img th:src="@{/images/order-success.png}" alt="Order Successful">
+        <h2>Order Successfully Placed!</h2>
+        <p>Thank you for your purchase. Your order ID is <strong th:text="'#' + ${orderId}">#12345</strong>.</p>
+        <p>We've sent a confirmation to your email address.</p>
+        <div class="success-actions">
+            <a th:href="@{/shop}" class="btn btn-secondary">Continue Shopping</a>
+            <a th:href="@{/profile}" class="btn btn-primary">View My Orders</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+
+================================================
 File: src/main/resources/templates/product-detail.html
 ================================================
 <!DOCTYPE html>
@@ -2344,8 +3774,14 @@ File: src/main/resources/templates/product-detail.html
         <p class="product-detail-price" th:text="*{getFormattedPrice()}">â‚± 199</p>
 
         <div class="product-actions">
-            <!-- Quantity selector can be added here later -->
-            <button th:if="*{productQuantity > 0}" class="btn btn-primary btn-large">Add to Cart</button>
+            <form th:action="@{/cart/add}" method="post">
+                <input type="hidden" name="productId" th:value="*{id}"/>
+                <div class="form-group" style="display:flex; align-items:center; gap: 15px;">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" name="quantity" value="1" min="1" style="width: 70px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                    <button th:if="*{productQuantity > 0}" type="submit" class="btn btn-primary btn-large">Add to Cart</button>
+                </div>
+            </form>
             <button th:if="*{productQuantity <= 0}" class="btn btn-disabled btn-large" disabled>Out of Stock</button>
         </div>
 
@@ -2372,6 +3808,7 @@ File: src/main/resources/templates/profile.html
 <head>
     <meta charset="UTF-8">
     <title>My Account - DALI</title>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.5/dist/htmx.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2398,6 +3835,7 @@ File: src/main/resources/templates/profile.html
         .order-body { padding: 20px; }
         .order-footer { padding: 15px 20px; text-align: right; }
         .btn-track { background-color: #b21984; color: #fff; padding: 10px 25px; border-radius: 5px; text-decoration: none; }
+        .add-new-address-link { color: #b21984; font-weight: 700; text-decoration: none; display: inline-block; margin-top: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -2408,7 +3846,7 @@ File: src/main/resources/templates/profile.html
         <div class="profile-header">
             <div>
                 <p>Hello,</p>
-                <h1 th:text="${account.getFullName()}">Duncan Bandojo</h1>
+                <h1 th:text="${account.getFullName()}"></h1>
             </div>
         </div>
 
@@ -2419,10 +3857,10 @@ File: src/main/resources/templates/profile.html
                 <a href="#" class="edit-link">Edit</a>
             </div>
             <dl class="details-grid">
-                <dt>First Name:</dt> <dd th:text="${account.firstName}">Duncan</dd>
-                <dt>Last Name:</dt> <dd th:text="${account.lastName}">Bandojo</dd>
-                <dt>Phone Number:</dt> <dd th:text="${account.phoneNumber}">09123456789</dd>
-                <dt>Email:</dt> <dd th:text="${account.email}">duncanbandojo@gmail.com</dd>
+                <dt>First Name:</dt> <dd th:text="${account.firstName}"></dd>
+                <dt>Last Name:</dt> <dd th:text="${account.lastName}"></dd>
+                <dt>Phone Number:</dt> <dd th:text="${account.phoneNumber}"></dd>
+                <dt>Email:</dt> <dd th:text="${account.email}"></dd>
             </dl>
         </section>
 
@@ -2430,17 +3868,23 @@ File: src/main/resources/templates/profile.html
         <section class="profile-section">
             <div class="section-header">
                 <h2>Address</h2>
-                <a href="#" class="edit-link">Edit</a>
             </div>
             <div th:each="address : ${account.addresses}" class="address-box">
-                <p th:text="${address.phoneNumber}">09123456789</p>
-                <p th:text="${address.getFullAddress()}">Unit 4B Greenfield Residences, ...</p>
+                <p><strong><span th:text="${account.getFullName()}"></span></strong> | <span th:text="${address.phoneNumber}"></span></p>
+                <p th:text="${address.getFullAddress()}"></p>
                 <div class="address-tags">
                     <span class="tag-home">HOME</span>
                     <span th:if="${address.isDefault()}" class="tag-default">Default Address</span>
                 </div>
             </div>
-            <a href="#" class="edit-link" style="margin-top: 10px; display: inline-block;">Add new address</a>
+
+            <!-- HTMX Target & Trigger -->
+            <div id="add-address-profile-target">
+                <a hx-get="/address/new"
+                   hx-target="#add-address-profile-target"
+                   hx-swap="innerHTML"
+                   class="add-new-address-link">Add new address +</a>
+            </div>
         </section>
 
         <!-- Orders Section -->
@@ -2449,14 +3893,14 @@ File: src/main/resources/templates/profile.html
                 <h2>Orders</h2>
             </div>
             <div th:if="${hasOrders}">
-                <div class="order-card">
+                <div th:each="order : ${orders}" class="order-card">
                     <div class="order-header">
-                        <span class="order-header-info">Sta. Mesa â€¢ DALI Online</span>
-                        <span>Friday, October 8, 2025</span>
+                        <span class="order-header-info" th:text="'Order #' + ${order.orderId}"></span>
+                        <span th:text="${#temporals.format(order.createdAt, 'MMMM dd, yyyy')}"></span>
                     </div>
                     <div class="order-body">
-                        <p>3 products</p>
-                        <p>Total: <strong>â‚±750</strong></p>
+                        <p th:text="${order.orderItems.size()} + ' products'"></p>
+                        <p>Total: <strong th:text="'â‚±' + ${#numbers.formatDecimal(order.totalPrice, 1, 2)}"></strong></p>
                     </div>
                     <div class="order-footer">
                         <a href="#" class="btn-track">Track Order</a>
@@ -2670,6 +4114,44 @@ File: src/main/resources/templates/stores.html
 
 
 ================================================
+File: src/main/resources/templates/fragments/address-form.html
+================================================
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="address-form" class="address-form-container">
+    <h3 style="margin-top: 30px; margin-bottom: 20px;">Add a New Address</h3>
+    <form th:action="@{/address/add}" th:object="${address}" method="post" class="address-form">
+        <div class="form-group">
+            <label for="additionalInfo">Street Name, Building, House No.</label>
+            <input type="text" id="additionalInfo" th:field="*{additionalInfo}" required>
+        </div>
+        <div class="form-group">
+            <label for="barangay">Barangay</label>
+            <input type="text" id="barangay" th:field="*{barangay}" required>
+        </div>
+        <div class="form-group">
+            <label for="city">City / Municipality</label>
+            <input type="text" id="city" th:field="*{city}" required>
+        </div>
+        <div class="form-group">
+            <label for="province">Province</label>
+            <input type="text" id="province" th:field="*{province}" required>
+        </div>
+        <div class="form-group">
+            <label for="phoneNumber">Phone Number</label>
+            <input type="tel" id="phoneNumber" th:field="*{phoneNumber}" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Save Address</button>
+    </form>
+</div>
+
+</body>
+</html>
+
+
+================================================
 File: src/main/resources/templates/fragments/footer.html
 ================================================
 <!DOCTYPE html>
@@ -2700,7 +4182,7 @@ File: src/main/resources/templates/fragments/header.html
             <a th:href="@{/stores}">Stores</a>
         </nav>
         <div class="header-actions">
-            <a href="#">Cart (0)</a>
+            <a th:href="@{/cart}" th:text="'Cart (' + ${cartItemCount} + ')'">Cart (0)</a>
 
             <!-- Not Authenticated -->
             <a sec:authorize="!isAuthenticated()" th:href="@{/login}">Login</a>
@@ -2727,7 +4209,7 @@ File: src/main/resources/templates/fragments/product-list.html
 <!-- This is the fragment that will be updated by HTMX -->
 <div th:fragment="product-list-fragment" class="product-grid">
     <div th:each="product : ${products}" class="product-card">
-        <a th:href="@{/product/{id}(id=${product.id})}">
+        <a class="product-card-body" th:href="@{/product/{id}(id=${product.id})}">
             <div class="product-image-container">
                 <img th:src="@{'/images/products/' + ${product.image}}" th:alt="${product.name}">
             </div>
@@ -2737,6 +4219,13 @@ File: src/main/resources/templates/fragments/product-list.html
                 <p class="product-price" th:text="${product.getFormattedPrice()}">â‚± 199</p>
             </div>
         </a>
+        <div class="product-card-actions">
+            <form th:action="@{/cart/add}" method="post">
+                <input type="hidden" name="productId" th:value="${product.id}" />
+                <button type="submit" th:if="${product.productQuantity > 0}" class="add-to-cart-btn">Add to Cart</button>
+                <button type="button" th:if="${product.productQuantity <= 0}" class="add-to-cart-btn-disabled" disabled>Out of Stock</button>
+            </form>
+        </div>
     </div>
 </div>
 

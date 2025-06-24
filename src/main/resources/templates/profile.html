@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>My Account - DALI</title>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.5/dist/htmx.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,6 +30,7 @@
         .order-body { padding: 20px; }
         .order-footer { padding: 15px 20px; text-align: right; }
         .btn-track { background-color: #b21984; color: #fff; padding: 10px 25px; border-radius: 5px; text-decoration: none; }
+        .add-new-address-link { color: #b21984; font-weight: 700; text-decoration: none; display: inline-block; margin-top: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -39,7 +41,7 @@
         <div class="profile-header">
             <div>
                 <p>Hello,</p>
-                <h1 th:text="${account.getFullName()}">Duncan Bandojo</h1>
+                <h1 th:text="${account.getFullName()}"></h1>
             </div>
         </div>
 
@@ -50,10 +52,10 @@
                 <a href="#" class="edit-link">Edit</a>
             </div>
             <dl class="details-grid">
-                <dt>First Name:</dt> <dd th:text="${account.firstName}">Duncan</dd>
-                <dt>Last Name:</dt> <dd th:text="${account.lastName}">Bandojo</dd>
-                <dt>Phone Number:</dt> <dd th:text="${account.phoneNumber}">09123456789</dd>
-                <dt>Email:</dt> <dd th:text="${account.email}">duncanbandojo@gmail.com</dd>
+                <dt>First Name:</dt> <dd th:text="${account.firstName}"></dd>
+                <dt>Last Name:</dt> <dd th:text="${account.lastName}"></dd>
+                <dt>Phone Number:</dt> <dd th:text="${account.phoneNumber}"></dd>
+                <dt>Email:</dt> <dd th:text="${account.email}"></dd>
             </dl>
         </section>
 
@@ -61,17 +63,23 @@
         <section class="profile-section">
             <div class="section-header">
                 <h2>Address</h2>
-                <a href="#" class="edit-link">Edit</a>
             </div>
             <div th:each="address : ${account.addresses}" class="address-box">
-                <p th:text="${address.phoneNumber}">09123456789</p>
-                <p th:text="${address.getFullAddress()}">Unit 4B Greenfield Residences, ...</p>
+                <p><strong><span th:text="${account.getFullName()}"></span></strong> | <span th:text="${address.phoneNumber}"></span></p>
+                <p th:text="${address.getFullAddress()}"></p>
                 <div class="address-tags">
                     <span class="tag-home">HOME</span>
                     <span th:if="${address.isDefault()}" class="tag-default">Default Address</span>
                 </div>
             </div>
-            <a href="#" class="edit-link" style="margin-top: 10px; display: inline-block;">Add new address</a>
+
+            <!-- HTMX Target & Trigger -->
+            <div id="add-address-profile-target">
+                <a hx-get="/address/new"
+                   hx-target="#add-address-profile-target"
+                   hx-swap="innerHTML"
+                   class="add-new-address-link">Add new address +</a>
+            </div>
         </section>
 
         <!-- Orders Section -->
@@ -82,12 +90,12 @@
             <div th:if="${hasOrders}">
                 <div th:each="order : ${orders}" class="order-card">
                     <div class="order-header">
-                        <span class="order-header-info" th:text="'Order #' + ${order.orderId}">Sta. Mesa • DALI Online</span>
-                        <span th:text="${#temporals.format(order.createdAt, 'MMMM dd, yyyy')}">Friday, October 8, 2025</span>
+                        <span class="order-header-info" th:text="'Order #' + ${order.orderId}"></span>
+                        <span th:text="${#temporals.format(order.createdAt, 'MMMM dd, yyyy')}"></span>
                     </div>
                     <div class="order-body">
-                        <p th:text="${order.orderItems.size()} + ' products'">3 products</p>
-                        <p>Total: <strong th:text="'₱' + ${#numbers.formatDecimal(order.totalPrice, 1, 2)}">₱750</strong></p>
+                        <p th:text="${order.orderItems.size()} + ' products'"></p>
+                        <p>Total: <strong th:text="'₱' + ${#numbers.formatDecimal(order.totalPrice, 1, 2)}"></strong></p>
                     </div>
                     <div class="order-footer">
                         <a href="#" class="btn-track">Track Order</a>
