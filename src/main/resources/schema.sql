@@ -1,18 +1,21 @@
+-- DALI/src/main/resources/schema.sql
+
 -- Drop tables if they exist to ensure a clean slate on each run.
 -- This is useful for development.
+DROP TABLE IF EXISTS order_items CASCADE;
+DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS cart_items CASCADE;
 DROP TABLE IF EXISTS addresses CASCADE;
 DROP TABLE IF EXISTS accounts CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS stores CASCADE;
 
--- Create the 'stores' table
 CREATE TABLE stores (
                         store_id        SERIAL PRIMARY KEY,
                         store_name      VARCHAR(255) NOT NULL,
                         store_location  VARCHAR(255)
 );
 
--- Create the 'products' table
 CREATE TABLE products (
                           product_id          SERIAL PRIMARY KEY,
                           product_name        VARCHAR(255) NOT NULL,
@@ -23,7 +26,6 @@ CREATE TABLE products (
                           image               VARCHAR(255)
 );
 
--- Table 3: accounts
 CREATE TABLE accounts (
                           account_id          SERIAL PRIMARY KEY,
                           account_first_name  VARCHAR(255),
@@ -33,10 +35,9 @@ CREATE TABLE accounts (
                           phone_number        VARCHAR(50)
 );
 
--- Table 8: addresses
 CREATE TABLE addresses (
                            address_id      SERIAL PRIMARY KEY,
-                           account_id      INTEGER NOT NULL REFERENCES accounts(account_id),
+                           account_id      INTEGER NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
                            province        VARCHAR(255),
                            city            VARCHAR(255),
                            barangay        VARCHAR(255),
@@ -44,4 +45,32 @@ CREATE TABLE addresses (
                            phone_number    VARCHAR(50),
                            created_at      TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                            is_default      BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE cart_items (
+                            cart_item_id SERIAL PRIMARY KEY,
+                            account_id INTEGER NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
+                            product_id INTEGER NOT NULL REFERENCES products(product_id) ON DELETE CASCADE,
+                            quantity INTEGER NOT NULL,
+                            UNIQUE(account_id, product_id)
+);
+
+CREATE TABLE orders (
+                        order_id         SERIAL PRIMARY KEY,
+                        store_id         INTEGER REFERENCES stores(store_id),
+                        account_id       INTEGER NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
+                        address_id       INTEGER NOT NULL REFERENCES addresses(address_id),
+                        status           VARCHAR(255) NOT NULL,
+                        delivery_method  VARCHAR(255) NOT NULL,
+                        payment_method   VARCHAR(255) NOT NULL,
+                        total_price      NUMERIC(10, 2) NOT NULL,
+                        created_at       TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        updated_at       TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE order_items (
+                             order_item_id SERIAL PRIMARY KEY,
+                             order_id      INTEGER NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+                             product_id    INTEGER NOT NULL REFERENCES products(product_id),
+                             quantity      INTEGER NOT NULL
 );

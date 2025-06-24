@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Successful - DALI</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="order-success-page">
+    <div class="success-card">
+        <img th:src="@{/images/order-success.png}" alt="Order Successful">
+        <h2>Order Successfully Placed!</h2>
+        <p>Thank you for your purchase. Your order ID is <strong th:text="'#' + ${orderId}">#12345</strong>.</p>
+        <p>We've sent a confirmation to your email address.</p>
+        <div class="success-actions">
+            <a th:href="@{/shop}" class="btn btn-secondary">Continue Shopping</a>
+            <a th:href="@{/profile}" class="btn btn-primary">View My Orders</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

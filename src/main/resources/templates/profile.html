@@ -80,14 +80,14 @@
                 <h2>Orders</h2>
             </div>
             <div th:if="${hasOrders}">
-                <div class="order-card">
+                <div th:each="order : ${orders}" class="order-card">
                     <div class="order-header">
-                        <span class="order-header-info">Sta. Mesa • DALI Online</span>
-                        <span>Friday, October 8, 2025</span>
+                        <span class="order-header-info" th:text="'Order #' + ${order.orderId}">Sta. Mesa • DALI Online</span>
+                        <span th:text="${#temporals.format(order.createdAt, 'MMMM dd, yyyy')}">Friday, October 8, 2025</span>
                     </div>
                     <div class="order-body">
-                        <p>3 products</p>
-                        <p>Total: <strong>₱750</strong></p>
+                        <p th:text="${order.orderItems.size()} + ' products'">3 products</p>
+                        <p>Total: <strong th:text="'₱' + ${#numbers.formatDecimal(order.totalPrice, 1, 2)}">₱750</strong></p>
                     </div>
                     <div class="order-footer">
                         <a href="#" class="btn-track">Track Order</a>

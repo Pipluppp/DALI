@@ -12,16 +12,27 @@ Directory structure:
     │   │   │       └── dali/
     │   │   │           └── ecommerce/
     │   │   │               ├── DaliApplication.java
+    │   │   │               ├── config/
+    │   │   │               │   └── SecurityConfig.java
     │   │   │               ├── controller/
+    │   │   │               │   ├── AccountController.java
     │   │   │               │   ├── HomeController.java
     │   │   │               │   ├── ProductController.java
     │   │   │               │   └── StoreController.java
     │   │   │               ├── model/
+    │   │   │               │   ├── Account.java
+    │   │   │               │   ├── Address.java
     │   │   │               │   ├── Product.java
     │   │   │               │   └── Store.java
-    │   │   │               └── repository/
-    │   │   │                   ├── ProductRepository.java
-    │   │   │                   └── StoreRepository.java
+    │   │   │               ├── repository/
+    │   │   │               │   ├── AccountRepository.java
+    │   │   │               │   ├── AddressRepository.java
+    │   │   │               │   ├── ProductRepository.java
+    │   │   │               │   └── StoreRepository.java
+    │   │   │               └── service/
+    │   │   │                   ├── AccountService.java
+    │   │   │                   ├── AccountServiceImpl.java
+    │   │   │                   └── CustomUserDetailsService.java
     │   │   └── resources/
     │   │       ├── application.properties
     │   │       ├── data.sql
@@ -33,7 +44,10 @@ Directory structure:
     │   │       │       └── products/
     │   │       └── templates/
     │   │           ├── home.html
+    │   │           ├── login.html
     │   │           ├── product-detail.html
+    │   │           ├── profile.html
+    │   │           ├── register.html
     │   │           ├── shop.html
     │   │           ├── stores.html
     │   │           └── fragments/
@@ -618,6 +632,14 @@ File: pom.xml
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.thymeleaf.extras</groupId>
+            <artifactId>thymeleaf-extras-springsecurity6</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -650,6 +672,140 @@ public class DaliApplication {
 
 }
 
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/config/SecurityConfig.java
+================================================
+package com.dali.ecommerce.config;
+
+import com.dali.ecommerce.service.CustomUserDetailsService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    private final CustomUserDetailsService customUserDetailsService;
+
+    public SecurityConfig(CustomUserDetailsService customUserDetailsService) {
+        this.customUserDetailsService = customUserDetailsService;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(customUserDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .authorizeHttpRequests(auth -> auth
+                        // Add "/register" to the list of public URLs
+                        .requestMatchers("/", "/register", "/shop/**", "/stores/**", "/product/**", "/css/**", "/images/**", "/login").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                        .defaultSuccessUrl("/", true)
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/")
+                        .permitAll()
+                );
+
+        http.authenticationProvider(authenticationProvider());
+
+        return http.build();
+    }
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/controller/AccountController.java
+================================================
+package com.dali.ecommerce.controller;
+
+import com.dali.ecommerce.model.Account;
+import com.dali.ecommerce.repository.AccountRepository;
+import com.dali.ecommerce.service.AccountService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+@Controller
+public class AccountController {
+
+    private final AccountRepository accountRepository;
+    private final AccountService accountService;
+
+    public AccountController(AccountRepository accountRepository, AccountService accountService) {
+        this.accountRepository = accountRepository;
+        this.accountService = accountService;
+    }
+
+    @GetMapping("/register")
+    public String showRegistrationForm(Model model) {
+        model.addAttribute("account", new Account());
+        return "register";
+    }
+
+    @PostMapping("/register")
+    public String registerUserAccount(@ModelAttribute("account") Account account, RedirectAttributes redirectAttributes) {
+        try {
+            accountService.registerNewUser(account);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/register";
+        }
+        redirectAttributes.addFlashAttribute("success", "Registration successful! Please log in.");
+        return "redirect:/login";
+    }
+
+    @GetMapping("/login")
+    public String login() {
+        return "login";
+    }
+
+    @GetMapping("/profile")
+    public String profile(Model model, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+        String email = authentication.getName();
+        Account account = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        model.addAttribute("account", account);
+        model.addAttribute("hasOrders", false); // Default to false for new users
+
+        return "profile";
+    }
+}
 
 
 ================================================
@@ -789,6 +945,132 @@ public class StoreController {
         }
         model.addAttribute("stores", stores);
         return "fragments/store-list :: store-list-fragment";
+    }
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/model/Account.java
+================================================
+package com.dali.ecommerce.model;
+
+import jakarta.persistence.*;
+import java.util.List;
+
+@Entity
+@Table(name = "accounts")
+public class Account {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "account_id")
+    private Integer accountId;
+
+    @Column(name = "account_first_name")
+    private String firstName;
+
+    @Column(name = "account_last_name")
+    private String lastName;
+
+    @Column(name = "account_email", nullable = false, unique = true)
+    private String email;
+
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @OneToMany(mappedBy = "account", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OrderBy("isDefault DESC, addressId ASC")
+    private List<Address> addresses;
+
+    // Getters and Setters
+    public Integer getAccountId() { return accountId; }
+    public void setAccountId(Integer accountId) { this.accountId = accountId; }
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+    public List<Address> getAddresses() { return addresses; }
+    public void setAddresses(List<Address> addresses) { this.addresses = addresses; }
+
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/model/Address.java
+================================================
+package com.dali.ecommerce.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "addresses")
+public class Address {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "address_id")
+    private Integer addressId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
+
+    @Column(name = "province")
+    private String province;
+
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "barangay")
+    private String barangay;
+
+    @Column(name = "additional_info")
+    private String additionalInfo;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "is_default")
+    private boolean isDefault;
+
+    // Getters and Setters
+    public Integer getAddressId() { return addressId; }
+    public void setAddressId(Integer addressId) { this.addressId = addressId; }
+    public Account getAccount() { return account; }
+    public void setAccount(Account account) { this.account = account; }
+    public String getProvince() { return province; }
+    public void setProvince(String province) { this.province = province; }
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+    public String getBarangay() { return barangay; }
+    public void setBarangay(String barangay) { this.barangay = barangay; }
+    public String getAdditionalInfo() { return additionalInfo; }
+    public void setAdditionalInfo(String additionalInfo) { this.additionalInfo = additionalInfo; }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public boolean isDefault() { return isDefault; }
+    public void setDefault(boolean isDefault) { this.isDefault = isDefault; }
+
+    public String getFullAddress() {
+        return String.join(", ", additionalInfo, barangay, city, province);
     }
 }
 
@@ -978,6 +1260,37 @@ public class Store {
 
 
 ================================================
+File: src/main/java/com/dali/ecommerce/repository/AccountRepository.java
+================================================
+package com.dali.ecommerce.repository;
+
+import com.dali.ecommerce.model.Account;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface AccountRepository extends JpaRepository<Account, Integer> {
+    Optional<Account> findByEmail(String email);
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/repository/AddressRepository.java
+================================================
+package com.dali.ecommerce.repository;
+
+import com.dali.ecommerce.model.Address;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface AddressRepository extends JpaRepository<Address, Integer> {
+}
+
+
+================================================
 File: src/main/java/com/dali/ecommerce/repository/ProductRepository.java
 ================================================
 package com.dali.ecommerce.repository;
@@ -1021,6 +1334,85 @@ public interface StoreRepository extends JpaRepository<Store, Integer> {
 
     // Add this for searching
     List<Store> findByNameContainingIgnoreCaseOrLocationContainingIgnoreCase(String name, String location);
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/service/AccountService.java
+================================================
+package com.dali.ecommerce.service;
+
+import com.dali.ecommerce.model.Account;
+
+public interface AccountService {
+    Account registerNewUser(Account account) throws Exception;
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/service/AccountServiceImpl.java
+================================================
+package com.dali.ecommerce.service;
+
+import com.dali.ecommerce.model.Account;
+import com.dali.ecommerce.repository.AccountRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+public class AccountServiceImpl implements AccountService {
+
+    private final AccountRepository accountRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public AccountServiceImpl(AccountRepository accountRepository, PasswordEncoder passwordEncoder) {
+        this.accountRepository = accountRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Override
+    public Account registerNewUser(Account account) throws Exception {
+        if (accountRepository.findByEmail(account.getEmail()).isPresent()) {
+            throw new Exception("There is already an account with that email address: " + account.getEmail());
+        }
+        // Encode the raw password before saving
+        account.setPasswordHash(passwordEncoder.encode(account.getPasswordHash()));
+        return accountRepository.save(account);
+    }
+}
+
+
+================================================
+File: src/main/java/com/dali/ecommerce/service/CustomUserDetailsService.java
+================================================
+package com.dali.ecommerce.service;
+
+import com.dali.ecommerce.model.Account;
+import com.dali.ecommerce.repository.AccountRepository;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+
+@Service
+public class CustomUserDetailsService implements UserDetailsService {
+
+    private final AccountRepository accountRepository;
+
+    public CustomUserDetailsService(AccountRepository accountRepository) {
+        this.accountRepository = accountRepository;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        Account account = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+        return new User(account.getEmail(), account.getPasswordHash(), new ArrayList<>());
+    }
 }
 
 
@@ -1075,7 +1467,6 @@ INSERT INTO stores (store_name, store_location) VALUES
 -- =================================================================
 --  Seed the 'products' table
 -- =================================================================
--- Note: The image filenames here must exactly match the files in 'static/images/products/'
 INSERT INTO products (product_name, product_description, product_price, product_category, product_quantity, image) VALUES
                                                                                                                        ('Frozen Pork Shoulder 500g', 'Versatile and affordable choice for your everyday meals. Perfect for classic dishes like adobo, sinigang, or hearty stews. Tender, flavorful, and conveniently packed.', 199.00, 'Pork', 55, 'frozen-pork-shoulder.png'),
                                                                                                                        ('Beef Cubes for Stew 500g', 'Ideal for slow-cooking, caldereta, or mechado. These tender beef cubes will make your stews rich and flavorful.', 280.00, 'Beef', 40, 'beef-cubes.png'),
@@ -1090,6 +1481,8 @@ File: src/main/resources/schema.sql
 ================================================
 -- Drop tables if they exist to ensure a clean slate on each run.
 -- This is useful for development.
+DROP TABLE IF EXISTS addresses CASCADE;
+DROP TABLE IF EXISTS accounts CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS stores CASCADE;
 
@@ -1109,6 +1502,29 @@ CREATE TABLE products (
                           product_category    VARCHAR(255),
                           product_quantity    INTEGER NOT NULL,
                           image               VARCHAR(255)
+);
+
+-- Table 3: accounts
+CREATE TABLE accounts (
+                          account_id          SERIAL PRIMARY KEY,
+                          account_first_name  VARCHAR(255),
+                          account_last_name   VARCHAR(255),
+                          account_email       VARCHAR(255) UNIQUE NOT NULL,
+                          password_hash       VARCHAR(255) NOT NULL,
+                          phone_number        VARCHAR(50)
+);
+
+-- Table 8: addresses
+CREATE TABLE addresses (
+                           address_id      SERIAL PRIMARY KEY,
+                           account_id      INTEGER NOT NULL REFERENCES accounts(account_id),
+                           province        VARCHAR(255),
+                           city            VARCHAR(255),
+                           barangay        VARCHAR(255),
+                           additional_info VARCHAR(1024),
+                           phone_number    VARCHAR(50),
+                           created_at      TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                           is_default      BOOLEAN DEFAULT FALSE
 );
 
 
@@ -1561,6 +1977,185 @@ body {
     min-height: calc(100vh - 81px - 61px); /* Ensures content area fills the screen, pushing footer down */
 }
 
+/* =================================
+   7. Authentication Page Styles (NEW)
+   ================================= */
+.auth-page-wrapper {
+    background-color: #b21984;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+    box-sizing: border-box;
+}
+
+.auth-card {
+    display: flex;
+    max-width: 960px;
+    width: 100%;
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.auth-image-panel {
+    flex: 1;
+    background-color: #fce9d3;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.auth-image-panel img {
+    max-width: 80%;
+    margin-top: 30px;
+}
+
+.back-to-shop-btn {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 20px;
+    border-radius: 20px;
+    background-color: #fff;
+    border: 1px solid #eee;
+    text-decoration: none;
+    color: #333;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.back-to-shop-btn:hover {
+    background-color: #f8f8f8;
+}
+
+.auth-form-panel {
+    flex: 1;
+    padding: 25px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.auth-form-panel h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.auth-form-panel .sub-heading {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.auth-form-panel .sub-heading a {
+    color: #b21984;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-form-panel .form-group {
+    margin-bottom: 20px;
+}
+
+.auth-form-panel label {
+    display: block;
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.auth-form-panel input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 1rem;
+}
+
+.auth-form-panel input:focus {
+    outline: none;
+    border-color: #b21984;
+    box-shadow: 0 0 0 2px rgba(178, 25, 132, 0.2);
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    background-color: #b21984;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.2s;
+}
+
+.auth-btn:hover {
+    background-color: #9e1673;
+}
+
+.forgot-password-link {
+    display: block;
+    text-align: right;
+    font-size: 0.9rem;
+    color: #555;
+    text-decoration: none;
+    margin-top: -10px;
+    margin-bottom: 20px;
+}
+
+.or-separator {
+    text-align: center;
+    margin: 30px 0;
+    color: #aaa;
+    position: relative;
+}
+.or-separator::before,
+.or-separator::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+    background-color: #ddd;
+}
+.or-separator::before { left: 0; }
+.or-separator::after { right: 0; }
+
+
+.switch-auth-link {
+    text-align: center;
+    margin-top: 30px;
+    color: #555;
+}
+
+.switch-auth-link a {
+    color: #b21984;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.auth-error { color: #dc3545; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center; font-size: 0.9rem; }
+.auth-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center; font-size: 0.9rem; }
+
+/* The personal information label for sign up page */
+.form-section-label {
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 15px;
+    display: block;
+}
+
 
 
 ================================================
@@ -1658,6 +2253,71 @@ File: src/main/resources/templates/home.html
 
 
 ================================================
+File: src/main/resources/templates/login.html
+================================================
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - DALI</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="auth-page-wrapper">
+    <div class="auth-card">
+        <!-- Image Panel -->
+        <div class="auth-image-panel">
+            <a th:href="@{/shop}" class="back-to-shop-btn">
+                <span><</span> Â  Back to shop
+            </a>
+            <img th:src="@{/images/login.png}" alt="Shopping cart with groceries">
+        </div>
+
+        <!-- Form Panel -->
+        <div class="auth-form-panel">
+            <h2>Login</h2>
+
+            <div th:if="${param.error}" class="auth-error">
+                Invalid email or password.
+            </div>
+            <div th:if="${success}" class="auth-success" th:text="${success}">
+                Registration successful!
+            </div>
+
+            <form th:action="@{/login}" method="post">
+                <div class="form-group">
+                    <label for="username">Email</label>
+                    <input type="text" id="username" name="username" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <a href="#" class="forgot-password-link">Forgot Password?</a>
+                <button type="submit" class="auth-btn">Login</button>
+            </form>
+
+            <div class="or-separator">OR</div>
+
+            <!-- Removed Social Media Buttons as per request -->
+
+            <div class="switch-auth-link">
+                Don't have an account? <a th:href="@{/register}">Sign up</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+
+
+================================================
 File: src/main/resources/templates/product-detail.html
 ================================================
 <!DOCTYPE html>
@@ -1699,6 +2359,186 @@ File: src/main/resources/templates/product-detail.html
 </main>
 
 <footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>
+
+
+================================================
+File: src/main/resources/templates/profile.html
+================================================
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>My Account - DALI</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .profile-page { background-color: #f7f3f6; min-height: calc(100vh - 81px - 61px); padding: 50px 0; }
+        .profile-page .container { max-width: 900px; }
+        .profile-header h1 { font-size: 2rem; color: #b21984; font-weight: 700; }
+        .profile-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
+        .profile-section { background: #fff; border-radius: 8px; padding: 30px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        .section-header h2 { font-size: 1.5rem; color: #333; }
+        .edit-link { color: #b21984; text-decoration: none; font-weight: 600; }
+        .details-grid { display: grid; grid-template-columns: 150px 1fr; gap: 10px; color: #555; }
+        .details-grid dt { font-weight: 600; color: #888; }
+        .address-box { border: 1px solid #eee; padding: 20px; border-radius: 5px; margin-bottom: 15px; }
+        .address-box p { margin: 0 0 5px; }
+        .address-tags span { display: inline-block; padding: 4px 10px; font-size: 0.75rem; border-radius: 15px; margin-right: 10px; font-weight: 600; }
+        .tag-home { background-color: #e9ecef; color: #495057; }
+        .tag-default { border: 1px solid #b21984; color: #b21984; background-color: #fff; }
+        .order-card { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; overflow: hidden; }
+        .order-header { background-color: #f8f9fa; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .order-header-info { font-weight: 600; }
+        .order-body { padding: 20px; }
+        .order-footer { padding: 15px 20px; text-align: right; }
+        .btn-track { background-color: #b21984; color: #fff; padding: 10px 25px; border-radius: 5px; text-decoration: none; }
+    </style>
+</head>
+<body>
+<header class="header" th:replace="~{fragments/header :: header}"></header>
+
+<main class="profile-page">
+    <div class="container" th:if="${account}">
+        <div class="profile-header">
+            <div>
+                <p>Hello,</p>
+                <h1 th:text="${account.getFullName()}">Duncan Bandojo</h1>
+            </div>
+        </div>
+
+        <!-- Personal Details Section -->
+        <section class="profile-section">
+            <div class="section-header">
+                <h2>Personal details</h2>
+                <a href="#" class="edit-link">Edit</a>
+            </div>
+            <dl class="details-grid">
+                <dt>First Name:</dt> <dd th:text="${account.firstName}">Duncan</dd>
+                <dt>Last Name:</dt> <dd th:text="${account.lastName}">Bandojo</dd>
+                <dt>Phone Number:</dt> <dd th:text="${account.phoneNumber}">09123456789</dd>
+                <dt>Email:</dt> <dd th:text="${account.email}">duncanbandojo@gmail.com</dd>
+            </dl>
+        </section>
+
+        <!-- Address Section -->
+        <section class="profile-section">
+            <div class="section-header">
+                <h2>Address</h2>
+                <a href="#" class="edit-link">Edit</a>
+            </div>
+            <div th:each="address : ${account.addresses}" class="address-box">
+                <p th:text="${address.phoneNumber}">09123456789</p>
+                <p th:text="${address.getFullAddress()}">Unit 4B Greenfield Residences, ...</p>
+                <div class="address-tags">
+                    <span class="tag-home">HOME</span>
+                    <span th:if="${address.isDefault()}" class="tag-default">Default Address</span>
+                </div>
+            </div>
+            <a href="#" class="edit-link" style="margin-top: 10px; display: inline-block;">Add new address</a>
+        </section>
+
+        <!-- Orders Section -->
+        <section class="profile-section">
+            <div class="section-header">
+                <h2>Orders</h2>
+            </div>
+            <div th:if="${hasOrders}">
+                <div class="order-card">
+                    <div class="order-header">
+                        <span class="order-header-info">Sta. Mesa â€¢ DALI Online</span>
+                        <span>Friday, October 8, 2025</span>
+                    </div>
+                    <div class="order-body">
+                        <p>3 products</p>
+                        <p>Total: <strong>â‚±750</strong></p>
+                    </div>
+                    <div class="order-footer">
+                        <a href="#" class="btn-track">Track Order</a>
+                    </div>
+                </div>
+            </div>
+            <div th:if="!${hasOrders}">
+                <p>You have no orders yet.</p>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>
+
+
+================================================
+File: src/main/resources/templates/register.html
+================================================
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - DALI</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="auth-page-wrapper">
+    <div class="auth-card">
+        <!-- Image Panel -->
+        <div class="auth-image-panel">
+            <a th:href="@{/shop}" class="back-to-shop-btn">
+                <span><</span> Â  Back to shop
+            </a>
+            <img th:src="@{/images/login.png}" alt="Shopping cart with groceries">
+        </div>
+
+        <!-- Form Panel -->
+        <div class="auth-form-panel">
+            <h2>Sign up</h2>
+            <p class="sub-heading">
+                <br>Already have account? <a th:href="@{/login}">Login here</a>
+            </p>
+
+            <div th:if="${error}" class="auth-error" th:text="${error}">
+                Error message will go here.
+            </div>
+
+            <form th:action="@{/register}" th:object="${account}" method="post">
+                <span class="form-section-label">Personal Information</span>
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" th:field="*{firstName}" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" id="lastName" th:field="*{lastName}" required>
+                </div>
+                <div class="form-group">
+                    <label for="phoneNumber">Phone number</label>
+                    <input type="tel" id="phoneNumber" th:field="*{phoneNumber}" placeholder="PH (+63)">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" th:field="*{email}" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" th:field="*{passwordHash}" required>
+                </div>
+                <button type="submit" class="auth-btn">Next</button>
+            </form>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
@@ -1848,7 +2688,7 @@ File: src/main/resources/templates/fragments/footer.html
 File: src/main/resources/templates/fragments/header.html
 ================================================
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity">
 <body>
 <header class="header" th:fragment="header">
     <div class="container">
@@ -1861,7 +2701,15 @@ File: src/main/resources/templates/fragments/header.html
         </nav>
         <div class="header-actions">
             <a href="#">Cart (0)</a>
-            <a href="#">Login</a>
+
+            <!-- Not Authenticated -->
+            <a sec:authorize="!isAuthenticated()" th:href="@{/login}">Login</a>
+
+            <!-- Authenticated -->
+            <a sec:authorize="isAuthenticated()" th:href="@{/profile}">Profile</a>
+            <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" style="background:none; border:none; padding:0; font-family:inherit; font-size:inherit; cursor:pointer; color:#555; font-weight: 600; margin-left: 20px;">Logout</button>
+            </form>
         </div>
     </div>
 </header>

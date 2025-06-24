@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkout - DALI</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="checkout-page-wrapper">
+    <div class="checkout-main-panel">
+        <div class="checkout-header">
+            <a th:href="@{/}" class="logo"><img th:src="@{/images/dali-logo.png}" alt="DALI Logo" style="height: 50px;"/></a>
+            <div class="checkout-steps">
+                <span th:classappend="${step == 'address'} ? 'active'">Address</span> >
+                <span th:classappend="${step == 'shipping'} ? 'active'">Shipping</span> >
+                <span th:classappend="${step == 'payment'} ? 'active'">Payment</span>
+            </div>
+        </div>
+
+        <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}">Error message</div>
+
+        <!-- Address Step -->
+        <div th:if="${step == 'address'}" class="checkout-content">
+            <h2>Shipping Information</h2>
+            <form th:action="@{/checkout/address}" method="post">
+                <div class="address-selection">
+                    <div th:each="addr : ${addresses}" class="address-option">
+                        <input type="radio" name="addressId" th:value="${addr.addressId}" th:id="'addr-' + ${addr.addressId}" required
+                               th:checked="${checkoutDetails.addressId == addr.addressId or (addr.isDefault() and checkoutDetails.addressId == null)}">
+                        <label th:for="'addr-' + ${addr.addressId}">
+                            <strong th:text="${session.SPRING_SECURITY_CONTEXT.authentication.principal.username}"></strong>
+                            <span th:text="' | ' + ${addr.phoneNumber}"></span>
+                            <p th:text="${addr.getFullAddress()}"></p>
+                            <span th:if="${addr.isDefault()}" class="tag-default">Default</span>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary checkout-btn">Proceed</button>
+            </form>
+        </div>
+
+        <!-- Shipping Step -->
+        <div th:if="${step == 'shipping'}" class="checkout-content">
+            <h2>Delivery Option</h2>
+            <form th:action="@{/checkout/shipping}" method="post">
+                <div class="delivery-selection">
+                    <div class="delivery-option">
+                        <input type="radio" name="deliveryMethod" value="Standard Delivery" id="del-standard" required
+                               th:checked="${checkoutDetails.deliveryMethod == 'Standard Delivery'}">
+                        <label for="del-standard">
+                            <strong>Standard Delivery</strong>
+                            <p>Within the day</p>
+                        </label>
+                    </div>
+                    <div class="delivery-option">
+                        <input type="radio" name="deliveryMethod" value="Priority Delivery" id="del-priority" required
+                               th:checked="${checkoutDetails.deliveryMethod == 'Priority Delivery'}">
+                        <label for="del-priority">
+                            <strong>Priority Delivery</strong>
+                            <p>Within hours</p>
+                        </label>
+                    </div>
+                    <div class="delivery-option">
+                        <input type="radio" name="deliveryMethod" value="Pickup Delivery" id="del-pickup" required
+                               th:checked="${checkoutDetails.deliveryMethod == 'Pickup Delivery'}">
+                        <label for="del-pickup">
+                            <strong>Pickup Delivery</strong>
+                            <p>Pickup after 2-3 hours</p>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary checkout-btn">Proceed</button>
+            </form>
+        </div>
+
+        <!-- Payment Step -->
+        <div th:if="${step == 'payment'}" class="checkout-content">
+            <h2>Payment Methods</h2>
+            <form th:action="@{/checkout/payment}" method="post">
+                <div class="payment-selection">
+                    <div class="payment-option">
+                        <input type="radio" name="paymentMethod" value="Cash on delivery (COD)" id="pay-cod" required
+                               th:checked="${checkoutDetails.paymentMethod == 'Cash on delivery (COD)'}">
+                        <label for="pay-cod">
+                            <img th:src="@{/images/cod.png}" alt="COD">
+                            <div>
+                                <strong>Cash on delivery (COD)</strong>
+                                <p>Cash on Delivery</p>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="payment-option">
+                        <input type="radio" name="paymentMethod" value="GCash e-Wallet" id="pay-gcash" required
+                               th:checked="${checkoutDetails.paymentMethod == 'GCash e-Wallet'}">
+                        <label for="pay-gcash">
+                            <img th:src="@{/images/gcash.png}" alt="GCash">
+                            <div>
+                                <strong>GCash e-Wallet</strong>
+                                <p>GCash account required</p>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="payment-option">
+                        <input type="radio" name="paymentMethod" value="Credit/Debit Card" id="pay-card" required
+                               th:checked="${checkoutDetails.paymentMethod == 'Credit/Debit Card'}">
+                        <label for="pay-card">
+                            <img th:src="@{/images/credit-card.png}" alt="Card">
+                            <div>
+                                <strong>Credit/Debit Card</strong>
+                                <p>Credit/Debit Card</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary checkout-btn">Finish Order</button>
+            </form>
+        </div>
+    </div>
+    <div class="checkout-summary-panel">
+        <h3>Your Cart</h3>
+        <div class="cart-items-summary">
+            <div th:each="item : ${cartItems}" class="cart-item-summary-row">
+                <img th:src="@{'/images/products/' + ${item.product.image}}">
+                <div class="item-details">
+                    <p class="name" th:text="${item.product.name}">Product Name</p>
+                    <p class="qty" th:text="'Qty: ' + ${item.quantity}">Qty: 1</p>
+                </div>
+                <p class="price" th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 2)}">₱199.00</p>
+            </div>
+        </div>
+        <hr>
+        <div class="summary-row">
+            <span>Subtotal</span>
+            <span th:text="'₱' + ${#numbers.formatDecimal(subtotal, 1, 2)}">₱650.00</span>
+        </div>
+        <div class="summary-row">
+            <span>Shipping</span>
+            <span th:text="'₱' + ${#numbers.formatDecimal(shipping, 1, 2)}">₱50.00</span>
+        </div>
+        <hr>
+        <div class="summary-row total-row">
+            <span>Total</span>
+            <span th:text="'₱' + ${#numbers.formatDecimal(total, 1, 2)}">₱700.00</span>
+        </div>
+    </div>
+</div>
+</body>
+</html>

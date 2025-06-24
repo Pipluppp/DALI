@@ -1,0 +1,183 @@
+package com.dali.ecommerce.service;
+
+import com.dali.ecommerce.model.Account;
+import com.dali.ecommerce.model.CartItem;
+import com.dali.ecommerce.model.Product;
+import com.dali.ecommerce.repository.AccountRepository;
+import com.dali.ecommerce.repository.CartItemRepository;
+import com.dali.ecommerce.repository.ProductRepository;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+public class CartServiceImpl implements CartService {
+
+    private final CartItemRepository cartItemRepository;
+    private final ProductRepository productRepository;
+    private final AccountRepository accountRepository;
+    private static final String SESSION_CART = "sessionCart";
+
+    public CartServiceImpl(CartItemRepository cartItemRepository, ProductRepository productRepository, AccountRepository accountRepository) {
+        this.cartItemRepository = cartItemRepository;
+        this.productRepository = productRepository;
+        this.accountRepository = accountRepository;
+    }
+
+    @Override
+    @Transactional
+    public void addToCart(Integer productId, int quantity, Authentication authentication, HttpSession session) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            Account account = getAccount(authentication.getName());
+            Optional<CartItem> existingItem = cartItemRepository.findByAccountAccountIdAndProductId(account.getAccountId(), productId);
+            if (existingItem.isPresent()) {
+                CartItem cartItem = existingItem.get();
+                cartItem.setQuantity(cartItem.getQuantity() + quantity);
+                cartItemRepository.save(cartItem);
+            } else {
+                Product product = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
+                CartItem newItem = new CartItem();
+                newItem.setAccount(account);
+                newItem.setProduct(product);
+                newItem.setQuantity(quantity);
+                cartItemRepository.save(newItem);
+            }
+        } else {
+            Map<Integer, Integer> cart = getSessionCart(session);
+            cart.put(productId, cart.getOrDefault(productId, 0) + quantity);
+            session.setAttribute(SESSION_CART, cart);
+        }
+    }
+
+    @Override
+    public List<CartItem> getCartItems(Authentication authentication, HttpSession session) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            Account account = getAccount(authentication.getName());
+            return cartItemRepository.findByAccountAccountId(account.getAccountId());
+        } else {
+            Map<Integer, Integer> sessionCart = getSessionCart(session);
+            return sessionCart.entrySet().stream()
+                    .map(entry -> {
+                        Product product = productRepository.findById(entry.getKey()).orElse(null);
+                        if (product == null) return null;
+                        CartItem item = new CartItem();
+                        item.setProduct(product);
+                        item.setQuantity(entry.getValue());
+                        return item;
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void updateQuantity(Integer productId, int quantity, Authentication authentication, HttpSession session) {
+        if (quantity <= 0) {
+            removeFromCart(productId, authentication, session);
+            return;
+        }
+        if (authentication != null && authentication.isAuthenticated()) {
+            Account account = getAccount(authentication.getName());
+            cartItemRepository.findByAccountAccountIdAndProductId(account.getAccountId(), productId)
+                    .ifPresent(item -> {
+                        item.setQuantity(quantity);
+                        cartItemRepository.save(item);
+                    });
+        } else {
+            Map<Integer, Integer> cart = getSessionCart(session);
+            if (cart.containsKey(productId)) {
+                cart.put(productId, quantity);
+                session.setAttribute(SESSION_CART, cart);
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void removeFromCart(Integer productId, Authentication authentication, HttpSession session) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            Account account = getAccount(authentication.getName());
+            cartItemRepository.findByAccountAccountIdAndProductId(account.getAccountId(), productId)
+                    .ifPresent(cartItemRepository::delete);
+        } else {
+            Map<Integer, Integer> cart = getSessionCart(session);
+            cart.remove(productId);
+            session.setAttribute(SESSION_CART, cart);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void clearCart(Authentication authentication, HttpSession session) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            Account account = getAccount(authentication.getName());
+            cartItemRepository.deleteByAccountAccountId(account.getAccountId());
+        } else {
+            session.removeAttribute(SESSION_CART);
+        }
+    }
+
+
+    @Override
+    public double getCartTotal(List<CartItem> cartItems) {
+        return cartItems.stream().mapToDouble(CartItem::getSubtotal).sum();
+    }
+
+    @Override
+    public int getCartItemCount(Authentication authentication, HttpSession session) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            Account account = getAccount(authentication.getName());
+            return cartItemRepository.findByAccountAccountId(account.getAccountId()).stream()
+                    .mapToInt(CartItem::getQuantity)
+                    .sum();
+        } else {
+            return getSessionCart(session).values().stream().mapToInt(Integer::intValue).sum();
+        }
+    }
+
+    @Override
+    @Transactional
+    public void mergeSessionCartWithDbCart(HttpSession session, String username) {
+        Map<Integer, Integer> sessionCart = getSessionCart(session);
+        if (sessionCart.isEmpty()) return;
+
+        Account account = getAccount(username);
+        sessionCart.forEach((productId, quantity) -> {
+            Optional<CartItem> existingItem = cartItemRepository.findByAccountAccountIdAndProductId(account.getAccountId(), productId);
+            if (existingItem.isPresent()) {
+                CartItem dbItem = existingItem.get();
+                dbItem.setQuantity(dbItem.getQuantity() + quantity); // Merge quantities
+                cartItemRepository.save(dbItem);
+            } else {
+                Product product = productRepository.findById(productId).orElse(null);
+                if (product != null) {
+                    CartItem newItem = new CartItem();
+                    newItem.setAccount(account);
+                    newItem.setProduct(product);
+                    newItem.setQuantity(quantity);
+                    cartItemRepository.save(newItem);
+                }
+            }
+        });
+        session.removeAttribute(SESSION_CART);
+    }
+
+    private Map<Integer, Integer> getSessionCart(HttpSession session) {
+        Map<Integer, Integer> cart = (Map<Integer, Integer>) session.getAttribute(SESSION_CART);
+        if (cart == null) {
+            cart = new HashMap<>();
+            session.setAttribute(SESSION_CART, cart);
+        }
+        return cart;
+    }
+
+    private Account getAccount(String email) {
+        return accountRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
+}

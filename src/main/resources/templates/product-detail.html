@@ -22,8 +22,14 @@
         <p class="product-detail-price" th:text="*{getFormattedPrice()}">₱ 199</p>
 
         <div class="product-actions">
-            <!-- Quantity selector can be added here later -->
-            <button th:if="*{productQuantity > 0}" class="btn btn-primary btn-large">Add to Cart</button>
+            <form th:action="@{/cart/add}" method="post">
+                <input type="hidden" name="productId" th:value="*{id}"/>
+                <div class="form-group" style="display:flex; align-items:center; gap: 15px;">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" name="quantity" value="1" min="1" style="width: 70px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                    <button th:if="*{productQuantity > 0}" type="submit" class="btn btn-primary btn-large">Add to Cart</button>
+                </div>
+            </form>
             <button th:if="*{productQuantity <= 0}" class="btn btn-disabled btn-large" disabled>Out of Stock</button>
         </div>
 

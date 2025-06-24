@@ -11,7 +11,7 @@
             <a th:href="@{/stores}">Stores</a>
         </nav>
         <div class="header-actions">
-            <a href="#">Cart (0)</a>
+            <a th:href="@{/cart}" th:text="'Cart (' + ${cartItemCount} + ')'">Cart (0)</a>
 
             <!-- Not Authenticated -->
             <a sec:authorize="!isAuthenticated()" th:href="@{/login}">Login</a>

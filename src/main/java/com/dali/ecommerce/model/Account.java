@@ -31,6 +31,13 @@ public class Account {
     @OrderBy("isDefault DESC, addressId ASC")
     private List<Address> addresses;
 
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CartItem> cartItems;
+
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("createdAt DESC")
+    private List<Order> orders;
+
     // Getters and Setters
     public Integer getAccountId() { return accountId; }
     public void setAccountId(Integer accountId) { this.accountId = accountId; }
@@ -46,6 +53,10 @@ public class Account {
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
     public List<Address> getAddresses() { return addresses; }
     public void setAddresses(List<Address> addresses) { this.addresses = addresses; }
+    public List<CartItem> getCartItems() { return cartItems; }
+    public void setCartItems(List<CartItem> cartItems) { this.cartItems = cartItems; }
+    public List<Order> getOrders() { return orders; }
+    public void setOrders(List<Order> orders) { this.orders = orders; }
 
     public String getFullName() {
         return firstName + " " + lastName;

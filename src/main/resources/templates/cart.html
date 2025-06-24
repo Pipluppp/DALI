@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Cart - DALI</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="header" th:replace="~{fragments/header :: header}"></header>
+
+<main class="cart-page container">
+    <h1>Your Cart</h1>
+    <div class="cart-container" th:if="${!cartItems.isEmpty()}">
+        <div class="cart-items-panel">
+            <div class="cart-item-header">
+                <div class="header-product">Product</div>
+                <div class="header-quantity">Quantity</div>
+                <div class="header-total">Total</div>
+                <div class="header-action"></div>
+            </div>
+
+            <div th:each="item : ${cartItems}" class="cart-item-row">
+                <div class="cart-product-info">
+                    <img th:src="@{'/images/products/' + ${item.product.image}}" th:alt="${item.product.name}">
+                    <div>
+                        <p class="product-name" th:text="${item.product.name}">Product Name</p>
+                        <p class="product-price" th:text="'₱' + ${#numbers.formatDecimal(item.product.price, 1, 2)}">₱199.00</p>
+                    </div>
+                </div>
+
+                <div class="cart-quantity-selector">
+                    <form th:action="@{/cart/update}" method="post">
+                        <input type="hidden" name="productId" th:value="${item.product.id}"/>
+                        <input type="number" name="quantity" th:value="${item.quantity}" min="1" onchange="this.form.submit()">
+                    </form>
+                </div>
+
+                <div class="cart-item-total" th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 2)}">
+                    ₱199.00
+                </div>
+
+                <div class="cart-item-remove">
+                    <form th:action="@{/cart/remove}" method="post">
+                        <input type="hidden" name="productId" th:value="${item.product.id}"/>
+                        <button type="submit" class="remove-btn">×</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="cart-summary-panel">
+            <h2>Order Summary</h2>
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span th:text="'₱' + ${#numbers.formatDecimal(subtotal, 1, 2)}">₱650.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Shipping</span>
+                <span th:text="${shipping == 0.0} ? 'FREE' : '₱' + ${#numbers.formatDecimal(shipping, 1, 2)}">₱50.00</span>
+            </div>
+            <hr>
+            <div class="summary-row total-row">
+                <span>Total</span>
+                <span th:text="'₱' + ${#numbers.formatDecimal(total, 1, 2)}">₱700.00</span>
+            </div>
+            <a th:href="@{/checkout}" class="btn btn-primary checkout-btn">Continue to checkout</a>
+        </div>
+    </div>
+
+    <div class="cart-empty" th:if="${cartItems.isEmpty()}">
+        <h2>Your cart is empty.</h2>
+        <p>Looks like you haven't added anything to your cart yet.</p>
+        <a th:href="@{/shop}" class="btn btn-primary">Continue Shopping</a>
+    </div>
+</main>
+
+<footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

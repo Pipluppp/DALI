@@ -1,7 +1,9 @@
 package com.dali.ecommerce.controller;
 
 import com.dali.ecommerce.model.Account;
+import com.dali.ecommerce.model.Order;
 import com.dali.ecommerce.repository.AccountRepository;
+import com.dali.ecommerce.repository.OrderRepository;
 import com.dali.ecommerce.service.AccountService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,15 +14,19 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
+
 @Controller
 public class AccountController {
 
     private final AccountRepository accountRepository;
     private final AccountService accountService;
+    private final OrderRepository orderRepository;
 
-    public AccountController(AccountRepository accountRepository, AccountService accountService) {
+    public AccountController(AccountRepository accountRepository, AccountService accountService, OrderRepository orderRepository) {
         this.accountRepository = accountRepository;
         this.accountService = accountService;
+        this.orderRepository = orderRepository;
     }
 
     @GetMapping("/register")
@@ -56,8 +62,11 @@ public class AccountController {
         Account account = accountRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
+        List<Order> orders = orderRepository.findByAccountAccountIdOrderByCreatedAtDesc(account.getAccountId());
+
         model.addAttribute("account", account);
-        model.addAttribute("hasOrders", false); // Default to false for new users
+        model.addAttribute("orders", orders);
+        model.addAttribute("hasOrders", !orders.isEmpty());
 
         return "profile";
     }
