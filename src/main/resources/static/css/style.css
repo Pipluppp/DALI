@@ -1,6 +1,3 @@
-/* =================================
-   1. Basic Reset and Global Styles
-   ================================= */
 body, h1, h2, h3, h4, p, a {
     margin: 0;
     padding: 0;
@@ -82,6 +79,11 @@ body {
     cursor: not-allowed;
 }
 
+.btn-small {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+}
 /* =================================
    3. Homepage Specific Styles
    ================================= */
@@ -876,87 +878,6 @@ body {
     text-align: left;
 }
 /* =================================
-   13. Admin Inventory & Order Page Styles (NEW)
-   ================================= */
-.inventory-update-form {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-.stock-input {
-    width: 70px;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    text-align: center;
-}
-.update-stock-btn {
-    flex-grow: 1;
-    padding: 9px;
-    background: #b21984;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: 600;
-}
-.update-stock-btn:hover {
-    background: #b21984;
-}
-.product-stock-level {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 20px;
-}
-
-.admin-order-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    border-radius: 8px;
-    overflow: hidden;
-}
-.admin-order-table th, .admin-order-table td {
-    padding: 15px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-.admin-order-table th {
-    background-color: #f8f9fa;
-    font-weight: 600;
-    color: #666;
-}
-.admin-order-table tr:hover {
-    background-color: #fafafa;
-}
-.order-status-badge {
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: capitalize;
-}
-.status-processing { background-color: #fff0c2; color: #7a5a00; }
-.status-shipped { background-color: #d1ecf1; color: #0c5460; }
-.status-delivered { background-color: #d4edda; color: #155724; }
-.status-cancelled { background-color: #f8d7da; color: #721c24; }
-.view-order-link {
-    text-decoration: none;
-    color: #b21984;
-    font-weight: 600;
-    padding: 8px 16px;
-    border: 1px solid #b21984;
-    border-radius: 20px;
-    transition: all 0.2s ease-in-out;
-}
-.view-order-link:hover {
-    background-color: #b21984;
-    color: #fff;
-}
-/* =================================
    13. Admin Inventory Page Styles (NEW)
    ================================= */
 .inventory-update-form {
@@ -1061,7 +982,15 @@ body {
     border-top: 1px solid #eee;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end; /* Align items to the bottom of the flex container */
+}
+.order-card-actions {
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically */
+    gap: 8px; /* Add space between the buttons */
+}
+.order-card-actions .btn {
+    margin-right: 0;
 }
 .order-card-status {
     display: flex;

@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${product.name} + ' - DALI Admin'">Product Detail - DALI Admin</title>
+    <title th:text="${product.name} + ' - DALI'">Product Detail - DALI</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,38 +10,38 @@
 </head>
 <body>
 
-<header th:replace="~{fragments/admin-header :: header}"></header>
+<header th:replace="~{fragments/header :: header}"></header>
 
 <main class="product-detail-container container">
-    <div style="width:100%; position: absolute; top: 100px; left: 0; padding: 0 20px;">
-        <!-- CORRECTED: Access flash attributes directly from the model -->
-        <div th:if="${successMessage}" class="auth-success" th:text="${successMessage}"></div>
-        <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}"></div>
-    </div>
-
+    <!-- Customer-facing product image -->
     <div class="product-detail-image">
         <img th:src="@{'/images/products/' + ${product.image}}" th:alt="${product.name}">
     </div>
-    <div class="product-detail-info" th:object="${product}">
-        <h1 th:text="*{name}">Frozen Pork Shoulder 500g</h1>
-        <p class="product-detail-price" th:text="*{getFormattedPrice()}">₱199.00</p>
-        <p class="product-stock-level" th:text="'Current Stock: ' + *{productQuantity}">Current Stock: 55</p>
 
+    <!-- Customer-facing product info -->
+    <div class="product-detail-info" th:object="${product}">
+        <h1 th:text="*{name}">Product Name</h1>
+        <p class="product-detail-price" th:text="*{getFormattedPrice()}">₱199.00</p>
+
+        <!-- "Add to Cart" form for customers -->
         <div class="product-actions">
-            <form th:action="@{/admin/inventory/update}" method="post">
+            <form th:action="@{/cart/add}" method="post">
                 <input type="hidden" name="productId" th:value="*{id}"/>
-                <div class="form-group" style="display:flex; align-items:center; gap: 15px;">
-                    <label for="quantity">Set New Quantity:</label>
-                    <input type="number" id="quantity" name="quantity" th:value="*{productQuantity}" min="0" style="width: 100px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
-                    <button type="submit" class="btn btn-primary btn-large">Update Stock</button>
+                <div class="quantity-selector">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" name="quantity" value="1" min="1" th:max="*{productQuantity}">
                 </div>
+
+                <!-- Conditional button based on stock -->
+                <button th:if="*{productQuantity > 0}" type="submit" class="btn btn-primary btn-large">Add to Cart</button>
+                <button th:if="*{productQuantity <= 0}" type="button" class="btn-disabled btn-large" disabled>Out of Stock</button>
             </form>
         </div>
 
         <div class="product-description">
             <h3>Description</h3>
             <p th:text="*{description}">
-                Versatile and affordable choice for your everyday meals.
+                Product description goes here. It provides details about the product, its features, and benefits.
             </p>
         </div>
     </div>

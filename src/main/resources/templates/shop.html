@@ -14,26 +14,27 @@
 
 <header class="header" th:replace="~{fragments/header :: header}"></header>
 
-<!-- The form now controls the HTMX requests for both search and filtering -->
-<form class="shop-container container"
-      hx-get="/shop/products"
-      hx-trigger="keyup changed delay:200ms from:#search-input, change from:[name='category']"
-      hx-target="#product-grid-results"
-      hx-swap="innerHTML">
+<!--
+  FIXED: Added hx-include to explicitly tell HTMX which form inputs to send
+  with the GET request, since the parent is a <div> and not a <form>.
+-->
+<div class="shop-container container"
+     hx-get="/shop/products"
+     hx-trigger="keyup changed delay:200ms from:#search-input, change from:[name='category']"
+     hx-target="#product-grid-results"
+     hx-swap="innerHTML"
+     hx-include="[name='query'], [name='category']">
 
     <!-- Filter Sidebar -->
     <aside class="filter-sidebar">
         <h4>Filters</h4>
         <div class="filter-group">
             <h5>CATEGORY</h5>
-            <!-- We now use radio buttons for filtering. They are semantically correct and work great with HTMX -->
             <ul>
-                <!-- "All" option -->
                 <li>
                     <input type="radio" name="category" value="" id="cat-all" checked="checked">
                     <label for="cat-all">All</label>
                 </li>
-                <!-- Category options from the model -->
                 <li th:each="cat, iterStat : ${categories}">
                     <input type="radio" name="category" th:value="${cat}" th:id="'cat-' + ${iterStat.index}">
                     <label th:for="'cat-' + ${iterStat.index}" th:text="${cat}">Category Name</label>
@@ -45,7 +46,6 @@
     <!-- Main Content Area -->
     <main class="product-grid-container">
         <section class="search-banner">
-            <!-- The search input is now just a standard input. The form handles the HTMX. -->
             <input type="search"
                    id="search-input"
                    name="query"
@@ -56,11 +56,10 @@
 
         <!-- Product Grid Results -->
         <div id="product-grid-results">
-            <!-- The initial product list is loaded via a fragment -->
             <div th:replace="~{fragments/product-list :: product-list-fragment}"></div>
         </div>
     </main>
-</form>
+</div>
 
 <footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
 
