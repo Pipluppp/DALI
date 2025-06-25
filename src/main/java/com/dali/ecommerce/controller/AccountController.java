@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import jakarta.validation.Valid;
+import org.springframework.validation.BindingResult;
 
 @Controller
 public class AccountController {
@@ -57,10 +59,17 @@ public class AccountController {
     }
 
     @PostMapping("/register")
-    public String registerUserAccount(@ModelAttribute("account") Account account,
+    public String registerUserAccount(@ModelAttribute("account") @Valid Account account,
+                                      BindingResult bindingResult,
                                       HttpServletRequest request,
                                       HttpServletResponse response,
-                                      RedirectAttributes redirectAttributes) {
+                                      RedirectAttributes redirectAttributes,
+                                      Model model) {
+        if  (bindingResult.hasErrors()) {
+            model.addAttribute("account", account);
+            return "register";
+        }
+
         Account registeredUser;
         try {
             registeredUser = accountService.registerNewUser(account);

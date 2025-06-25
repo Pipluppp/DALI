@@ -2,6 +2,9 @@ package com.dali.ecommerce.model;
 
 import jakarta.persistence.*;
 import java.util.List;
+import jakarta.validation.constraints.*;
+
+
 
 @Entity
 @Table(name = "accounts")
@@ -18,12 +21,18 @@ public class Account {
     @Column(name = "account_last_name")
     private String lastName;
 
+    @Email(message = "Please enter a valid email address")
+    @NotBlank(message = "Email is required")
     @Column(name = "account_email", nullable = false, unique = true)
     private String email;
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Pattern(
+            regexp = "^(\\+63|0)9\\d{9}$",
+            message = "Phone number must start with +63 or 0 followed by 10 digits (e.g. +639123456789 or 09123456789)"
+    )
     @Column(name = "phone_number")
     private String phoneNumber;
 
