@@ -54,8 +54,6 @@ public class SecurityConfig {
         return authProvider;
     }
 
-    // The @Bean definition for the handler was removed from here.
-
     @Bean
     @Order(1)
     public SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {
@@ -69,7 +67,7 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/admin/login")
                         .loginProcessingUrl("/admin/login")
-                        .successHandler(this.adminAuthenticationSuccessHandler) // Use the injected field
+                        .successHandler(this.adminAuthenticationSuccessHandler)
                         .failureUrl("/admin/login?error=true")
                         .permitAll()
                 )
@@ -88,14 +86,15 @@ public class SecurityConfig {
     public SecurityFilterChain customerFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/register", "/shop/**", "/stores/**", "/product/**", "/css/**", "/images/**", "/login", "/cart/**", "/admin/login").permitAll()
+                        // The line below was modified to include "/forgot-password"
+                        .requestMatchers("/", "/register", "/shop/**", "/stores/**", "/product/**", "/css/**", "/images/**", "/login", "/cart/**", "/admin/login", "/forgot-password").permitAll()
                         .requestMatchers("/profile", "/checkout/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
-                        .successHandler(this.customAuthenticationSuccessHandler) // Use the injected field
+                        .successHandler(this.customAuthenticationSuccessHandler)
                         .permitAll()
                 )
                 .logout(logout -> logout
