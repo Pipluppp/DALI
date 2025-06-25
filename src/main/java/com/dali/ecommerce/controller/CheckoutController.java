@@ -134,4 +134,15 @@ public class CheckoutController {
         }
         return "order-success";
     }
+
+    @GetMapping("/address/form")
+    public String getAddressForm(Model model) {
+        model.addAttribute("address", new Address());
+        return "fragments/address-form :: address-form";
+    }
+
+    @GetMapping("/address/link")
+    public String getAddAddressLink() {
+        return "fragments/add-address-link :: add-address-link";
+    }
 }

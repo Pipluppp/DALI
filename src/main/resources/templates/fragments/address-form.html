@@ -2,7 +2,13 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div th:fragment="address-form" class="address-form-container">
+<div th:fragment="address-form" class="address-form-container" style="position: relative;">
+
+    <a hx-get="/checkout/address/link"
+       hx-target="#add-address-target"
+       hx-swap="innerHTML"
+       style="position: absolute; top: 15px; right: 20px; font-size: 1.8rem; text-decoration: none; color: #888; cursor: pointer; line-height: 1;">×</a>
+
     <h3 style="margin-top: 30px; margin-bottom: 20px;">Add a New Address</h3>
     <form th:action="@{/address/add}" th:object="${address}" method="post" class="address-form">
         <div class="form-group">

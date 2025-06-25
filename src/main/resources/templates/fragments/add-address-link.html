@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- This fragment contains ONLY the link. -->
+<a th:fragment="add-address-link"
+   hx-get="/checkout/address/form"   
+   hx-target="#add-address-target"
+   hx-swap="innerHTML"
+   class="add-new-address-link">Add new address +</a>
+
+</body>
+</html>
