@@ -47,7 +47,11 @@
 
             <div class="or-separator">OR</div>
 
-            <!-- Removed Social Media Buttons as per request -->
+            <!-- START: Admin Login Button Added -->
+            <a th:href="@{/admin/login}" class="btn btn-secondary" style="width: 100%; box-sizing: border-box; text-align: center; display: block;">
+                Admin Login
+            </a>
+            <!-- END: Admin Login Button Added -->
 
             <div class="switch-auth-link">
                 Don't have an account? <a th:href="@{/register}">Sign up</a>
