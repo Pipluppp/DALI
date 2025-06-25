@@ -24,6 +24,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.dali.ecommerce.model.Address;
+import org.springframework.web.bind.annotation.PostMapping;
+
 
 import java.util.List;
 
@@ -118,5 +121,25 @@ public class AccountController {
     public String showForgotPasswordPage() {
         // This string "forgot-password" MUST match your HTML file name.
         return "forgot-password";
+    }
+
+    @GetMapping("/account/address/form")
+    public String getProfileAddressForm(Model model) {
+        model.addAttribute("address", new Address());
+        // This will return the content of a NEW file you will create: 'profile-address-form.html'
+        return "fragments/profile-address-form :: profile-address-form";
+    }
+
+    @GetMapping("/account/address/link")
+    public String getProfileAddAddressLink() {
+        // This will return the content of a NEW file you will create: 'profile-add-address-link.html'
+        return "fragments/profile-add-address-link :: profile-add-address-link";
+    }
+
+
+    @PostMapping("/account/address/add")
+    public String saveNewAddressFromProfile(@ModelAttribute Address address, Authentication authentication) {
+
+        return "redirect:/profile";
     }
 }
