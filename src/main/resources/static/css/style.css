@@ -26,15 +26,43 @@ body {
 
 .header .container {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    gap: 40px;
+}
+
+.header .logo {
+    flex-shrink: 0;
+}
+
+.header .nav {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.header .header-actions {
+    margin-left: auto;
+    display: flex;
     align-items: center;
 }
 
-.nav a, .header-actions a {
+.nav a {
+    margin-right: 30px;
+    margin-left: 0;
+    text-decoration: none;
+    color: #555;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.header-actions a {
     margin-left: 20px;
     text-decoration: none;
     color: #555;
     font-weight: 600;
+    transition: all 0.3s ease;
+    position: relative;
 }
 
 .footer {
@@ -463,10 +491,111 @@ body {
    ================================= */
 .product-detail-container {
     display: flex;
-    gap: 50px;
-    padding-top: 50px;
+    gap: 40px;
+    padding-top: 40px;
     padding-bottom: 50px;
     min-height: calc(100vh - 81px - 61px); /* Ensures content area fills the screen, pushing footer down */
+    align-items: flex-start; /* Align items to the top of the container */
+}
+
+/* Product Image Styling */
+.product-detail-image {
+    flex-basis: 40%; 
+    max-width: 450px; /* But not wider than 450 pixels */
+    background-color: #fff; /* White background for the image area */
+    border-radius: 8px;    /* Rounded corners */
+    padding: 5px;          /* Space inside the image box */
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08); /* A soft shadow */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-detail-image:hover {
+    transform: scale(1.03); /* Slightly enlarge on hover */
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12); /* Enhance shadow on hover */
+}
+
+.product-detail-image img {
+    max-width: 100%;    /* Image won't overflow its box */
+    height: auto;       /* Keeps image proportions correct */
+    object-fit: contain;/* Ensures the whole image is visible */
+}
+
+.product-detail-info {
+    flex: 1; /* Info column takes the rest of the available width */
+    display: flex;
+    flex-direction: column; /* Stacks items in this column vertically */
+}
+
+.product-detail-info h1 { /* Product Name */
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 10px; /* Space below the product name */
+}
+
+.product-detail-price {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #b21984; 
+    margin-bottom: 25px; 
+}
+
+.product-actions {
+    margin-bottom: 30px; 
+}
+
+.product-actions form {
+    display: flex;
+    flex-direction: column; /* Stacks quantity and button vertically */
+    align-items: flex-start; /* Aligns them to the left */
+    gap: 20px; /* Space between quantity selector and button */
+}
+
+.quantity-selector {
+    display: flex;
+    align-items: center; /* Aligns "Quantity:" label and input nicely */
+    gap: 10px; /* Space between label and input */
+}
+
+.quantity-selector label {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.quantity-selector input[type="number"] {
+    width: 70px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.quantity-selector input[type="number"]:focus {
+    border-color: #b21984; /* Pink border when you click in it */
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(178, 25, 132, 0.2);
+}
+
+.product-description {
+    margin-top: 10px; /* Space above the description */
+}
+
+.product-description h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 12px; /* Space below "Description" title */
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee; /* A light line under "Description" */
+}
+
+.product-description p {
+    font-size: 0.95rem;
+    line-height: 1.7; /* Makes description text easier to read */
+    color: #555;
 }
 
 /* =================================
@@ -1006,3 +1135,398 @@ body {
     border-radius: 12px;
     color: #666;
 }
+
+/* =================================
+   Enhanced Button Transitions
+   ================================= */
+.btn {
+    display: inline-block;
+    padding: 12px 25px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    margin-right: 10px;
+    border: none;
+    cursor: pointer;
+    /* Enhanced transitions */
+    transition: all 0.3s ease;
+    transform: translateY(0);
+}
+
+.btn-primary {
+    background-color: #b21984;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #9e1673;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(178, 25, 132, 0.3);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(178, 25, 132, 0.2);
+}
+
+.btn-secondary {
+    background-color: #fff;
+    color: #b21984;
+    border: 1px solid #b21984;
+}
+
+.btn-secondary:hover {
+    background-color: #b21984;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(178, 25, 132, 0.2);
+}
+
+.btn-secondary:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(178, 25, 132, 0.1);
+}
+
+/* Enhanced transitions for other button types */
+.add-to-cart-btn {
+    width: 100%;
+    padding: 10px;
+    background: #b21984;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    /* Add transitions */
+    transition: all 0.3s ease;
+    transform: translateY(0);
+}
+
+.add-to-cart-btn:hover {
+    background: #9e1673;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 15px rgba(178, 25, 132, 0.3);
+}
+
+.add-to-cart-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(178, 25, 132, 0.2);
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    background-color: #b21984;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 10px;
+    /* Enhanced transition */
+    transition: all 0.3s ease;
+    transform: translateY(0);
+}
+
+.auth-btn:hover {
+    background-color: #9e1673;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(178, 25, 132, 0.3);
+}
+
+.auth-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(178, 25, 132, 0.2);
+}
+
+.checkout-btn {
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
+    padding: 15px;
+    /* Add transitions */
+    transition: all 0.3s ease;
+    transform: translateY(0);
+}
+
+.checkout-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(178, 25, 132, 0.3);
+}
+
+.back-to-shop-btn {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 20px;
+    border-radius: 20px;
+    background-color: #fff;
+    border: 1px solid #eee;
+    text-decoration: none;
+    color: #333;
+    font-weight: 600;
+    /* Enhanced transition */
+    transition: all 0.3s ease;
+    transform: translateY(0);
+}
+
+.back-to-shop-btn:hover {
+    background-color: #f8f8f8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* =================================
+   Enhanced Category Card Transitions
+   ================================= */
+.category-card {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    /* Enhanced transitions */
+    transition: all 0.3s ease;
+    transform: translateY(0);
+    cursor: pointer;
+}
+
+.category-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+    background-color: #fefefe;
+}
+
+.category-card:hover h3 {
+    color: #b21984;
+}
+
+.category-card h3 {
+    color: #333;
+    margin-bottom: 10px;
+    /* Add transition for color change */
+    transition: color 0.3s ease;
+}
+
+.category-card p {
+    color: #777;
+    margin-bottom: 20px;
+    /* Add transition for potential color changes */
+    transition: color 0.3s ease;
+}
+
+.category-card a {
+    color: #b21984;
+    text-decoration: none;
+    font-weight: 600;
+    /* Add transition */
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.category-card a:hover {
+    color: #9e1673;
+}
+
+/* Add a subtle underline animation for category card links */
+.category-card a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background-color: #b21984;
+    transition: width 0.3s ease;
+}
+
+.category-card:hover a::after {
+    width: 100%;
+}
+
+/* =================================
+   Enhanced Product Card Transitions
+   ================================= */
+.product-card {
+    background-color: #fff;
+    border: 1px solid #eee;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    /* Add transitions */
+    transition: all 0.3s ease;
+    transform: translateY(0);
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.1);
+    border-color: #ddd;
+}
+
+/* =================================
+   Enhanced Feature Item Transitions
+   ================================= */
+.feature-item {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid #b21984;
+    /* Add transitions */
+    transition: all 0.3s ease;
+    transform: translateX(0);
+}
+
+.feature-item:hover {
+    transform: translateX(5px);
+    background-color: #f5f5f5;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+}
+
+/* =================================
+   Enhanced Store Item Transitions
+   ================================= */
+.store-item {
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+    /* Add transitions */
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.store-item:hover {
+    background-color: #f8f9fa;
+    padding-left: 10px;
+    border-left: 4px solid #b21984;
+}
+
+/* =================================
+   Enhanced Link Transitions
+   ================================= */
+.nav a, .header-actions a {
+    /* margin-left: 20px; Note: .nav a has margin-right, .header-actions a has margin-left. Keep specific margins.*/
+    text-decoration: none;
+    color: #555;
+    font-weight: 600;
+    /* Add transitions */
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav a:hover, .header-actions a:hover {
+    color: #b21984;
+}
+
+/* Add underline animation for navigation links */
+.nav a::after, .header-actions a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -5px;
+    left: 0;
+    background-color: #b21984;
+    transition: width 0.3s ease;
+}
+
+.nav a:hover::after, .header-actions a:hover::after {
+    width: 100%;
+}
+
+/* =================================
+   Enhanced Input Field Transitions
+   ================================= */
+.main-search-input {
+    width: 100%;
+    max-width: 600px;
+    padding: 15px 20px;
+    font-size: 1.1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    /* Add transitions */
+    transition: all 0.3s ease;
+}
+
+.main-search-input:focus {
+    outline: none;
+    border-color: #b21984;
+    box-shadow: 0 6px 20px rgba(178, 25, 132, 0.2);
+    transform: translateY(-1px);
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 15px;
+    font-size: 1rem;
+    border-radius: 30px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    /* Add transitions */
+    transition: all 0.3s ease;
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: #b21984;
+    box-shadow: 0 4px 15px rgba(178, 25, 132, 0.2);
+}
+
+/* =================================
+   Header Action - Logout Button
+   ================================= */
+.logout-button-linkstyle {
+    background: none;
+    border: none;
+    padding: 0; /* Or a small padding if needed for click area, e.g., padding: 5px 0; */
+    font-family: 'Poppins', sans-serif; /* Explicitly set, good practice */
+    font-size: inherit; /* Inherits from parent, typically 1rem or as per body */
+    cursor: pointer;
+    color: #555;
+    font-weight: 600;
+    margin-left: 20px; /* Maintains the spacing */
+    text-decoration: none; /* Ensure no default button text-decoration */
+    transition: all 0.3s ease; /* For color and potential future transitions */
+    position: relative; /* For the underline animation */
+    /* If you want it to perfectly align with other <a> tags that might have different natural line-height or padding:
+       Consider vertical-align: middle; or adjusting padding slightly.
+       Or ensure its line-height matches the <a> tags if they differ.
+    */
+}
+
+.logout-button-linkstyle:hover {
+    color: #b21984; /* Theme color on hover */
+}
+
+/* Underline animation for logout button (similar to nav a and header-actions a) */
+.logout-button-linkstyle::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -5px; /* Adjust as needed for visual positioning */
+    left: 0;
+    background-color: #b21984;
+    transition: width 0.3s ease;
+}
+
+.logout-button-linkstyle:hover::after {
+    width: 100%;
+}
+
+/* Optional: Focus style for accessibility, especially for keyboard users */
+.logout-button-linkstyle:focus {
+    outline: 2px solid #b21984; /* Or your preferred focus style */
+    outline-offset: 2px;
+}
+.logout-button-linkstyle:focus-visible { /* More modern, better focus indicator */
+    outline: 2px solid #b21984;
+    outline-offset: 2px;
+}
+/* If you want to remove the default button focus style if it's too obtrusive
+   and rely solely on your custom :focus or :focus-visible style: */
+.logout-button-linkstyle:focus:not(:focus-visible) {
+  outline: none;
+}
+

@@ -55,7 +55,6 @@ public class SecurityConfig {
         return authProvider;
     }
 
-
     @Bean
     @Order(1)
     public SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {

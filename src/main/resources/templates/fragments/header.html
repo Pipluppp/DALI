@@ -19,7 +19,7 @@
             <!-- Authenticated -->
             <a sec:authorize="isAuthenticated()" th:href="@{/profile}">Profile</a>
             <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" style="display: inline;">
-                <button type="submit" style="background:none; border:none; padding:0; font-family:inherit; font-size:inherit; cursor:pointer; color:#555; font-weight: 600; margin-left: 20px;">Logout</button>
+                <button type="submit"  class="logout-button-linkstyle" style="background:none; border:none; padding:0; font-family:inherit; font-size:inherit; cursor:pointer; color:#555; font-weight: 600; margin-left: 20px;">Logout</button>
             </form>
         </div>
     </div>
