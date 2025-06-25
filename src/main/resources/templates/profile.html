@@ -76,7 +76,8 @@
 
             <!-- HTMX Target & Trigger -->
             <div id="add-address-profile-target">
-                <a hx-get="/address/new"
+                <!-- The URL now points to a unique endpoint inside the AccountController -->
+                <a hx-get="/account/address/form"
                    hx-target="#add-address-profile-target"
                    hx-swap="innerHTML"
                    class="add-new-address-link">Add new address +</a>
