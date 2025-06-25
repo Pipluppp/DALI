@@ -41,13 +41,17 @@
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required>
                 </div>
-                <a href="#" class="forgot-password-link">Forgot Password?</a>
+                <a th:href="@{/forgot-password}" class="forgot-password-link">Forgot Password?</a>
                 <button type="submit" class="auth-btn">Login</button>
             </form>
 
             <div class="or-separator">OR</div>
 
-            <!-- Removed Social Media Buttons as per request -->
+            <!-- START: Admin Login Button Added -->
+            <a th:href="@{/admin/login}" class="btn btn-secondary" style="width: 100%; box-sizing: border-box; text-align: center; display: block;">
+                Admin Login
+            </a>
+            <!-- END: Admin Login Button Added -->
 
             <div class="switch-auth-link">
                 Don't have an account? <a th:href="@{/register}">Sign up</a>
