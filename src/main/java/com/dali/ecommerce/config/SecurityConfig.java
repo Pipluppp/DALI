@@ -18,6 +18,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 @EnableWebSecurity
 public class SecurityConfig {
 
+    // Your constructor and other beans...
     private final CustomUserDetailsService customUserDetailsService;
     private final AuthenticationSuccessHandler customAuthenticationSuccessHandler;
     private final AdminUserDetailsService adminUserDetailsService;
@@ -60,7 +61,9 @@ public class SecurityConfig {
         http
                 .securityMatcher("/admin/**")
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/admin/login").permitAll()
+                        // *** THE FIX IS HERE ***
+                        // We tell the admin chain that navigating to /forgot-password is also permitted.
+                        .requestMatchers("/admin/login", "/forgot-password").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
@@ -86,8 +89,9 @@ public class SecurityConfig {
     public SecurityFilterChain customerFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        // The line below was modified to include "/forgot-password"
-                        .requestMatchers("/", "/register", "/shop/**", "/stores/**", "/product/**", "/css/**", "/images/**", "/login", "/cart/**", "/admin/login", "/forgot-password").permitAll()
+                        // This chain remains the same as our last correct version.
+                        .requestMatchers("/login", "/register").anonymous()
+                        .requestMatchers("/", "/shop/**", "/stores/**", "/product/**", "/css/**", "/images/**", "/cart/**", "/forgot-password").permitAll()
                         .requestMatchers("/profile", "/checkout/**").authenticated()
                         .anyRequest().authenticated()
                 )
