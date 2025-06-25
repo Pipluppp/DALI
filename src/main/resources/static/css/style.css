@@ -65,17 +65,6 @@ body {
     position: relative;
 }
 
-.footer {
-    background-color: #333;
-    color: #fff;
-    text-align: center;
-    padding: 20px 0;
-}
-
-.footer p {
-    color: #fff;
-}
-
 .btn {
     display: inline-block;
     padding: 12px 25px;
@@ -1405,7 +1394,6 @@ body {
    Enhanced Link Transitions
    ================================= */
 .nav a, .header-actions a {
-    /* margin-left: 20px; Note: .nav a has margin-right, .header-actions a has margin-left. Keep specific margins.*/
     text-decoration: none;
     color: #555;
     font-weight: 600;
@@ -1489,10 +1477,6 @@ body {
     text-decoration: none; /* Ensure no default button text-decoration */
     transition: all 0.3s ease; /* For color and potential future transitions */
     position: relative; /* For the underline animation */
-    /* If you want it to perfectly align with other <a> tags that might have different natural line-height or padding:
-       Consider vertical-align: middle; or adjusting padding slightly.
-       Or ensure its line-height matches the <a> tags if they differ.
-    */
 }
 
 .logout-button-linkstyle:hover {
@@ -1515,18 +1499,147 @@ body {
     width: 100%;
 }
 
-/* Optional: Focus style for accessibility, especially for keyboard users */
+
 .logout-button-linkstyle:focus {
-    outline: 2px solid #b21984; /* Or your preferred focus style */
+    outline: 2px solid #b21984; 
     outline-offset: 2px;
 }
-.logout-button-linkstyle:focus-visible { /* More modern, better focus indicator */
+.logout-button-linkstyle:focus-visible { 
     outline: 2px solid #b21984;
     outline-offset: 2px;
 }
-/* If you want to remove the default button focus style if it's too obtrusive
-   and rely solely on your custom :focus or :focus-visible style: */
+
 .logout-button-linkstyle:focus:not(:focus-visible) {
   outline: none;
 }
 
+/* Footer Styles */
+.footer {
+    background-color: #f9f9f9; /* Or #fff if you prefer pure white */
+    color: #333; /* Default text color for footer */
+    padding: 50px 0; /* Adjust padding as needed */
+    border-top: 1px solid #e0e0e0; /* Top border line */
+    text-align: left; /* Reset text-align from previous styles if any */
+}
+
+
+.footer-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Aligns items to the top of their container */
+    gap: 30px; /* Space between left and right sections */
+}
+
+.footer-left {
+    flex: 1; /* Allows it to take available space */
+    max-width: 40%; /* Adjust as needed */
+}
+
+.footer-logo {
+    width: 100px; 
+    margin-bottom: 15px;
+}
+
+.copyright-text {
+    font-size: 0.8rem; /* Small text for copyright */
+    color: #6c757d; /* Greyish color for copyright */
+    line-height: 1.6;
+}
+
+.footer-right {
+    flex: 1; /* Allows it to take available space */
+    max-width: 55%; /* Adjust as needed */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Align content to the right */
+    text-align: right;
+}
+
+.social-contact {
+    margin-bottom: 25px; /* Space below social icons */
+}
+
+.social-cta-text {
+    font-size: 2.8rem; 
+    font-weight: 950; /* Bold */
+    color: #b21984; /* Purple color */
+    line-height: 1.1; /* Adjust for spacing */
+    margin-bottom: 6px; /* Fine-tune spacing between the two lines */
+}
+
+.social-subtext {
+    font-size: 1.6rem; /* Large "on Our Socials" */
+    font-weight: 950; /* Bold */
+    color: #333; /* Dark grey / black */
+    line-height: 1.1; /* Adjust for spacing */
+    margin-bottom: 20px; /* Space above social icons */
+}
+
+.social-icons {
+    display: flex;
+    gap: 18px; /* Spacing between icons */
+    justify-content: flex-end; /* Align icons to the right if they wrap */
+}
+
+.social-icons a {
+    color: #b21984; /* Purple color for icons */
+    font-size: 2.2rem; /* Icon size - adjust as needed */
+    transition: color 0.3s ease, transform 0.2s ease;
+    display: inline-block; /* For transform to work */
+}
+
+.social-icons a:hover {
+    color: #9e1673; /* Darker purple on hover */
+    transform: translateY(-2px); /* Slight lift on hover */
+}
+
+.footer-links {
+    margin-top: auto; /* Pushes to the bottom if social-contact height varies, or remove if not needed */
+    font-size: 0.85rem; /* Text size for links */
+    color: #6c757d;
+}
+
+.footer-links a {
+    color: #6c757d; /* Greyish color for links */
+    text-decoration: none;
+    margin: 0 5px; /* Spacing around the separator */
+    transition: color 0.3s ease;
+}
+
+.footer-links span { /* For the "|" separator */
+    color: #adb5bd; /* Lighter grey for separator */
+    user-select: none;
+}
+
+/* Responsive adjustments for footer */
+@media (max-width: 768px) {
+    .footer-container {
+        flex-direction: column;
+        align-items: center; /* Center items on smaller screens */
+        text-align: center;
+    }
+    .footer-left, .footer-right {
+        max-width: 100%;
+        align-items: center;
+        text-align: center;
+    }
+    .footer-logo {
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .social-icons {
+        justify-content: center; /* Center icons */
+    }
+    .footer-right {
+      margin-top: 30px;
+    }
+    .social-cta-text {
+     font-size: 1.8rem;
+    }
+    .social-subtext {
+     font-size: 1.4rem;
+    }
+    .social-icons a {
+     font-size: 2rem;
+    }
+}
