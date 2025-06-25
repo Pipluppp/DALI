@@ -491,10 +491,111 @@ body {
    ================================= */
 .product-detail-container {
     display: flex;
-    gap: 50px;
-    padding-top: 50px;
+    gap: 40px;
+    padding-top: 40px;
     padding-bottom: 50px;
     min-height: calc(100vh - 81px - 61px); /* Ensures content area fills the screen, pushing footer down */
+    align-items: flex-start; /* Align items to the top of the container */
+}
+
+/* Product Image Styling */
+.product-detail-image {
+    flex-basis: 40%; 
+    max-width: 450px; /* But not wider than 450 pixels */
+    background-color: #fff; /* White background for the image area */
+    border-radius: 8px;    /* Rounded corners */
+    padding: 5px;          /* Space inside the image box */
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08); /* A soft shadow */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-detail-image:hover {
+    transform: scale(1.03); /* Slightly enlarge on hover */
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12); /* Enhance shadow on hover */
+}
+
+.product-detail-image img {
+    max-width: 100%;    /* Image won't overflow its box */
+    height: auto;       /* Keeps image proportions correct */
+    object-fit: contain;/* Ensures the whole image is visible */
+}
+
+.product-detail-info {
+    flex: 1; /* Info column takes the rest of the available width */
+    display: flex;
+    flex-direction: column; /* Stacks items in this column vertically */
+}
+
+.product-detail-info h1 { /* Product Name */
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 10px; /* Space below the product name */
+}
+
+.product-detail-price {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #b21984; 
+    margin-bottom: 25px; 
+}
+
+.product-actions {
+    margin-bottom: 30px; 
+}
+
+.product-actions form {
+    display: flex;
+    flex-direction: column; /* Stacks quantity and button vertically */
+    align-items: flex-start; /* Aligns them to the left */
+    gap: 20px; /* Space between quantity selector and button */
+}
+
+.quantity-selector {
+    display: flex;
+    align-items: center; /* Aligns "Quantity:" label and input nicely */
+    gap: 10px; /* Space between label and input */
+}
+
+.quantity-selector label {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.quantity-selector input[type="number"] {
+    width: 70px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.quantity-selector input[type="number"]:focus {
+    border-color: #b21984; /* Pink border when you click in it */
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(178, 25, 132, 0.2);
+}
+
+.product-description {
+    margin-top: 10px; /* Space above the description */
+}
+
+.product-description h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 12px; /* Space below "Description" title */
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee; /* A light line under "Description" */
+}
+
+.product-description p {
+    font-size: 0.95rem;
+    line-height: 1.7; /* Makes description text easier to read */
+    color: #555;
 }
 
 /* =================================
@@ -1428,3 +1529,4 @@ body {
 .logout-button-linkstyle:focus:not(:focus-visible) {
   outline: none;
 }
+
