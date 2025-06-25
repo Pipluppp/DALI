@@ -18,6 +18,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 @EnableWebSecurity
 public class SecurityConfig {
 
+    // Your constructor and other beans...
     private final CustomUserDetailsService customUserDetailsService;
     private final AuthenticationSuccessHandler customAuthenticationSuccessHandler;
     private final AdminUserDetailsService adminUserDetailsService;
@@ -54,7 +55,6 @@ public class SecurityConfig {
         return authProvider;
     }
 
-    // The @Bean definition for the handler was removed from here.
 
     @Bean
     @Order(1)
@@ -62,14 +62,16 @@ public class SecurityConfig {
         http
                 .securityMatcher("/admin/**")
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/admin/login").permitAll()
+                        // *** THE FIX IS HERE ***
+                        // We tell the admin chain that navigating to /forgot-password is also permitted.
+                        .requestMatchers("/admin/login", "/forgot-password").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/admin/login")
                         .loginProcessingUrl("/admin/login")
-                        .successHandler(this.adminAuthenticationSuccessHandler) // Use the injected field
+                        .successHandler(this.adminAuthenticationSuccessHandler)
                         .failureUrl("/admin/login?error=true")
                         .permitAll()
                 )
@@ -88,14 +90,16 @@ public class SecurityConfig {
     public SecurityFilterChain customerFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/register", "/shop/**", "/stores/**", "/product/**", "/css/**", "/images/**", "/login", "/cart/**", "/admin/login").permitAll()
+                        // This chain remains the same as our last correct version.
+                        .requestMatchers("/login", "/register").anonymous()
+                        .requestMatchers("/", "/shop/**", "/stores/**", "/product/**", "/css/**", "/images/**", "/cart/**", "/forgot-password").permitAll()
                         .requestMatchers("/profile", "/checkout/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
-                        .successHandler(this.customAuthenticationSuccessHandler) // Use the injected field
+                        .successHandler(this.customAuthenticationSuccessHandler)
                         .permitAll()
                 )
                 .logout(logout -> logout
