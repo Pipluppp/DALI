@@ -122,4 +122,10 @@ public class AccountController {
 
         return "profile";
     }
+
+    @GetMapping("/forgot-password")
+    public String showForgotPasswordPage() {
+        // This string "forgot-password" MUST match your HTML file name.
+        return "forgot-password";
+    }
 }
