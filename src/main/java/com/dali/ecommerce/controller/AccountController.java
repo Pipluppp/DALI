@@ -131,11 +131,11 @@ public class AccountController {
         return "profile";
     }
 
-    @GetMapping("/forgot-password")
+    /*@GetMapping("/forgot-password")
     public String showForgotPasswordPage() {
         // This string "forgot-password" MUST match your HTML file name.
         return "forgot-password";
-    }
+    }*/
 
     @GetMapping("/account/address/form")
     public String getProfileAddressForm(Model model) {

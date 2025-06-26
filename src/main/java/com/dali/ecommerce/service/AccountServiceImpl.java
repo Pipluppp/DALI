@@ -52,4 +52,25 @@ public void changeUserPassword(String email, String currentPassword, String newP
     account.setPasswordHash(passwordEncoder.encode(newPassword));
     accountRepository.save(account);
 }
+
+    @Override
+    public Account findByEmail(String email) {
+        return accountRepository.findByEmail(email).orElse(null);
+    }
+
+    @Override
+    public Account findByResetPasswordToken(String token) {
+        return accountRepository.findByResetPasswordToken(token).orElse(null);
+    }
+
+    @Override
+    public void createPasswordResetTokenForUser(Account account, String token) {
+        account.setResetPasswordToken(token);
+        accountRepository.save(account);
+    }
+
+    @Override
+    public void save(Account account) {
+        accountRepository.save(account);
+    }
 }
