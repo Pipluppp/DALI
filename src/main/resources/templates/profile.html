@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <style>
         .profile-page { background-color: #f7f3f6; min-height: calc(100vh - 81px - 61px); padding: 50px 0; }
         .profile-page .container { max-width: 900px; }
@@ -75,12 +74,10 @@
             </div>
 
             <!-- HTMX Target & Trigger -->
-            <div id="add-address-profile-target">
-                <!-- The URL now points to a unique endpoint inside the AccountController -->
-                <a hx-get="/account/address/form"
-                   hx-target="#add-address-profile-target"
-                   hx-swap="innerHTML"
-                   class="add-new-address-link">Add new address +</a>
+            <div id="add-address-profile-target"
+                 th:include="~{fragments/address-link-fragment :: link}"
+                 th:with="context='profile'">
+                <!-- The "Add new address +" link will be injected here by Thymeleaf -->
             </div>
         </section>
 
@@ -97,7 +94,7 @@
                     </div>
                     <div class="order-body">
                         <p th:text="${order.orderItems.size()} + ' products'"></p>
-                        <p>Total: <strong th:text="'₱' + ${#numbers.formatDecimal(order.totalPrice, 1, 2)}"></strong></p>
+                        <p>Total: <strong th:text="'â‚±' + ${#numbers.formatDecimal(order.totalPrice, 1, 2)}"></strong></p>
                     </div>
                     <div class="order-footer">
                         <a th:href="@{/order/{id}(id=${order.orderId})}" class="btn-track">Track Order</a>

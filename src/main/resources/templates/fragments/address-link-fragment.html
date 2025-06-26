@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  This reusable fragment generates the "Add new address +" link.
+  It takes the 'context' (e.g., 'profile' or 'checkout') to construct
+  the correct HTMX GET request for loading the address form.
+-->
+<div th:fragment="link">
+    <!-- For Checkout Page -->
+    <a th:if="${context == 'checkout'}"
+       th:attr="hx-get=@{/address/new(context='checkout')}"
+       hx-target="#add-address-target"
+       hx-swap="innerHTML"
+       class="add-new-address-link">Add new address +</a>
+
+    <!-- For Profile Page -->
+    <a th:if="${context == 'profile'}"
+       th:attr="hx-get=@{/address/new(context='profile')}"
+       hx-target="#add-address-profile-target"
+       hx-swap="innerHTML"
+       class="add-new-address-link">Add new address +</a>
+</div>
+
+</body>
+</html>
