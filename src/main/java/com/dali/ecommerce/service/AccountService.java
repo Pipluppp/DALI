@@ -5,4 +5,3 @@ import com.dali.ecommerce.model.Account;
 public interface AccountService {
     Account registerNewUser(Account account) throws Exception;
 }
-
