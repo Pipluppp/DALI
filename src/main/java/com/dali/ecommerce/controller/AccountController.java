@@ -26,6 +26,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.dali.ecommerce.model.Address;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+
 
 
 import java.util.List;
@@ -151,4 +156,51 @@ public class AccountController {
 
         return "redirect:/profile";
     }
+
+    @GetMapping("/profile/password/form")
+    public String getChangePasswordForm() {
+        // This correctly returns the path to the HTML fragment.
+        System.out.println(">>>>>>>>> AccountController: getChangePasswordForm() was called! <<<<<<<<<");
+        return "fragments/change-password-form :: change-password-form";
+        
+    }
+
+    @GetMapping("/profile/password/link")
+    public String getChangePasswordLink() {
+    // This serves the content of 'fragments/change-password-link.html'
+        return "fragments/change-password-link :: change-password-link";
+    }
+
+    @PostMapping("/profile/change-password")
+    public String processChangePassword(Authentication authentication,
+                                    @RequestParam("currentPassword") String currentPassword,
+                                    @RequestParam("newPassword") String newPassword,
+                                    @RequestParam("confirmPassword") String confirmPassword,
+                                    Model model) { // Note: We use Model, not RedirectAttributes
+
+    // Check if the new passwords match
+    if (!newPassword.equals(confirmPassword)) {
+        // If they don't match, add an error message to the model...
+        model.addAttribute("passwordChangeError", "New passwords do not match.");
+        // ...and return the form fragment again, which will display the error.
+        return "fragments/change-password-form :: change-password-form";
+    }
+
+    try {
+        // Call your existing service method. This logic is correct.
+        accountService.changeUserPassword(authentication.getName(), currentPassword, newPassword);
+    } catch (Exception e) {
+        // If the service throws an error (e.g., wrong password)...
+        model.addAttribute("passwordChangeError", e.getMessage());
+        // ...return the form fragment again to display the error.
+        return "fragments/change-password-form :: change-password-form";
+    }
+
+    // If successful, return a different fragment that just contains a success message.
+    return "fragments/password-change-success :: success-message";
+    }
+
+    
+
+
 }

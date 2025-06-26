@@ -102,7 +102,9 @@
                     <div th:replace="~{fragments/address-link-fragment :: link(context='checkout')}"></div>
                 </div>
 
-                <button type="submit" class="btn btn-primary checkout-btn" th:disabled="${addresses.isEmpty()} and #object.equals(newAddress, null)">Proceed</button>
+                <!-- ================== THIS IS THE CORRECTED LINE ================== -->
+                <button type="submit" class="btn btn-primary checkout-btn" th:disabled="${addresses.isEmpty()}">Proceed</button>
+                <!-- ================================================================ -->
             </form>
         </div>
 
