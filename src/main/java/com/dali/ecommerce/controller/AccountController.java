@@ -23,6 +23,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.dali.ecommerce.model.Address;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,9 +33,11 @@ import java.util.List;
 import jakarta.validation.Valid;
 import org.springframework.validation.BindingResult;
 
+
 @Controller
 public class AccountController {
 
+   
     private final AccountRepository accountRepository;
     private final AccountService accountService;
     private final OrderRepository orderRepository;
@@ -53,6 +56,7 @@ public class AccountController {
         this.orderRepository = orderRepository;
         this.userDetailsService = userDetailsService;
         this.cartService = cartService;
+        
     }
 
     @GetMapping("/register")
@@ -151,4 +155,36 @@ public class AccountController {
 
         return "redirect:/profile";
     }
+
+    @GetMapping("/profile/change-password")
+    public String showChangePasswordForm() {
+    return "change-password";
+    }
+
+
+    @PostMapping("/profile/change-password")
+    public String processChangePassword(Authentication authentication,
+                                    @RequestParam("currentPassword") String currentPassword,
+                                    @RequestParam("newPassword") String newPassword,
+                                    @RequestParam("confirmPassword") String confirmPassword,
+                                    RedirectAttributes redirectAttributes) {
+
+    if (!newPassword.equals(confirmPassword)) {
+        redirectAttributes.addFlashAttribute("errorMessage", "New passwords do not match.");
+        return "redirect:/profile/change-password";
+    }
+
+    try {
+        // You should have a service method that handles the logic
+        accountService.changeUserPassword(authentication.getName(), currentPassword, newPassword);
+    } catch (Exception e) {
+        // Catch exceptions from the service (e.g., incorrect current password)
+        redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        return "redirect:/profile/change-password";
+    }
+
+    redirectAttributes.addFlashAttribute("successMessage", "Password updated successfully!");
+    return "redirect:/profile";
+}
+
 }
