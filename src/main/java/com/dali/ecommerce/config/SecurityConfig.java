@@ -18,7 +18,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // Your constructor and other beans...
+    // Your constructor and other beans remain unchanged...
     private final CustomUserDetailsService customUserDetailsService;
     private final AuthenticationSuccessHandler customAuthenticationSuccessHandler;
     private final AdminUserDetailsService adminUserDetailsService;
@@ -61,8 +61,6 @@ public class SecurityConfig {
         http
                 .securityMatcher("/admin/**")
                 .authorizeHttpRequests(auth -> auth
-                        // *** THE FIX IS HERE ***
-                        // We tell the admin chain that navigating to /forgot-password is also permitted.
                         .requestMatchers("/admin/login", "/forgot-password").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
@@ -89,9 +87,15 @@ public class SecurityConfig {
     public SecurityFilterChain customerFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        // This chain remains the same as our last correct version.
-                        .requestMatchers("/login", "/register").anonymous()
-                        .requestMatchers("/", "/shop/**", "/stores/**", "/product/**", "/css/**", "/images/**", "/cart/**", "/forgot-password").permitAll()
+                        // === THE FIX IS HERE ===
+                        // 1. We keep the /login page as anonymous-only to prevent logged-in users from seeing it.
+                        .requestMatchers("/login").anonymous()
+
+                        // 2. We move /register to the permitAll() list. This allows ANYONE to access the
+                        //    GET (view page) and POST (submit form) endpoints, fixing the 403 Forbidden error.
+                        .requestMatchers("/", "/register", "/shop/**", "/stores/**", "/product/**", "/css/**", "/images/**", "/cart/**", "/forgot-password", "/reset-password").permitAll()
+                        
+                        // These rules remain the same
                         .requestMatchers("/profile", "/checkout/**").authenticated()
                         .anyRequest().authenticated()
                 )

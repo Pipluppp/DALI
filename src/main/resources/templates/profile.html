@@ -91,6 +91,23 @@
             </div>
         </section>
 
+        <!-- Security Section -->
+        <section class="profile-section">
+            <div class="section-header">
+                <h2>Security</h2>
+            </div>
+
+            <!-- This div is the HTMX target. It will be updated with the form. -->
+            <div id="change-password-target">
+                <!-- The initial state: a button to open the form -->
+                <a hx-get="/profile/password/form"
+                hx-target="#change-password-target"
+                hx-swap="innerHTML"
+                class="btn btn-secondary"
+                style="border-radius: 8px;">Change Password</a>
+            </div>
+        </section>
+
         <!-- Orders Section -->
         <section class="profile-section">
             <div class="section-header">
