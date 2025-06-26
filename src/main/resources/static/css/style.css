@@ -1488,7 +1488,8 @@ body {
     position: absolute;
     width: 0;
     height: 2px;
-    bottom: -5px; 
+    bottom: -5px;
+    left: 0;
     background-color: #b21984;
     transition: width 0.3s ease;
 }
