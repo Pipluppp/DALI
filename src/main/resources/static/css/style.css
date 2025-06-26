@@ -65,17 +65,6 @@ body {
     position: relative;
 }
 
-.footer {
-    background-color: #333;
-    color: #fff;
-    text-align: center;
-    padding: 20px 0;
-}
-
-.footer p {
-    color: #fff;
-}
-
 .btn {
     display: inline-block;
     padding: 12px 25px;
@@ -380,15 +369,14 @@ body {
 }
 
 .filter-sidebar ul li label:hover {
-    color: #b21984; /* Use theme color for hover */
+    color: #b21984; 
 }
 
 .filter-sidebar ul li input[type="radio"]:checked + label {
-    color: #b21984; /* Use theme color for selected */
+    color: #b21984; 
     font-weight: 700;
 }
 /* END: Updated styles for category filter */
-
 
 .product-grid-container {
     flex-grow: 1;
@@ -495,17 +483,17 @@ body {
     padding-top: 40px;
     padding-bottom: 50px;
     min-height: calc(100vh - 81px - 61px); /* Ensures content area fills the screen, pushing footer down */
-    align-items: flex-start; /* Align items to the top of the container */
+    align-items: flex-start; 
 }
 
 /* Product Image Styling */
 .product-detail-image {
     flex-basis: 40%; 
-    max-width: 450px; /* But not wider than 450 pixels */
-    background-color: #fff; /* White background for the image area */
-    border-radius: 8px;    /* Rounded corners */
-    padding: 5px;          /* Space inside the image box */
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08); /* A soft shadow */
+    max-width: 450px; 
+    background-color: #fff; 
+    border-radius: 8px;    
+    padding: 5px;          
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08); 
     display: flex;
     align-items: center;
     justify-content: center;
@@ -514,26 +502,26 @@ body {
 }
 
 .product-detail-image:hover {
-    transform: scale(1.03); /* Slightly enlarge on hover */
-    box-shadow: 0 8px 25px rgba(0,0,0,0.12); /* Enhance shadow on hover */
+    transform: scale(1.03); 
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12); 
 }
 
 .product-detail-image img {
-    max-width: 100%;    /* Image won't overflow its box */
-    height: auto;       /* Keeps image proportions correct */
-    object-fit: contain;/* Ensures the whole image is visible */
+    max-width: 100%;    
+    height: auto;       
+    object-fit: contain;
 }
 
 .product-detail-info {
-    flex: 1; /* Info column takes the rest of the available width */
+    flex: 1; 
     display: flex;
-    flex-direction: column; /* Stacks items in this column vertically */
+    flex-direction: column; 
 }
 
-.product-detail-info h1 { /* Product Name */
+.product-detail-info h1 { 
     font-size: 2.2rem;
     font-weight: 700;
-    margin-bottom: 10px; /* Space below the product name */
+    margin-bottom: 10px; 
 }
 
 .product-detail-price {
@@ -549,15 +537,15 @@ body {
 
 .product-actions form {
     display: flex;
-    flex-direction: column; /* Stacks quantity and button vertically */
-    align-items: flex-start; /* Aligns them to the left */
-    gap: 20px; /* Space between quantity selector and button */
+    flex-direction: column; 
+    align-items: flex-start; 
+    gap: 20px; 
 }
 
 .quantity-selector {
     display: flex;
-    align-items: center; /* Aligns "Quantity:" label and input nicely */
-    gap: 10px; /* Space between label and input */
+    align-items: center; 
+    gap: 10px; 
 }
 
 .quantity-selector label {
@@ -575,26 +563,26 @@ body {
 }
 
 .quantity-selector input[type="number"]:focus {
-    border-color: #b21984; /* Pink border when you click in it */
+    border-color: #b21984; 
     outline: none;
     box-shadow: 0 0 0 2px rgba(178, 25, 132, 0.2);
 }
 
 .product-description {
-    margin-top: 10px; /* Space above the description */
+    margin-top: 10px; 
 }
 
 .product-description h3 {
     font-size: 1.25rem;
     font-weight: 600;
-    margin-bottom: 12px; /* Space below "Description" title */
+    margin-bottom: 12px; 
     padding-bottom: 8px;
-    border-bottom: 1px solid #eee; /* A light line under "Description" */
+    border-bottom: 1px solid #eee; 
 }
 
 .product-description p {
     font-size: 0.95rem;
-    line-height: 1.7; /* Makes description text easier to read */
+    line-height: 1.7; 
     color: #555;
 }
 
@@ -1405,7 +1393,6 @@ body {
    Enhanced Link Transitions
    ================================= */
 .nav a, .header-actions a {
-    /* margin-left: 20px; Note: .nav a has margin-right, .header-actions a has margin-left. Keep specific margins.*/
     text-decoration: none;
     color: #555;
     font-weight: 600;
@@ -1479,24 +1466,20 @@ body {
 .logout-button-linkstyle {
     background: none;
     border: none;
-    padding: 0; /* Or a small padding if needed for click area, e.g., padding: 5px 0; */
-    font-family: 'Poppins', sans-serif; /* Explicitly set, good practice */
-    font-size: inherit; /* Inherits from parent, typically 1rem or as per body */
+    padding: 0; 
+    font-family: 'Poppins', sans-serif; 
+    font-size: inherit; 
     cursor: pointer;
     color: #555;
     font-weight: 600;
-    margin-left: 20px; /* Maintains the spacing */
-    text-decoration: none; /* Ensure no default button text-decoration */
-    transition: all 0.3s ease; /* For color and potential future transitions */
-    position: relative; /* For the underline animation */
-    /* If you want it to perfectly align with other <a> tags that might have different natural line-height or padding:
-       Consider vertical-align: middle; or adjusting padding slightly.
-       Or ensure its line-height matches the <a> tags if they differ.
-    */
+    margin-left: 20px; 
+    text-decoration: none; 
+    transition: all 0.3s ease; 
+    position: relative; 
 }
 
 .logout-button-linkstyle:hover {
-    color: #b21984; /* Theme color on hover */
+    color: #b21984; 
 }
 
 /* Underline animation for logout button (similar to nav a and header-actions a) */
@@ -1505,8 +1488,7 @@ body {
     position: absolute;
     width: 0;
     height: 2px;
-    bottom: -5px; /* Adjust as needed for visual positioning */
-    left: 0;
+    bottom: -5px; 
     background-color: #b21984;
     transition: width 0.3s ease;
 }
@@ -1515,18 +1497,147 @@ body {
     width: 100%;
 }
 
-/* Optional: Focus style for accessibility, especially for keyboard users */
+
 .logout-button-linkstyle:focus {
-    outline: 2px solid #b21984; /* Or your preferred focus style */
+    outline: 2px solid #b21984; 
     outline-offset: 2px;
 }
-.logout-button-linkstyle:focus-visible { /* More modern, better focus indicator */
+.logout-button-linkstyle:focus-visible { 
     outline: 2px solid #b21984;
     outline-offset: 2px;
 }
-/* If you want to remove the default button focus style if it's too obtrusive
-   and rely solely on your custom :focus or :focus-visible style: */
+
 .logout-button-linkstyle:focus:not(:focus-visible) {
   outline: none;
 }
 
+/* Footer Styles */
+.footer {
+    background-color: #f9f9f9; 
+    color: #333; 
+    padding: 50px 0; 
+    border-top: 1px solid #e0e0e0; 
+    text-align: left; 
+}
+
+
+.footer-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; 
+    gap: 30px; 
+}
+
+.footer-left {
+    flex: 1; 
+    max-width: 40%; 
+}
+
+.footer-logo {
+    width: 100px; 
+    margin-bottom: 15px;
+}
+
+.copyright-text {
+    font-size: 0.8rem; 
+    color: #6c757d; 
+    line-height: 1.6;
+}
+
+.footer-right {
+    flex: 1; 
+    max-width: 55%; 
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; 
+    text-align: right;
+}
+
+.social-contact {
+    margin-bottom: 25px; 
+}
+
+.social-cta-text {
+    font-size: 2.8rem; 
+    font-weight: 950; 
+    color: #b21984; 
+    line-height: 1.1; 
+    margin-bottom: 6px; 
+}
+
+.social-subtext {
+    font-size: 1.6rem; 
+    font-weight: 950; 
+    color: #333; 
+    line-height: 1.1; 
+    margin-bottom: 20px; 
+}
+
+.social-icons {
+    display: flex;
+    gap: 18px; 
+    justify-content: flex-end; 
+}
+
+.social-icons a {
+    color: #b21984; 
+    font-size: 2.2rem; 
+    transition: color 0.3s ease, transform 0.2s ease;
+    display: inline-block; 
+}
+
+.social-icons a:hover {
+    color: #9e1673; 
+    transform: translateY(-2px);
+}
+
+.footer-links {
+    margin-top: auto; 
+    font-size: 0.85rem; 
+    color: #6c757d;
+}
+
+.footer-links a {
+    color: #6c757d; 
+    text-decoration: none;
+    margin: 0 5px; 
+    transition: color 0.3s ease;
+}
+
+.footer-links span { 
+    color: #adb5bd; 
+    user-select: none;
+}
+
+/* Responsive adjustments for footer */
+@media (max-width: 768px) {
+    .footer-container {
+        flex-direction: column;
+        align-items: center; /* Center items on smaller screens */
+        text-align: center;
+    }
+    .footer-left, .footer-right {
+        max-width: 100%;
+        align-items: center;
+        text-align: center;
+    }
+    .footer-logo {
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .social-icons {
+        justify-content: center; /* Center icons */
+    }
+    .footer-right {
+      margin-top: 30px;
+    }
+    .social-cta-text {
+     font-size: 1.8rem;
+    }
+    .social-subtext {
+     font-size: 1.4rem;
+    }
+    .social-icons a {
+     font-size: 2rem;
+    }
+}
