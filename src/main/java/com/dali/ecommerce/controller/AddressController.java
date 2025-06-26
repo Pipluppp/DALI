@@ -1,5 +1,6 @@
 package com.dali.ecommerce.controller;
 
+import com.dali.ecommerce.location.LocationService;
 import com.dali.ecommerce.model.Account;
 import com.dali.ecommerce.model.Address;
 import com.dali.ecommerce.repository.AccountRepository;
@@ -15,28 +16,34 @@ public class AddressController {
 
     private final AddressService addressService;
     private final AccountRepository accountRepository;
+    private final LocationService locationService;
 
-    public AddressController(AddressService addressService, AccountRepository accountRepository) {
+    public AddressController(AddressService addressService, AccountRepository accountRepository, LocationService locationService) {
         this.addressService = addressService;
         this.accountRepository = accountRepository;
+        this.locationService = locationService;
     }
 
     @GetMapping("/address/new")
     public String getAddressForm(Model model, @RequestParam(name="context", defaultValue="checkout") String context) {
         model.addAttribute("address", new Address());
-        model.addAttribute("context", context); // Pass context to the form for the cancel button
+        model.addAttribute("provinces", locationService.getAllProvinces());
+        model.addAttribute("context", context);
         return "fragments/address-form :: address-form";
     }
 
     @PostMapping("/address/add")
-    public String addNewAddress(@ModelAttribute("address") Address address,
+    public String addNewAddress(@ModelAttribute Address address,
+                                @RequestParam("provinceId") Integer provinceId,
+                                @RequestParam("cityId") Integer cityId,
+                                @RequestParam("barangayId") Integer barangayId,
                                 Authentication authentication,
                                 @RequestHeader("Referer") String referer) {
         String email = authentication.getName();
         Account account = accountRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        addressService.addAddress(account, address);
+        addressService.addAddress(account, address, provinceId, cityId, barangayId);
 
         // Redirect back to the page that initiated the request
         return "redirect:" + referer;

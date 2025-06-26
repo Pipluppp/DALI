@@ -8,6 +8,46 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        /* Basic Modal Styles */
+        .map-modal-overlay {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .map-modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .map-modal-close {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #map { height: 400px; width: 100%; margin-top: 15px; }
+    </style>
 </head>
 <body>
 <div class="checkout-page-wrapper">
@@ -29,13 +69,12 @@
                 <h2>Shipping Information</h2>
                 <p class="sub-header">Select Saved Addresses</p>
             </div>
-            <form th:action="@{/checkout/address}" method="post">
+            <form id="address-form" th:action="@{/checkout/address}" method="post">
                 <div class="address-selection">
                     <div th:if="${addresses.isEmpty()}" class="no-address-notice">
                         <p>You have no saved addresses. Please add one below to continue.</p>
                     </div>
                     <div th:each="addr : ${addresses}" class="address-option">
-                        <!-- FIX: Use bracket notation for map access -->
                         <input type="radio" name="addressId" th:value="${addr.addressId}" th:id="'addr-' + ${addr.addressId}" required
                                th:checked="${checkoutDetails['addressId'] == addr.addressId or (addr.isDefault() and checkoutDetails['addressId'] == null and !addresses.isEmpty())}">
                         <label th:for="'addr-' + ${addr.addressId}">
@@ -56,13 +95,12 @@
                 </div>
 
                 <!-- HTMX Target & Trigger -->
-                <div id="add-address-target"
-                     th:include="~{fragments/address-link-fragment :: link}"
-                     th:with="context='checkout'">
-                    <!-- The "Add new address +" link will be injected here by Thymeleaf -->
+                <div id="add-address-target">
+                    <!-- The "Add new address +" link is loaded via a fragment -->
+                    <div th:replace="~{fragments/address-link-fragment :: link(context='checkout')}"></div>
                 </div>
 
-                <button type="submit" class="btn btn-primary checkout-btn" th:disabled="${addresses.isEmpty()}">Proceed</button>
+                <button type="submit" class="btn btn-primary checkout-btn" th:disabled="${addresses.isEmpty()} and #object.equals(newAddress, null)">Proceed</button>
             </form>
         </div>
 
@@ -73,7 +111,6 @@
             <form th:action="@{/checkout/shipping}" method="post">
                 <div class="delivery-selection">
                     <div class="delivery-option">
-                        <!-- FIX: Use bracket notation for map access -->
                         <input type="radio" name="deliveryMethod" value="Standard Delivery" id="del-standard" required
                                th:checked="${checkoutDetails['deliveryMethod'] == 'Standard Delivery'}">
                         <label for="del-standard">
@@ -82,7 +119,6 @@
                         </label>
                     </div>
                     <div class="delivery-option">
-                        <!-- FIX: Use bracket notation for map access -->
                         <input type="radio" name="deliveryMethod" value="Priority Delivery" id="del-priority" required
                                th:checked="${checkoutDetails['deliveryMethod'] == 'Priority Delivery'}">
                         <label for="del-priority">
@@ -91,7 +127,6 @@
                         </label>
                     </div>
                     <div class="delivery-option">
-                        <!-- FIX: Use bracket notation for map access -->
                         <input type="radio" name="deliveryMethod" value="Pickup Delivery" id="del-pickup" required
                                th:checked="${checkoutDetails['deliveryMethod'] == 'Pickup Delivery'}">
                         <label for="del-pickup">
@@ -110,7 +145,6 @@
             <form th:action="@{/checkout/payment}" method="post">
                 <div class="payment-selection">
                     <div class="payment-option">
-                        <!-- FIX: Use bracket notation for map access -->
                         <input type="radio" name="paymentMethod" value="Cash on delivery (COD)" id="pay-cod" required
                                th:checked="${checkoutDetails['paymentMethod'] == 'Cash on delivery (COD)'}">
                         <label for="pay-cod">
@@ -122,7 +156,6 @@
                         </label>
                     </div>
                     <div class="payment-option">
-                        <!-- FIX: Use bracket notation for map access -->
                         <input type="radio" name="paymentMethod" value="GCash e-Wallet" id="pay-gcash" required
                                th:checked="${checkoutDetails['paymentMethod'] == 'GCash e-Wallet'}">
                         <label for="pay-gcash">
@@ -134,7 +167,6 @@
                         </label>
                     </div>
                     <div class="payment-option">
-                        <!-- FIX: Use bracket notation for map access -->
                         <input type="radio" name="paymentMethod" value="Credit/Debit Card" id="pay-card" required
                                th:checked="${checkoutDetails['paymentMethod'] == 'Credit/Debit Card'}">
                         <label for="pay-card">
@@ -159,24 +191,133 @@
                     <p class="name" th:text="${item.product.name}"></p>
                     <p class="qty" th:text="'Qty: ' + ${item.quantity}"></p>
                 </div>
-                <p class="price" th:text="'â‚±' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 2)}"></p>
+                <p class="price" th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 'COMMA', 2, 'POINT')}"></p>
             </div>
         </div>
         <hr>
         <div class="summary-row">
             <span>Subtotal</span>
-            <span th:text="'â‚±' + ${#numbers.formatDecimal(subtotal, 1, 2)}"></span>
+            <span th:text="'₱' + ${#numbers.formatDecimal(subtotal, 1, 'COMMA', 2, 'POINT')}"></span>
         </div>
         <div class="summary-row">
             <span>Shipping</span>
-            <span th:text="'â‚±' + ${#numbers.formatDecimal(shipping, 1, 2)}"></span>
+            <span th:text="'₱' + ${#numbers.formatDecimal(shipping, 1, 'COMMA', 2, 'POINT')}"></span>
         </div>
         <hr>
         <div class="summary-row total-row">
             <span>Total</span>
-            <span th:text="'â‚±' + ${#numbers.formatDecimal(total, 1, 2)}"></span>
+            <span th:text="'₱' + ${#numbers.formatDecimal(total, 1, 'COMMA', 2, 'POINT')}"></span>
         </div>
     </div>
 </div>
+
+<!-- Map Modal -->
+<div id="map-modal" class="map-modal-overlay">
+    <div class="map-modal-content">
+        <span id="close-modal-btn" class="map-modal-close">×</span>
+        <h3>Pinpoint Your Location</h3>
+        <p>Drag the pin to your exact delivery address.</p>
+        <div id="map"></div>
+        <button id="confirm-pin-btn" class="btn btn-primary" style="margin-top: 15px;">Confirm Location</button>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const manilaCoords = [14.5995, 120.9842];
+        let map;
+        let marker;
+
+        function initializeMap() {
+            if (!map) {
+                map = L.map('map').setView(manilaCoords, 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+                marker = L.marker(manilaCoords, { draggable: true }).addTo(map);
+            }
+        }
+
+        document.body.addEventListener('click', function(e) {
+            if (e.target && e.target.id === 'pinpoint-btn') {
+                document.getElementById('map-modal').style.display = 'flex';
+                initializeMap();
+                // Invalidate map size to ensure it renders correctly after being hidden
+                setTimeout(() => map.invalidateSize(), 10);
+            }
+        });
+
+        document.getElementById('close-modal-btn').onclick = function() {
+            document.getElementById('map-modal').style.display = 'none';
+        }
+
+        document.getElementById('confirm-pin-btn').onclick = function() {
+            const position = marker.getLatLng();
+            const latInput = document.getElementById('latitude');
+            const lngInput = document.getElementById('longitude');
+            const coordsDisplay = document.getElementById('coords-display');
+
+            if (latInput && lngInput) {
+                latInput.value = position.lat;
+                lngInput.value = position.lng;
+            }
+            if(coordsDisplay) {
+                coordsDisplay.textContent = `Pinned at: ${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
+            }
+            document.getElementById('map-modal').style.display = 'none';
+        };
+
+        // JS for enabling/disabling dropdowns
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            const target = event.detail.target;
+            if (target.id === 'city-select') {
+                target.disabled = false;
+                const barangaySelect = document.getElementById('barangay-select');
+                if (barangaySelect) {
+                    barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+                    barangaySelect.disabled = true;
+                }
+            } else if (target.id === 'barangay-select') {
+                target.disabled = false;
+            }
+        });
+
+        document.body.addEventListener('change', function(e) {
+            const target = e.target;
+            if (target.id === 'province-select') {
+                const citySelect = document.getElementById('city-select');
+                const barangaySelect = document.getElementById('barangay-select');
+                const provinceFeedback = document.getElementById('province-feedback');
+
+                if (target.value) {
+                    if (provinceFeedback) provinceFeedback.style.display = 'block';
+                } else {
+                    if (provinceFeedback) provinceFeedback.style.display = 'none';
+                    if (citySelect) {
+                        citySelect.innerHTML = '<option value="">Select City</option>';
+                        citySelect.disabled = true;
+                    }
+                    if (barangaySelect) {
+                        barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+                        barangaySelect.disabled = true;
+                    }
+                }
+            } else if (target.id === 'city-select') {
+                const barangaySelect = document.getElementById('barangay-select');
+                const cityFeedback = document.getElementById('city-feedback');
+                if (target.value) {
+                    if (cityFeedback) cityFeedback.style.display = 'block';
+                } else {
+                    if (cityFeedback) cityFeedback.style.display = 'none';
+                    if (barangaySelect) {
+                        barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+                        barangaySelect.disabled = true;
+                    }
+                }
+            }
+        });
+    });
+</script>
+
 </body>
 </html>

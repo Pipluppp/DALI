@@ -4,5 +4,5 @@ import com.dali.ecommerce.model.Account;
 import com.dali.ecommerce.model.Address;
 
 public interface AddressService {
-    void addAddress(Account account, Address address);
+    Address addAddress(Account account, Address address, Integer provinceId, Integer cityId, Integer barangayId);
 }

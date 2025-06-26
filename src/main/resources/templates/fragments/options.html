@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Fragment for City options -->
+<th:block th:fragment="city-options">
+    <option value="">Select City</option>
+    <option th:each="city : ${cities}" th:value="${city.id}" th:text="${city.name}"></option>
+</th:block>
+
+<!-- Fragment for Barangay options -->
+<th:block th:fragment="barangay-options">
+    <option value="">Select Barangay</option>
+    <option th:each="b : ${barangays}" th:value="${b.id}" th:text="${b.name}"></option>
+</th:block>
+
+</body>
+</html>

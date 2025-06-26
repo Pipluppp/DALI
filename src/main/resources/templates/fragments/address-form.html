@@ -2,40 +2,68 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<!-- This is the single, consolidated address form fragment -->
 <div th:fragment="address-form" class="address-form-container" style="position: relative;">
 
-    <!--
-      FIX: Used th:attr to ensure Thymeleaf processes the dynamic hx-get and hx-target attributes.
-      The 'cancel' button (X) is now dynamic. It gets the correct link and target based on the context.
-    -->
-    <a th:attr="hx-get=@{/address/link(context=${context})}, hx-target=(${context == 'checkout' ? '#add-address-target' : '#add-address-profile-target'})"
+    <a th:attr="hx-get=@{/address/link(context=${context})},
+               hx-target=(${context == 'checkout' ? '#add-address-target' : '#add-address-profile-target'})"
        hx-swap="innerHTML"
        style="position: absolute; top: 15px; right: 20px; font-size: 1.8rem; text-decoration: none; color: #888; cursor: pointer; line-height: 1;">×</a>
 
-    <h3 style="margin-top: 30px; margin-bottom: 20px;">Add a New Address</h3>
+    <h3 style="margin-top: 30px; margin-bottom: 20px;" th:text="${context == 'checkout'} ? 'Add a New Shipping Address' : 'Add a New Address'">Add a New Address</h3>
+
     <form th:action="@{/address/add}" th:object="${address}" method="post" class="address-form">
+        <input type="hidden" id="latitude" th:field="*{latitude}">
+        <input type="hidden" id="longitude" th:field="*{longitude}">
+
+        <div class="form-group">
+            <label for="phone-number">Phone number</label>
+            <input type="tel" id="phone-number" th:field="*{phoneNumber}" placeholder="PH (+63) e.g., 09123456789" pattern="^(\+63|0)9\d{9}$" required>
+        </div>
+
+        <div class="form-group">
+            <label for="province-select">Province</label>
+            <select id="province-select" name="provinceId" required class="form-control"
+                    hx-get="/api/locations/cities"
+                    hx-trigger="change"
+                    hx-target="#city-select"
+                    hx-swap="innerHTML">
+                <option value="">Select Province</option>
+                <option th:each="p : ${provinces}" th:value="${p.id}" th:text="${p.name}"></option>
+            </select>
+            <div id="province-feedback" style="display:none; color: green; font-size: 0.9em; margin-top: 5px;">✓ Way to go!</div>
+        </div>
+
+        <div class="form-group">
+            <label for="city-select">City / Municipality</label>
+            <select id="city-select" name="cityId" required class="form-control" disabled
+                    hx-get="/api/locations/barangays"
+                    hx-trigger="change"
+                    hx-target="#barangay-select"
+                    hx-swap="innerHTML">
+                <option value="">Select Province First</option>
+            </select>
+            <div id="city-feedback" style="display:none; color: green; font-size: 0.9em; margin-top: 5px;">✓ Well done!</div>
+        </div>
+
+        <div class="form-group">
+            <label for="barangay-select">Barangay</label>
+            <select id="barangay-select" name="barangayId" required class="form-control" disabled>
+                <option value="">Select City First</option>
+            </select>
+        </div>
+
         <div class="form-group">
             <label for="additionalInfo">Street Name, Building, House No.</label>
             <input type="text" id="additionalInfo" th:field="*{additionalInfo}" required>
         </div>
+
         <div class="form-group">
-            <label for="barangay">Barangay</label>
-            <input type="text" id="barangay" th:field="*{barangay}" required>
+            <button type="button" id="pinpoint-btn" class="btn btn-secondary">
+                <i class="bx bx-map-pin"></i> Pinpoint address (optional)
+            </button>
+            <span id="coords-display" style="margin-left: 10px; color: #666; font-size: 0.9em;"></span>
         </div>
-        <div class="form-group">
-            <label for="city">City / Municipality</label>
-            <input type="text" id="city" th:field="*{city}" required>
-        </div>
-        <div class="form-group">
-            <label for="province">Province</label>
-            <input type="text" id="province" th:field="*{province}" required>
-        </div>
-        <div class="form-group">
-            <label for="phoneNumber">Phone Number</label>
-            <input type="tel" id="phoneNumber" th:field="*{phoneNumber}" placeholder="09XXXXXXXXX or +639XXXXXXXXX" pattern="^(\+63|0)9\d{9}$" required>
-            <span class="error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
-        </div>
+
         <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Save Address</button>
     </form>
 </div>

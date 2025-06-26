@@ -1,15 +1,37 @@
--- DALI/src/main/resources/schema.sql
-
--- Drop tables if they exist to ensure a clean slate on each run.
--- This is useful for development.
+-- Drop tables in order of dependency to avoid foreign key constraints errors.
 DROP TABLE IF EXISTS admin_accounts CASCADE;
 DROP TABLE IF EXISTS order_items CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
 DROP TABLE IF EXISTS cart_items CASCADE;
 DROP TABLE IF EXISTS addresses CASCADE;
+DROP TABLE IF EXISTS barangays CASCADE;
+DROP TABLE IF EXISTS cities CASCADE;
+DROP TABLE IF EXISTS provinces CASCADE;
 DROP TABLE IF EXISTS accounts CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS stores CASCADE;
+
+
+-- Location Tables
+CREATE TABLE provinces (
+                           province_id     SERIAL PRIMARY KEY,
+                           province_name   VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE cities (
+                        city_id         SERIAL PRIMARY KEY,
+                        province_id     INTEGER NOT NULL REFERENCES provinces(province_id) ON DELETE CASCADE,
+                        city_name       VARCHAR(255) NOT NULL,
+                        UNIQUE(province_id, city_name)
+);
+
+CREATE TABLE barangays (
+                           barangay_id     SERIAL PRIMARY KEY,
+                           city_id         INTEGER NOT NULL REFERENCES cities(city_id) ON DELETE CASCADE,
+                           barangay_name   VARCHAR(255) NOT NULL,
+                           UNIQUE(city_id, barangay_name)
+);
+
 
 CREATE TABLE stores (
                         store_id        SERIAL PRIMARY KEY,
@@ -46,11 +68,13 @@ CREATE TABLE admin_accounts (
 CREATE TABLE addresses (
                            address_id      SERIAL PRIMARY KEY,
                            account_id      INTEGER NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
-                           province        VARCHAR(255),
-                           city            VARCHAR(255),
-                           barangay        VARCHAR(255),
+                           province_id     INTEGER NOT NULL REFERENCES provinces(province_id),
+                           city_id         INTEGER NOT NULL REFERENCES cities(city_id),
+                           barangay_id     INTEGER NOT NULL REFERENCES barangays(barangay_id),
                            additional_info VARCHAR(1024),
                            phone_number    VARCHAR(50),
+                           latitude        NUMERIC(10, 7),
+                           longitude       NUMERIC(10, 7),
                            created_at      TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                            is_default      BOOLEAN DEFAULT FALSE
 );
