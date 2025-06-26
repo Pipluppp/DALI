@@ -10,8 +10,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <!-- Leaflet JS -->
+    <!-- Leaflet JS (place before our custom script) -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Our custom, modularized script for the map. 'defer' ensures it runs after the DOM is parsed. -->
+    <script th:src="@{/js/address-form-handler.js}" defer></script>
     <style>
         /* Basic Modal Styles */
         .map-modal-overlay {
@@ -221,103 +223,6 @@
         <button id="confirm-pin-btn" class="btn btn-primary" style="margin-top: 15px;">Confirm Location</button>
     </div>
 </div>
-
-<script th:inline="javascript">
-    document.addEventListener('DOMContentLoaded', function() {
-        const manilaCoords = [14.5995, 120.9842];
-        let map;
-        let marker;
-
-        function initializeMap() {
-            if (!map) {
-                map = L.map('map').setView(manilaCoords, 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                }).addTo(map);
-                marker = L.marker(manilaCoords, { draggable: true }).addTo(map);
-            }
-        }
-
-        document.body.addEventListener('click', function(e) {
-            if (e.target && e.target.id === 'pinpoint-btn') {
-                document.getElementById('map-modal').style.display = 'flex';
-                initializeMap();
-                // Invalidate map size to ensure it renders correctly after being hidden
-                setTimeout(() => map.invalidateSize(), 10);
-            }
-        });
-
-        document.getElementById('close-modal-btn').onclick = function() {
-            document.getElementById('map-modal').style.display = 'none';
-        }
-
-        document.getElementById('confirm-pin-btn').onclick = function() {
-            const position = marker.getLatLng();
-            const latInput = document.getElementById('latitude');
-            const lngInput = document.getElementById('longitude');
-            const coordsDisplay = document.getElementById('coords-display');
-
-            if (latInput && lngInput) {
-                latInput.value = position.lat;
-                lngInput.value = position.lng;
-            }
-            if(coordsDisplay) {
-                coordsDisplay.textContent = `Pinned at: ${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
-            }
-            document.getElementById('map-modal').style.display = 'none';
-        };
-
-        // JS for enabling/disabling dropdowns
-        document.body.addEventListener('htmx:afterSwap', function(event) {
-            const target = event.detail.target;
-            if (target.id === 'city-select') {
-                target.disabled = false;
-                const barangaySelect = document.getElementById('barangay-select');
-                if (barangaySelect) {
-                    barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
-                    barangaySelect.disabled = true;
-                }
-            } else if (target.id === 'barangay-select') {
-                target.disabled = false;
-            }
-        });
-
-        document.body.addEventListener('change', function(e) {
-            const target = e.target;
-            if (target.id === 'province-select') {
-                const citySelect = document.getElementById('city-select');
-                const barangaySelect = document.getElementById('barangay-select');
-                const provinceFeedback = document.getElementById('province-feedback');
-
-                if (target.value) {
-                    if (provinceFeedback) provinceFeedback.style.display = 'block';
-                } else {
-                    if (provinceFeedback) provinceFeedback.style.display = 'none';
-                    if (citySelect) {
-                        citySelect.innerHTML = '<option value="">Select City</option>';
-                        citySelect.disabled = true;
-                    }
-                    if (barangaySelect) {
-                        barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
-                        barangaySelect.disabled = true;
-                    }
-                }
-            } else if (target.id === 'city-select') {
-                const barangaySelect = document.getElementById('barangay-select');
-                const cityFeedback = document.getElementById('city-feedback');
-                if (target.value) {
-                    if (cityFeedback) cityFeedback.style.display = 'block';
-                } else {
-                    if (cityFeedback) cityFeedback.style.display = 'none';
-                    if (barangaySelect) {
-                        barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
-                        barangaySelect.disabled = true;
-                    }
-                }
-            }
-        });
-    });
-</script>
 
 </body>
 </html>

@@ -3,7 +3,7 @@
 <body>
 
 <div th:fragment="address-form" class="address-form-container" style="position: relative;">
-
+    <!-- Cancel Button -->
     <a th:attr="hx-get=@{/address/link(context=${context})},
                hx-target=(${context == 'checkout' ? '#add-address-target' : '#add-address-profile-target'})"
        hx-swap="innerHTML"
@@ -12,54 +12,59 @@
     <h3 style="margin-top: 30px; margin-bottom: 20px;" th:text="${context == 'checkout'} ? 'Add a New Shipping Address' : 'Add a New Address'">Add a New Address</h3>
 
     <form th:action="@{/address/add}" th:object="${address}" method="post" class="address-form">
+        <!-- Hidden fields for coordinates -->
         <input type="hidden" id="latitude" th:field="*{latitude}">
         <input type="hidden" id="longitude" th:field="*{longitude}">
 
+        <!-- Phone Number -->
         <div class="form-group">
             <label for="phone-number">Phone number</label>
             <input type="tel" id="phone-number" th:field="*{phoneNumber}" placeholder="PH (+63) e.g., 09123456789" pattern="^(\+63|0)9\d{9}$" required>
         </div>
 
+        <!-- Province Dropdown -->
         <div class="form-group">
             <label for="province-select">Province</label>
             <select id="province-select" name="provinceId" required class="form-control"
                     hx-get="/api/locations/cities"
                     hx-trigger="change"
-                    hx-target="#city-select"
-                    hx-swap="innerHTML">
+                    hx-target="#city-select-wrapper">
                 <option value="">Select Province</option>
                 <option th:each="p : ${provinces}" th:value="${p.id}" th:text="${p.name}"></option>
             </select>
-            <div id="province-feedback" style="display:none; color: green; font-size: 0.9em; margin-top: 5px;">✓ Way to go!</div>
+            <!-- OOB Swap Target -->
+            <div id="province-feedback"></div>
         </div>
 
-        <div class="form-group">
+        <!-- City Dropdown (Wrapper is the HTMX target) -->
+        <!-- BUG FIX: The HTMX attributes that load the barangay are now removed from this wrapper -->
+        <div class="form-group" id="city-select-wrapper">
             <label for="city-select">City / Municipality</label>
-            <select id="city-select" name="cityId" required class="form-control" disabled
-                    hx-get="/api/locations/barangays"
-                    hx-trigger="change"
-                    hx-target="#barangay-select"
-                    hx-swap="innerHTML">
+            <select id="city-select" name="cityId" required class="form-control" disabled>
                 <option value="">Select Province First</option>
             </select>
-            <div id="city-feedback" style="display:none; color: green; font-size: 0.9em; margin-top: 5px;">✓ Well done!</div>
+            <!-- OOB Swap Target -->
+            <div id="city-feedback"></div>
         </div>
 
-        <div class="form-group">
+        <!-- Barangay Dropdown (Wrapper is the HTMX target) -->
+        <div class="form-group" id="barangay-select-wrapper">
             <label for="barangay-select">Barangay</label>
             <select id="barangay-select" name="barangayId" required class="form-control" disabled>
                 <option value="">Select City First</option>
             </select>
         </div>
 
+        <!-- Additional Info / Street Address -->
         <div class="form-group">
             <label for="additionalInfo">Street Name, Building, House No.</label>
             <input type="text" id="additionalInfo" th:field="*{additionalInfo}" required>
         </div>
 
+        <!-- Pinpoint Button -->
         <div class="form-group">
             <button type="button" id="pinpoint-btn" class="btn btn-secondary">
-                <i class="bx bx-map-pin"></i> Pinpoint address (optional)
+                Pinpoint address (optional)
             </button>
             <span id="coords-display" style="margin-left: 10px; color: #666; font-size: 0.9em;"></span>
         </div>

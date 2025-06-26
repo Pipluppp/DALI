@@ -2,16 +2,72 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<!-- Fragment for City options -->
-<th:block th:fragment="city-options">
-    <option value="">Select City</option>
-    <option th:each="city : ${cities}" th:value="${city.id}" th:text="${city.name}"></option>
+<!-- === CITY SELECT FRAGMENTS === -->
+
+<!-- Fragment for an ENABLED City select dropdown -->
+<th:block th:fragment="city-select">
+    <!-- This is the main content that will be swapped into #city-select-wrapper -->
+    <label for="city-select">City / Municipality</label>
+    <!--
+      BUG FIX: The hx-* attributes are now on the <select> element itself.
+      When this fragment replaces the old content, these attributes come with it,
+      ensuring the barangay dropdown will be triggered correctly.
+      'hx-include="this"' tells HTMX to include the value of this select element in the request.
+    -->
+    <select id="city-select" name="cityId" required class="form-control"
+            hx-get="/api/locations/barangays"
+            hx-trigger="change"
+            hx-target="#barangay-select-wrapper"
+            hx-include="this">
+        <option value="">Select City</option>
+        <option th:each="city : ${cities}" th:value="${city.id}" th:text="${city.name}"></option>
+    </select>
+    <!-- This is an Out-Of-Band Swap: it updates #province-feedback separately -->
+    <div id="province-feedback" hx-swap-oob="true">
+        <div>✓ Way to go!</div>
+    </div>
 </th:block>
 
-<!-- Fragment for Barangay options -->
-<th:block th:fragment="barangay-options">
-    <option value="">Select Barangay</option>
-    <option th:each="b : ${barangays}" th:value="${b.id}" th:text="${b.name}"></option>
+<!-- Fragment for a DISABLED City select dropdown (when no province is selected) -->
+<th:block th:fragment="disabled-city-select">
+    <!-- Main content swap -->
+    <label for="city-select">City / Municipality</label>
+    <select id="city-select" name="cityId" required class="form-control" disabled>
+        <option value="">Select Province First</option>
+    </select>
+    <!-- OOB Swap to clear the feedback -->
+    <div id="province-feedback" hx-swap-oob="true"></div>
+    <div id="city-feedback" hx-swap-oob="true"></div>
+    <!-- OOB Swap to also reset the barangay dropdown -->
+    <div id="barangay-select-wrapper" hx-swap-oob="true">
+        <div th:replace="~{:: disabled-barangay-select}"></div>
+    </div>
+</th:block>
+
+
+<!-- === BARANGAY SELECT FRAGMENTS === -->
+
+<!-- Fragment for an ENABLED Barangay select dropdown -->
+<th:block th:fragment="barangay-select">
+    <label for="barangay-select">Barangay</label>
+    <select id="barangay-select" name="barangayId" required class="form-control">
+        <option value="">Select Barangay</option>
+        <option th:each="b : ${barangays}" th:value="${b.id}" th:text="${b.name}"></option>
+    </select>
+    <!-- Out-Of-Band Swap to show city feedback -->
+    <div id="city-feedback" hx-swap-oob="true">
+        <div>✓ Well done!</div>
+    </div>
+</th:block>
+
+<!-- Fragment for a DISABLED Barangay select dropdown (when no city is selected) -->
+<th:block th:fragment="disabled-barangay-select">
+    <label for="barangay-select">Barangay</label>
+    <select id="barangay-select" name="barangayId" required class="form-control" disabled>
+        <option value="">Select City First</option>
+    </select>
+    <!-- OOB Swap to clear the feedback -->
+    <div id="city-feedback" hx-swap-oob="true"></div>
 </th:block>
 
 </body>
