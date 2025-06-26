@@ -62,6 +62,8 @@
             <div class="section-header">
                 <h2>Personal details</h2>
                 <a href="#" class="edit-link">Edit</a>
+                 <!-- This is the new link to the change password page -->
+                <a th:href="@{/profile/change-password}" class="edit-link">Change Password</a>
             </div>
             <dl class="details-grid">
                 <dt>First Name:</dt> <dd th:text="${account.firstName}"></dd>
