@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
 <div class="checkout-page-wrapper">
@@ -57,11 +56,10 @@
                 </div>
 
                 <!-- HTMX Target & Trigger -->
-                <div id="add-address-target">
-                    <a hx-get="/address/new"
-                       hx-target="#add-address-target"
-                       hx-swap="innerHTML"
-                       class="add-new-address-link">Add new address +</a>
+                <div id="add-address-target"
+                     th:include="~{fragments/address-link-fragment :: link}"
+                     th:with="context='checkout'">
+                    <!-- The "Add new address +" link will be injected here by Thymeleaf -->
                 </div>
 
                 <button type="submit" class="btn btn-primary checkout-btn" th:disabled="${addresses.isEmpty()}">Proceed</button>
@@ -161,22 +159,22 @@
                     <p class="name" th:text="${item.product.name}"></p>
                     <p class="qty" th:text="'Qty: ' + ${item.quantity}"></p>
                 </div>
-                <p class="price" th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 2)}"></p>
+                <p class="price" th:text="'â‚±' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 2)}"></p>
             </div>
         </div>
         <hr>
         <div class="summary-row">
             <span>Subtotal</span>
-            <span th:text="'₱' + ${#numbers.formatDecimal(subtotal, 1, 2)}"></span>
+            <span th:text="'â‚±' + ${#numbers.formatDecimal(subtotal, 1, 2)}"></span>
         </div>
         <div class="summary-row">
             <span>Shipping</span>
-            <span th:text="'₱' + ${#numbers.formatDecimal(shipping, 1, 2)}"></span>
+            <span th:text="'â‚±' + ${#numbers.formatDecimal(shipping, 1, 2)}"></span>
         </div>
         <hr>
         <div class="summary-row total-row">
             <span>Total</span>
-            <span th:text="'₱' + ${#numbers.formatDecimal(total, 1, 2)}"></span>
+            <span th:text="'â‚±' + ${#numbers.formatDecimal(total, 1, 2)}"></span>
         </div>
     </div>
 </div>

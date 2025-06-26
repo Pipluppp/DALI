@@ -8,10 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class AddressController {
@@ -25,8 +22,9 @@ public class AddressController {
     }
 
     @GetMapping("/address/new")
-    public String getAddressForm(Model model) {
+    public String getAddressForm(Model model, @RequestParam(name="context", defaultValue="checkout") String context) {
         model.addAttribute("address", new Address());
+        model.addAttribute("context", context); // Pass context to the form for the cancel button
         return "fragments/address-form :: address-form";
     }
 
@@ -42,5 +40,11 @@ public class AddressController {
 
         // Redirect back to the page that initiated the request
         return "redirect:" + referer;
+    }
+
+    @GetMapping("/address/link")
+    public String getAddressLinkFragment(@RequestParam("context") String context, Model model) {
+        model.addAttribute("context", context);
+        return "fragments/address-link-fragment :: link";
     }
 }

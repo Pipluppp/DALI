@@ -2,10 +2,14 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 
+<!-- This is the single, consolidated address form fragment -->
 <div th:fragment="address-form" class="address-form-container" style="position: relative;">
 
-    <a hx-get="/checkout/address/link"
-       hx-target="#add-address-target"
+    <!--
+      FIX: Used th:attr to ensure Thymeleaf processes the dynamic hx-get and hx-target attributes.
+      The 'cancel' button (X) is now dynamic. It gets the correct link and target based on the context.
+    -->
+    <a th:attr="hx-get=@{/address/link(context=${context})}, hx-target=(${context == 'checkout' ? '#add-address-target' : '#add-address-profile-target'})"
        hx-swap="innerHTML"
        style="position: absolute; top: 15px; right: 20px; font-size: 1.8rem; text-decoration: none; color: #888; cursor: pointer; line-height: 1;">×</a>
 
