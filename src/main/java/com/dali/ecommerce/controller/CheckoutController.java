@@ -115,6 +115,11 @@ public class CheckoutController {
         // 4. Populate the model with the new, correct shipping fee
         populateCheckoutModel(model, authentication, session, checkoutDetails);
 
+        // Expose warehouse and user coordinates to the template for the map modal
+        model.addAttribute("warehouseLat", shippingService.getWarehouseLat());
+        model.addAttribute("warehouseLon", shippingService.getWarehouseLon());
+        model.addAttribute("customerAddress", customerAddress);
+
         return "checkout";
     }
 

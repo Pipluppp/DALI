@@ -29,6 +29,14 @@ public class ShippingService {
 
     }
 
+    public double getWarehouseLat() {
+        return warehouseLat;
+    }
+
+    public double getWarehouseLon() {
+        return warehouseLon;
+    }
+
     public double calculateShippingFee(Address customerAddress, String deliveryMethod) {
         // Handle Pickup immediately
         if ("Pickup Delivery".equalsIgnoreCase(deliveryMethod)) {

@@ -14,6 +14,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <!-- Our custom, modularized script for the map. 'defer' ensures it runs after the DOM is parsed. -->
     <script th:src="@{/js/address-map-locator.js}" defer></script>
+    <script th:src="@{/js/shipping-map-preview.js}" defer></script>
     <style>
         /* Basic Modal Styles */
         .map-modal-overlay {
@@ -49,6 +50,21 @@
             cursor: pointer;
         }
         #map { height: 400px; width: 100%; margin-top: 15px; }
+
+        /* Styles for the new modal and button */
+        #shipping-map-modal .map-modal-content {
+            max-width: 800px; /* A bit wider for better map view */
+        }
+        #shipping-map { height: 450px; width: 100%; margin-top: 15px; border-radius: 5px; }
+        .location-map-btn {
+            background: none;
+            border: none;
+            color: #b21984;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0 5px;
+        }
     </style>
 </head>
 <body>
@@ -116,6 +132,19 @@
             <a th:href="@{/checkout/address}">< Back to Address</a>
             <h2>Delivery Option</h2>
             <p class="sub-header">Your shipping fee has been calculated based on your selected address. Please choose a delivery type to continue.</p>
+
+            <div style="margin-bottom: 20px; border: 1px solid #eee; padding: 15px; border-radius: 8px;">
+                <p style="margin: 0;">Shipping fee is based on the distance from our warehouse to your location.</p>
+                <button type="button" id="view-shipping-map-btn" class="location-map-btn"
+                        th:attr="data-warehouse-lat=${warehouseLat},
+                                 data-warehouse-lon=${warehouseLon},
+                                 data-user-lat=${customerAddress.latitude},
+                                 data-user-lon=${customerAddress.longitude},
+                                 data-user-address=${customerAddress.getFullAddress()}">
+                    View on Map
+                </button>
+            </div>
+
             <form th:action="@{/checkout/shipping}" method="post">
                 <div class="delivery-selection"
                      hx-post="/checkout/recalculate"
@@ -234,6 +263,16 @@
         <p>Drag the pin to your exact delivery address.</p>
         <div id="map"></div>
         <button id="confirm-pin-btn" class="btn btn-primary" style="margin-top: 15px;">Confirm Location</button>
+    </div>
+</div>
+
+<!-- NEW: Map Modal for Shipping Preview -->
+<div id="shipping-map-modal" class="map-modal-overlay">
+    <div class="map-modal-content">
+        <span id="close-shipping-map-btn" class="map-modal-close">×</span>
+        <h3>Delivery Route Preview</h3>
+        <p>This map shows the delivery distance from our warehouse to your address.</p>
+        <div id="shipping-map"></div>
     </div>
 </div>
 
