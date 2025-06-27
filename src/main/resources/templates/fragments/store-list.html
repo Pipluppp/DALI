@@ -9,7 +9,9 @@
         <div th:if="${#lists.isEmpty(stores)}" class="store-item">
             <p>No stores found matching your search.</p>
         </div>
-        <div th:each="store : ${stores}" class="store-item">
+        <div th:each="store : ${stores}"
+             class="store-item store-item-clickable"
+             th:attr="data-lat=${store.latitude}, data-lng=${store.longitude}, data-store-id=${store.id}">
             <h3 th:text="${store.name}">DALI EVERYDAY GROCERY – PUREZA</h3>
         </div>
     </div>
