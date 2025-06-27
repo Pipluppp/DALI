@@ -18,7 +18,7 @@ public class StoreController {
         this.storeRepository = storeRepository;
     }
 
-    // Loads the full page shell with initial data
+    // Main page load - fetches ALL stores
     @GetMapping("/stores")
     public String showStoresPage(Model model) {
         List<Store> stores = storeRepository.findAll();
@@ -26,7 +26,7 @@ public class StoreController {
         return "stores";
     }
 
-    // HTMX endpoint for searching stores
+    // HTMX search endpoint - fetches ALL matching stores
     @GetMapping("/stores/search")
     public String searchStores(@RequestParam(value = "query", required = false) String query, Model model) {
         List<Store> stores;

@@ -87,15 +87,9 @@ public class SecurityConfig {
     public SecurityFilterChain customerFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        // === THE FIX IS HERE ===
-                        // 1. We keep the /login page as anonymous-only to prevent logged-in users from seeing it.
                         .requestMatchers("/login").anonymous()
+                        .requestMatchers("/", "/register", "/shop/**", "/stores", "/stores/search", "/product/**", "/css/**", "/images/**", "/cart/**", "/forgot-password", "/reset-password", "/api/locations/**").permitAll()
 
-                        // 2. We move /register to the permitAll() list. This allows ANYONE to access the
-                        //    GET (view page) and POST (submit form) endpoints, fixing the 403 Forbidden error.
-                        .requestMatchers("/", "/register", "/shop/**", "/stores/**", "/product/**", "/css/**", "/images/**", "/cart/**", "/forgot-password", "/reset-password").permitAll()
-                        
-                        // These rules remain the same
                         .requestMatchers("/profile", "/checkout/**").authenticated()
                         .anyRequest().authenticated()
                 )

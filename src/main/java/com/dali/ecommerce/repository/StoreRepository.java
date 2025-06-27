@@ -9,6 +9,6 @@ import java.util.List;
 @Repository
 public interface StoreRepository extends JpaRepository<Store, Integer> {
 
-    // Add this for searching
+    // Reverted to a simple list-based search
     List<Store> findByNameContainingIgnoreCaseOrLocationContainingIgnoreCase(String name, String location);
 }

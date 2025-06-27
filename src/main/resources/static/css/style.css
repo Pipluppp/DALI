@@ -1,3 +1,4 @@
+/* ... at the top of the file ... */
 html {
     scroll-behavior: smooth;
 }
@@ -230,18 +231,34 @@ body {
 /* =================================
    4. Store Finder Page Styles
    ================================= */
+/* =================================
+   4. Store Finder Page Styles
+   ================================= */
 .store-finder-container {
     display: flex;
-    min-height: calc(100vh - 81px - 61px);
+    /* Match the header and footer height to fill the screen */
+    height: calc(100vh - 81px - 195px);
 }
 
 .store-list-panel {
     width: 450px;
     padding: 40px;
     background-color: #fff;
-    overflow-y: auto;
     border-right: 1px solid #e0e0e0;
+    /* Make the panel scrollable */
+    display: flex;
+    flex-direction: column;
+    overflow-y: hidden; /* Hide parent scrollbar */
 }
+
+/* New container for the list to make it scroll independently */
+#store-list-container {
+    flex-grow: 1;
+    overflow-y: auto; /* Enable scrolling on this container */
+    margin-right: -20px; /* Hide scrollbar visually */
+    padding-right: 20px;
+}
+
 
 .store-list-panel h1 {
     font-size: 2.2rem;
@@ -275,31 +292,20 @@ body {
 .store-item h3 {
     font-size: 1.1rem;
     font-weight: 700;
+    /* Style to match image */
+    text-transform: uppercase;
 }
 
 .store-item p {
+    /* This style for location is no longer needed but kept for other potential uses */
     color: #666;
     margin-top: 5px;
-}
-
-.store-status .status-open {
-    color: #28a745;
-    font-weight: 600;
-}
-
-.view-all-stores {
-    display: block;
-    text-align: center;
-    margin-top: 20px;
-    font-weight: 600;
-    color: #333;
 }
 
 .map-panel {
     flex-grow: 1;
     background-color: #e9e9e9;
 }
-
 
 /* =================================
    5. Shop Page & HTMX Search Styles

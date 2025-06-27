@@ -2,15 +2,15 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 
+<!-- This fragment renders the entire list of stores -->
 <div th:fragment="store-list-fragment">
-    <p class="store-count" th:text="${stores.size()} + ' Stores found'">3 Stores near you</p>
+    <p class="store-count" th:text="${stores.size()} + ' Stores found'"></p>
     <div class="store-list">
         <div th:if="${#lists.isEmpty(stores)}" class="store-item">
             <p>No stores found matching your search.</p>
         </div>
         <div th:each="store : ${stores}" class="store-item">
-            <h3 th:text="${store.name}">DALI Everyday Grocery – PUREZA</h3>
-            <p th:text="${store.location}">Pureza, Sampaloc, City Of Manila</p>
+            <h3 th:text="${store.name}">DALI EVERYDAY GROCERY – PUREZA</h3>
         </div>
     </div>
 </div>

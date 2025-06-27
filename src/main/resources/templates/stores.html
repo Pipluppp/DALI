@@ -23,14 +23,14 @@
                    name="query"
                    placeholder="Search store name or location..."
                    hx-get="/stores/search"
-                   hx-trigger="keyup changed delay:200ms"
-                   hx-target="#store-list-results"
+                   hx-trigger="keyup changed delay:200ms, search"
+                   hx-target="#store-list-container"
                    hx-swap="innerHTML"
             >
         </div>
 
-        <!-- This div is the target for HTMX updates -->
-        <div id="store-list-results">
+        <!-- This div is the target for HTMX search updates -->
+        <div id="store-list-container">
             <!-- Load the initial list via fragment -->
             <div th:replace="~{fragments/store-list :: store-list-fragment}"></div>
         </div>
