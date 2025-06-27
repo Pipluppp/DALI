@@ -93,19 +93,23 @@
                     </form>
 
                     <!-- Form for PREPARING_FOR_SHIPMENT state -->
-                    <form th:if="*{status.name() == 'PREPARING_FOR_SHIPMENT'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post">
+                    <form th:if="*{status.name() == 'PREPARING_FOR_SHIPMENT'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
                         <button type="submit" name="status" th:value="SHIPPED" class="btn btn-primary">Mark as Shipped</button>
+                        <button type="submit" name="status" th:value="DELIVERED" class="btn btn-primary">Mark as Delivered (e.g. Pickup)</button>
+                        <button type="submit" name="status" th:value="CANCELLED" class="btn btn-secondary">Cancel Order</button>
                     </form>
 
                     <!-- Form for SHIPPED state -->
                     <form th:if="*{status.name() == 'SHIPPED'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
                         <button type="submit" name="status" th:value="DELIVERED" class="btn btn-primary">Mark as Delivered</button>
                         <button type="submit" name="status" th:value="DELIVERY_FAILED" class="btn btn-secondary">Mark Delivery Failed</button>
+                        <button type="submit" name="status" th:value="CANCELLED" class="btn btn-secondary">Cancel / Return</button>
                     </form>
 
                     <!-- Form for DELIVERY_FAILED state -->
                     <form th:if="*{status.name() == 'DELIVERY_FAILED'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
                         <button type="submit" name="status" th:value="SHIPPED" class="btn btn-primary">Re-attempt Delivery</button>
+                        <button type="submit" name="status" th:value="CANCELLED" class="btn btn-secondary">Cancel Order</button>
                     </form>
 
                     <p th:if="*{status.name() == 'DELIVERED' or status.name() == 'CANCELLED'}">This order is in a terminal state and cannot be updated.</p>
