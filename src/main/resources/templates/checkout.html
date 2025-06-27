@@ -111,6 +111,7 @@
 
         <!-- Shipping Step -->
         <div th:if="${step == 'shipping'}" class="checkout-content">
+            <a th:href="@{/checkout/address}">< Back to Address</a>
             <h2>Delivery Option</h2>
             <p class="sub-header">Your shipping fee has been calculated based on your selected address. Please choose a delivery type to continue.</p>
             <form th:action="@{/checkout/shipping}" method="post">
@@ -119,7 +120,7 @@
                     <div class="delivery-option">
                         <input type="radio" name="deliveryMethod" value="Standard Delivery" id="del-standard" required
                                th:data-base-fee="${shipping}"
-                        th:checked="${checkoutDetails['deliveryMethod'] == 'Standard Delivery' or checkoutDetails['deliveryMethod'] == null}">
+                               th:checked="${checkoutDetails['deliveryMethod'] == 'Standard Delivery' or checkoutDetails['deliveryMethod'] == null}">
                         <label for="del-standard">
                             <strong>Standard Delivery</strong>
                             <p>Within the day</p>
@@ -149,6 +150,7 @@
 
         <!-- Payment Step -->
         <div th:if="${step == 'payment'}" class="checkout-content">
+            <a th:href="@{/checkout/shipping}">< Back to Shipping</a>
             <h2>Payment Methods</h2>
             <form th:action="@{/checkout/payment}" method="post">
                 <div class="payment-selection">
@@ -207,7 +209,7 @@
             <span>Subtotal</span>
             <span id="subtotal-display"
                   th:data-subtotal="${subtotal}"
-            th:text="'₱' + ${#numbers.formatDecimal(subtotal, 1, 'COMMA', 2, 'POINT')}"></span>
+                  th:text="'₱' + ${#numbers.formatDecimal(subtotal, 1, 'COMMA', 2, 'POINT')}"></span>
         </div>
         <div class="summary-row">
             <span>Shipping</span>
