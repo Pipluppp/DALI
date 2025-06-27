@@ -36,7 +36,8 @@ CREATE TABLE barangays (
 CREATE TABLE stores (
                         store_id        SERIAL PRIMARY KEY,
                         store_name      VARCHAR(255) NOT NULL,
-                        store_location  VARCHAR(255)
+                        store_lat  NUMERIC(10, 7),
+                        store_lng  NUMERIC(10, 7)
 );
 
 CREATE TABLE products (
