@@ -80,11 +80,8 @@ public class OrderServiceImpl implements OrderService {
 
         if (paymentRecorded) {
             try {
-                // By calling a public @Transactional method on the same bean, Spring creates a new transaction.
                 this.processStockForPaidOrder(orderId);
             } catch (Exception e) {
-                // If stock processing fails, the payment is still recorded as PAID.
-                // We now log this critical failure and add a history note for the admin.
                 System.err.println("CRITICAL: Payment for order " + orderId + " was successful, but stock processing failed: " + e.getMessage());
                 Order order = findOrderById(orderId);
                 createOrderHistoryEvent(order, order.getShippingStatus(), "FULFILLMENT FAILED: Not enough stock. Admin review required.");
@@ -92,8 +89,47 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    @Override
+    @Transactional
+    public void confirmPaymentOnSuccessRedirect(Integer orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            System.out.println("Payment for order " + orderId + " is already marked as PAID. Skipping confirmation.");
+            return;
+        }
+
+        order.setPaymentStatus(PaymentStatus.PAID);
+
+        OrderHistory lastEvent = order.getOrderHistory().stream().findFirst().orElse(null);
+        if (lastEvent != null && lastEvent.getNotes().contains("Awaiting payment")) {
+            lastEvent.setNotes("Payment confirmed via user redirect. Order is now being processed.");
+            orderHistoryRepository.save(lastEvent);
+        } else {
+            createOrderHistoryEvent(order, order.getShippingStatus(), "Payment confirmed via user redirect.");
+        }
+
+        orderRepository.save(order);
+        System.out.println("Payment for order " + orderId + " successfully confirmed via redirect.");
+
+        try {
+            this.processStockForPaidOrder(orderId);
+        } catch (Exception e) {
+            System.err.println("CRITICAL: Payment for order " + orderId + " was confirmed, but stock processing failed: " + e.getMessage());
+            createOrderHistoryEvent(order, order.getShippingStatus(), "FULFILLMENT FAILED: Not enough stock. Admin review required.");
+            throw e; // Re-throw to let the controller handle the redirect
+        }
+    }
+
+
     @Transactional
     protected boolean recordPayment(Integer orderId, String mayaCheckoutId) {
+        if (mayaCheckoutId == null || mayaCheckoutId.trim().isEmpty()) {
+            System.out.println("Webhook for order " + orderId + " skipped due to missing transaction ID.");
+            return false;
+        }
+
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
 
@@ -110,15 +146,13 @@ public class OrderServiceImpl implements OrderService {
         order.setPaymentStatus(PaymentStatus.PAID);
         order.setPaymentTransactionId(mayaCheckoutId);
 
-        if (!order.getOrderHistory().isEmpty()) {
-            OrderHistory lastEvent = order.getOrderHistory().get(0);
-            if (lastEvent.getNotes().contains("Awaiting payment")) {
-                lastEvent.setNotes("Payment confirmed via Maya. Order is now being processed.");
-                orderHistoryRepository.save(lastEvent);
-            }
+        OrderHistory lastEvent = order.getOrderHistory().stream().findFirst().orElse(null);
+        if (lastEvent != null && lastEvent.getNotes().contains("Awaiting payment")) {
+            lastEvent.setNotes("Payment confirmed via Maya Webhook. Order is now being processed.");
+            orderHistoryRepository.save(lastEvent);
         }
 
-        orderRepository.save(order); // Commits this small transaction.
+        orderRepository.save(order);
         System.out.println("Webhook: Payment for order " + orderId + " successfully recorded as PAID.");
         return true;
     }
@@ -131,7 +165,6 @@ public class OrderServiceImpl implements OrderService {
 
         System.out.println("Fulfillment: Starting stock and cart processing for order " + orderId);
 
-        // Decrement stock
         for (OrderItem orderItem : order.getOrderItems()) {
             Product product = orderItem.getProduct();
             int newQuantity = product.getProductQuantity() - orderItem.getQuantity();
@@ -142,7 +175,6 @@ public class OrderServiceImpl implements OrderService {
             productRepository.save(product);
         }
 
-        // Clear cart
         cartItemRepository.deleteByAccountAccountId(account.getAccountId());
         System.out.println("Fulfillment: Stock and cart processing completed for order " + orderId);
     }

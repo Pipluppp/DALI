@@ -10,7 +10,8 @@ public interface OrderService {
     Order createPendingOrder(String username, Map<String, Object> checkoutDetails);
     void setPaymentTransactionId(Integer orderId, String transactionId);
     void processSuccessfulPayment(Integer orderId, String mayaCheckoutId);
-    void processStockForPaidOrder(Integer orderId); // New public method for separate transaction
+    void confirmPaymentOnSuccessRedirect(Integer orderId); // New method for success redirect
+    void processStockForPaidOrder(Integer orderId);
     void failOrderPayment(Integer orderId);
     Order findOrderById(Integer orderId);
     void updateShippingStatus(Integer orderId, ShippingStatus newStatus);

@@ -21,16 +21,15 @@ public class PaymentController {
 
     @GetMapping("/success")
     public String handleSuccess(@RequestParam("orderId") Integer orderId,
-                                @RequestParam(name = "id", required = false) String mayaCheckoutId, // Maya adds its checkoutId as a param named "id"
-                                SessionStatus sessionStatus, Model model) {
+                                SessionStatus sessionStatus, Model model, RedirectAttributes redirectAttributes) {
 
         System.out.println("Payment callback success for Order ID: " + orderId);
 
         try {
-            // This is the key change. We now trigger the successful payment logic here.
-            // We pass the mayaCheckoutId if it exists, otherwise null.
-            orderService.processSuccessfulPayment(orderId, mayaCheckoutId);
-            System.out.println("Successfully processed payment for Order ID: " + orderId);
+            // **CORE CHANGE**: Call the new, dedicated method that doesn't rely on a transaction ID from the URL.
+            // We now assume this redirect is the confirmation of a successful payment.
+            orderService.confirmPaymentOnSuccessRedirect(orderId);
+            System.out.println("Successfully processed payment confirmation for Order ID: " + orderId);
 
             // Clear the checkout session attributes.
             sessionStatus.setComplete();
@@ -48,11 +47,7 @@ public class PaymentController {
             orderService.failOrderPayment(orderId);
             sessionStatus.setComplete();
 
-            RedirectAttributes redirectAttributes = (RedirectAttributes) model.asMap().get("redirectAttributes");
-            if (redirectAttributes != null) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Payment was confirmed, but we couldn't finalize your order: " + e.getMessage());
-            }
-
+            redirectAttributes.addFlashAttribute("errorMessage", "Payment was confirmed, but we couldn't finalize your order: " + e.getMessage());
             return "redirect:/checkout/payment";
         }
     }
