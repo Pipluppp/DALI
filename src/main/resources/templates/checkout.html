@@ -16,55 +16,13 @@
     <script th:src="@{/js/address-map-locator.js}" defer></script>
     <script th:src="@{/js/shipping-map-preview.js}" defer></script>
     <style>
-        /* Basic Modal Styles */
-        .map-modal-overlay {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-        }
-        .map-modal-content {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 600px;
-            border-radius: 8px;
-            position: relative;
-        }
-        .map-modal-close {
-            color: #aaa;
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+        .map-modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .map-modal-content { background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; position: relative; }
+        .map-modal-close { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
         #map { height: 400px; width: 100%; margin-top: 15px; }
-
-        /* Styles for the new modal and button */
-        #shipping-map-modal .map-modal-content {
-            max-width: 800px; /* A bit wider for better map view */
-        }
+        #shipping-map-modal .map-modal-content { max-width: 800px; }
         #shipping-map { height: 450px; width: 100%; margin-top: 15px; border-radius: 5px; }
-        .location-map-btn {
-            background: none;
-            border: none;
-            color: #b21984;
-            text-decoration: underline;
-            cursor: pointer;
-            font-size: 0.9rem;
-            padding: 0 5px;
-        }
+        .location-map-btn { background: none; border: none; color: #b21984; text-decoration: underline; cursor: pointer; font-size: 0.9rem; padding: 0 5px; }
     </style>
 </head>
 <body>
@@ -87,12 +45,11 @@
                 <h2>Shipping Information</h2>
                 <p class="sub-header">Select Saved Addresses</p>
             </div>
-            <form id="address-form" th:action="@{/checkout/address}" method="post">
+            <form id="address-form-select" th:action="@{/checkout/address}" method="post">
                 <div class="address-selection">
                     <div th:if="${addresses.isEmpty()}" class="no-address-notice">
                         <p>You have no saved addresses. Please add one below to continue.</p>
                     </div>
-                    <!-- Address Block -->
                     <div th:each="addr : ${addresses}" th:id="'address-block-' + ${addr.addressId}" class="address-option">
                         <input type="radio" name="addressId" th:value="${addr.addressId}" th:id="'addr-' + ${addr.addressId}" required
                                th:checked="${checkoutDetails['addressId'] == addr.addressId or (addr.isDefault() and checkoutDetails['addressId'] == null and !addresses.isEmpty())}">
@@ -115,13 +72,9 @@
                         </label>
                     </div>
                 </div>
-
-                <!-- HTMX Target & Trigger -->
                 <div id="add-address-target">
-                    <!-- The "Add new address +" link is loaded via a fragment -->
                     <div th:replace="~{fragments/address-link-fragment :: link(context='checkout')}"></div>
                 </div>
-
                 <button type="submit" class="btn btn-primary checkout-btn" th:disabled="${addresses.isEmpty()}">Proceed</button>
             </form>
         </div>
@@ -132,7 +85,6 @@
             <a th:href="@{/checkout/address}">< Back to Address</a>
             <h2>Delivery Option</h2>
             <p class="sub-header">Your shipping fee has been calculated based on your selected address. Please choose a delivery type to continue.</p>
-
             <div style="margin-bottom: 20px; border: 1px solid #eee; padding: 15px; border-radius: 8px;">
                 <p style="margin: 0;">Shipping fee is based on the distance from our warehouse to your location.</p>
                 <button type="button" id="view-shipping-map-btn" class="location-map-btn"
@@ -144,36 +96,25 @@
                     View on Map
                 </button>
             </div>
-
             <form th:action="@{/checkout/shipping}" method="post">
                 <div class="delivery-selection"
                      hx-post="/checkout/recalculate"
                      hx-trigger="change"
                      hx-swap="none">
-
                     <div class="delivery-option">
                         <input type="radio" name="deliveryMethod" value="Standard Delivery" id="del-standard" required
                                th:checked="${checkoutDetails['deliveryMethod'] == 'Standard Delivery' or checkoutDetails['deliveryMethod'] == null}">
-                        <label for="del-standard">
-                            <strong>Standard Delivery</strong>
-                            <p>Within the day</p>
-                        </label>
+                        <label for="del-standard"><strong>Standard Delivery</strong><p>Within the day</p></label>
                     </div>
                     <div class="delivery-option">
                         <input type="radio" name="deliveryMethod" value="Priority Delivery" id="del-priority" required
                                th:checked="${checkoutDetails['deliveryMethod'] == 'Priority Delivery'}">
-                        <label for="del-priority">
-                            <strong>Priority Delivery</strong>
-                            <p>Within hours (+P<span th:text="${#numbers.formatDecimal(priorityFeeAddition, 1, 2)}">150.00</span>)</p>
-                        </label>
+                        <label for="del-priority"><strong>Priority Delivery</strong><p>Within hours (+P<span th:text="${#numbers.formatDecimal(priorityFeeAddition, 1, 2)}">150.00</span>)</p></label>
                     </div>
                     <div class="delivery-option">
                         <input type="radio" name="deliveryMethod" value="Pickup Delivery" id="del-pickup" required
                                th:checked="${checkoutDetails['deliveryMethod'] == 'Pickup Delivery'}">
-                        <label for="del-pickup">
-                            <strong>Pickup Delivery</strong>
-                            <p>Pickup after 2-3 hours</p>
-                        </label>
+                        <label for="del-pickup"><strong>Pickup Delivery</strong><p>Pickup after 2-3 hours</p></label>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary checkout-btn">Proceed</button>
@@ -187,40 +128,29 @@
             <form th:action="@{/checkout/payment}" method="post">
                 <div class="payment-selection">
                     <div class="payment-option">
-                        <input type="radio" name="paymentMethod" value="Cash on delivery (COD)" id="pay-cod" required
-                               th:checked="${checkoutDetails['paymentMethod'] == 'Cash on delivery (COD)'}">
+                        <input type="radio" name="paymentMethod" value="Cash on delivery (COD)" id="pay-cod" required>
                         <label for="pay-cod">
                             <img th:src="@{/images/cod.png}" alt="COD">
-                            <div>
-                                <strong>Cash on delivery (COD)</strong>
-                                <p>Cash on Delivery</p>
-                            </div>
+                            <div><strong>Cash on delivery (COD)</strong><p>Pay upon receiving your order.</p></div>
                         </label>
                     </div>
                     <div class="payment-option">
-                        <input type="radio" name="paymentMethod" value="GCash e-Wallet" id="pay-gcash" required
-                               th:checked="${checkoutDetails['paymentMethod'] == 'GCash e-Wallet'}">
-                        <label for="pay-gcash">
-                            <img th:src="@{/images/gcash.png}" alt="GCash">
-                            <div>
-                                <strong>GCash e-Wallet</strong>
-                                <p>GCash account required</p>
-                            </div>
+                        <!-- --- CORRECTED: Value is now "Maya" --- -->
+                        <input type="radio" name="paymentMethod" value="Maya" id="pay-maya" required checked>
+                        <label for="pay-maya">
+                            <img th:src="@{/images/gcash.png}" alt="Maya"> <!-- Icon can be updated later -->
+                            <div><strong>Maya</strong><p>Pay with your Maya wallet.</p></div>
                         </label>
                     </div>
                     <div class="payment-option">
-                        <input type="radio" name="paymentMethod" value="Credit/Debit Card" id="pay-card" required
-                               th:checked="${checkoutDetails['paymentMethod'] == 'Credit/Debit Card'}">
+                        <input type="radio" name="paymentMethod" value="Credit/Debit Card" id="pay-card" required>
                         <label for="pay-card">
                             <img th:src="@{/images/credit-card.png}" alt="Card">
-                            <div>
-                                <strong>Credit/Debit Card</strong>
-                                <p>Credit/Debit Card</p>
-                            </div>
+                            <div><strong>Credit/Debit Card</strong><p>Visa, Mastercard, etc. via Maya.</p></div>
                         </label>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary checkout-btn">Finish Order</button>
+                <button type="submit" class="btn btn-primary checkout-btn">Place Order</button>
             </form>
         </div>
     </div>
@@ -243,30 +173,26 @@
         </div>
         <div class="summary-row">
             <span>Shipping</span>
-            <!-- ADDED ID for OOB Swap -->
             <span id="shipping-display" th:text="${shipping == 0.0} ? 'FREE' : '₱' + ${#numbers.formatDecimal(shipping, 1, 'COMMA', 2, 'POINT')}"></span>
         </div>
         <hr>
         <div class="summary-row total-row">
             <span>Total</span>
-            <!-- ADDED ID for OOB Swap -->
             <span id="total-display" th:text="'₱' + ${#numbers.formatDecimal(total, 1, 'COMMA', 2, 'POINT')}"></span>
         </div>
     </div>
 </div>
 
-<!-- Map Modal -->
+<!-- Map Modals -->
 <div id="map-modal" class="map-modal-overlay">
     <div class="map-modal-content">
         <span id="close-modal-btn" class="map-modal-close">×</span>
         <h3>Pinpoint Your Location</h3>
-        <p>Drag the pin to your exact delivery address.</p>
+        <p>Pan the map to center the pin on your exact location.</p>
         <div id="map"></div>
         <button id="confirm-pin-btn" class="btn btn-primary" style="margin-top: 15px;">Confirm Location</button>
     </div>
 </div>
-
-<!-- NEW: Map Modal for Shipping Preview -->
 <div id="shipping-map-modal" class="map-modal-overlay">
     <div class="map-modal-content">
         <span id="close-shipping-map-btn" class="map-modal-close">×</span>
@@ -275,6 +201,5 @@
         <div id="shipping-map"></div>
     </div>
 </div>
-
 </body>
 </html>

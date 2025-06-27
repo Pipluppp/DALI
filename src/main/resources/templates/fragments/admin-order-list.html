@@ -1,42 +1,30 @@
-// DALI/src/main/resources/templates/fragments/admin-order-list.html
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 
 <!-- This fragment renders the grid of order cards -->
 <div th:fragment="order-list-fragment" class="admin-order-grid">
-
-    <!-- Message for no results -->
-    <div th:if="${orders.isEmpty()}" class="no-orders-found">
-        <p>No orders found matching your search.</p>
-    </div>
-
     <!-- Loop through orders -->
     <div th:each="order : ${orders}" class="admin-order-card">
         <div class="order-card-icon">
-            <img th:src="@{/images/admin-cart-icon.png}" alt="Cart Icon"/>
+            <img th:src="@{/images/order-icon.png}" alt="Order Icon">
         </div>
-
         <div class="order-card-details">
-            <h3 th:text="'Order #' + ${order.orderId}">Order #2200113271</h3>
-            <p class="order-card-meta" th:text="'Online Purchase • ' + ${#temporals.format(order.createdAt, 'MMMM d, yyyy')}">
-                Online Purchase • October 8, 2025
-            </p>
-            <p class="order-card-price" th:text="'₱ ' + ${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 2, 'POINT')}">
-                ₱ 750.00
-            </p>
+            <h3 th:text="'Order #' + ${order.orderId}">Order #12345</h3>
+            <p class="order-card-meta" th:text="${order.account.getFullName()} + ' • ' + ${#temporals.format(order.createdAt, 'MMM dd, yyyy')}"></p>
+            <p class="order-card-price" th:text="'₱' + ${#numbers.formatDecimal(order.totalPrice, 1, 'COMMA', 2, 'POINT')}"></p>
         </div>
-
         <div class="order-card-footer">
             <div class="order-card-status">
-                <span class="status-dot" th:classappend="${#strings.toLowerCase(order.status)}"></span>
-                <span th:text="${order.status}">Processing</span>
+                <span class="status-dot" th:classappend="${order.shippingStatus.cssClass}"></span>
+                <span th:text="${order.shippingStatus.name()}">PROCESSING</span>
             </div>
-            <div class="order-card-actions">
-                <a href="#" class="btn btn-secondary btn-small">Archive</a>
-                <a th:href="@{/admin/order/{id}(id=${order.orderId})}" class="btn btn-primary btn-small">View Order</a>
-            </div>
+            <a th:href="@{/admin/order/{id}(id=${order.orderId})}" class="btn btn-secondary btn-small">View Details</a>
         </div>
+    </div>
+    <!-- No Orders Found Message -->
+    <div th:if="${orders.isEmpty()}" class="no-orders-found">
+        <p>No orders found matching your search.</p>
     </div>
 </div>
 

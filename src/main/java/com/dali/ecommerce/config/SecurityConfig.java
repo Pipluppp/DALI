@@ -9,6 +9,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -18,7 +19,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // Your constructor and other beans remain unchanged...
     private final CustomUserDetailsService customUserDetailsService;
     private final AuthenticationSuccessHandler customAuthenticationSuccessHandler;
     private final AdminUserDetailsService adminUserDetailsService;
@@ -59,6 +59,7 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {
         http
+                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for admin simplicity, can be configured properly later
                 .securityMatcher("/admin/**")
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/login", "/forgot-password").permitAll()
@@ -86,10 +87,14 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain customerFilterChain(HttpSecurity http) throws Exception {
         http
+                // Disable CSRF for webhooks and payment callbacks
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/webhooks/**")
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login").anonymous()
-                        .requestMatchers("/", "/register", "/shop/**", "/stores", "/stores/search", "/api/stores", "/product/**", "/css/**", "/images/**", "/js/**", "/cart/**", "/forgot-password", "/reset-password", "/api/locations/**").permitAll()
-
+                        // PERMIT ALL these paths, including new payment and webhook endpoints
+                        .requestMatchers("/", "/register", "/shop/**", "/stores", "/stores/search", "/api/stores", "/product/**", "/css/**", "/images/**", "/js/**", "/cart/**", "/forgot-password", "/reset-password", "/api/locations/**", "/payment/callback/**", "/webhooks/**").permitAll()
                         .requestMatchers("/profile", "/checkout/**").authenticated()
                         .anyRequest().authenticated()
                 )

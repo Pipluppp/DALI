@@ -26,8 +26,15 @@ public class Order {
     private Address address;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private OrderStatus status;
+    @Column(name = "payment_status", nullable = false)
+    private PaymentStatus paymentStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "shipping_status", nullable = false)
+    private ShippingStatus shippingStatus;
+
+    @Column(name = "payment_transaction_id")
+    private String paymentTransactionId;
 
     @Column(name = "delivery_method", nullable = false)
     private String deliveryMethod;
@@ -92,8 +99,12 @@ public class Order {
     public void setAccount(Account account) { this.account = account; }
     public Address getAddress() { return address; }
     public void setAddress(Address address) { this.address = address; }
-    public OrderStatus getStatus() { return status; }
-    public void setStatus(OrderStatus status) { this.status = status; }
+    public PaymentStatus getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(PaymentStatus paymentStatus) { this.paymentStatus = paymentStatus; }
+    public ShippingStatus getShippingStatus() { return shippingStatus; }
+    public void setShippingStatus(ShippingStatus shippingStatus) { this.shippingStatus = shippingStatus; }
+    public String getPaymentTransactionId() { return paymentTransactionId; }
+    public void setPaymentTransactionId(String paymentTransactionId) { this.paymentTransactionId = paymentTransactionId; }
     public String getDeliveryMethod() { return deliveryMethod; }
     public void setDeliveryMethod(String deliveryMethod) { this.deliveryMethod = deliveryMethod; }
     public String getPaymentMethod() { return paymentMethod; }
@@ -106,6 +117,6 @@ public class Order {
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
     public List<OrderItem> getOrderItems() { return orderItems; }
     public void setOrderItems(List<OrderItem> orderItems) { this.orderItems = orderItems; }
-    public List<OrderHistory> getOrderHistory() { return orderHistory; } // New Getter
-    public void setOrderHistory(List<OrderHistory> orderHistory) { this.orderHistory = orderHistory; } // New Setter
+    public List<OrderHistory> getOrderHistory() { return orderHistory; }
+    public void setOrderHistory(List<OrderHistory> orderHistory) { this.orderHistory = orderHistory; }
 }
