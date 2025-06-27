@@ -211,8 +211,7 @@
         </div>
         <div class="summary-row">
             <span>Shipping</span>
-            <!-- FIX: Display "FREE" if shipping is 0, otherwise show the calculated fee -->
-            <span id="shipping-display" th:text="${shipping == 0.0} ? 'FREE' : '₱' + ${#numbers.formatDecimal(shipping, 1, 'COMMA', 2, 'POINT')}"></span>
+            <span id="shipping-display" th:text="'₱' + ${#numbers.formatDecimal(shipping, 1, 'COMMA', 2, 'POINT')}"></span>
         </div>
         <hr>
         <div class="summary-row total-row">

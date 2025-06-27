@@ -26,12 +26,14 @@ public class CartController {
     public String viewCart(Model model, Authentication authentication, HttpSession session) {
         List<CartItem> cartItems = cartService.getCartItems(authentication, session);
         double subtotal = cartService.getCartTotal(cartItems);
-        double shipping = cartItems.isEmpty() ? 0 : 50.0; // Example shipping fee
+
+        double shipping = 0.0;
+        double total = subtotal;
 
         model.addAttribute("cartItems", cartItems);
         model.addAttribute("subtotal", subtotal);
         model.addAttribute("shipping", shipping);
-        model.addAttribute("total", subtotal + shipping);
+        model.addAttribute("total", total);
 
         return "cart";
     }
