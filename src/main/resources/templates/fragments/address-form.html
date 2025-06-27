@@ -4,14 +4,15 @@
 
 <div th:fragment="address-form" class="address-form-container" style="position: relative;">
     <!-- Cancel Button -->
-    <a th:attr="hx-get=@{/address/link(context=${context})},
-               hx-target=(${context == 'checkout' ? '#add-address-target' : '#add-address-profile-target'})"
-       hx-swap="innerHTML"
+    <a th:href="${context == 'checkout'} ? @{/checkout/address} : @{/profile}"
        style="position: absolute; top: 15px; right: 20px; font-size: 1.8rem; text-decoration: none; color: #888; cursor: pointer; line-height: 1;">×</a>
 
-    <h3 style="margin-top: 30px; margin-bottom: 20px;" th:text="${context == 'checkout'} ? 'Add a New Shipping Address' : 'Add a New Address'">Add a New Address</h3>
+    <h3 style="margin-top: 30px; margin-bottom: 20px;" th:text="${address.addressId != null} ? 'Edit Address' : 'Add a New Address'">Add a New Address</h3>
 
-    <form th:action="@{/address/add}" th:object="${address}" method="post" class="address-form">
+    <!-- Dynamic Form Action -->
+    <form th:action="${address.addressId != null} ? @{/address/update/{id}(id=${address.addressId})} : @{/address/add}"
+          th:object="${address}" method="post" class="address-form">
+
         <!-- Hidden fields for coordinates -->
         <input type="hidden" id="latitude" th:field="*{latitude}">
         <input type="hidden" id="longitude" th:field="*{longitude}">
@@ -19,39 +20,38 @@
         <!-- Phone Number -->
         <div class="form-group">
             <label for="phone-number">Phone number</label>
-            <input type="tel" id="phone-number" th:field="*{phoneNumber}" placeholder="PH (+63) e.g., 09123456789" pattern="^(\+63|0)9\d{9}$" required>
+            <input type="tel" id="phone-number" th:field="*{phoneNumber}" required>
         </div>
 
         <!-- Province Dropdown -->
         <div class="form-group">
             <label for="province-select">Province</label>
-            <select id="province-select" name="provinceId" required class="form-control"
+            <select id="province-select" name="provinceId" required
                     hx-get="/api/locations/cities"
                     hx-trigger="change"
                     hx-target="#city-select-wrapper">
                 <option value="">Select Province</option>
-                <option th:each="p : ${provinces}" th:value="${p.id}" th:text="${p.name}"></option>
+                <option th:each="p : ${provinces}" th:value="${p.id}" th:text="${p.name}" th:selected="${p.id == address.province?.id}"></option>
             </select>
-            <!-- OOB Swap Target -->
-            <div id="province-feedback"></div>
         </div>
 
-        <!-- City Dropdown (Wrapper is the HTMX target) -->
-        <!-- BUG FIX: The HTMX attributes that load the barangay are now removed from this wrapper -->
+        <!-- City Dropdown -->
         <div class="form-group" id="city-select-wrapper">
             <label for="city-select">City / Municipality</label>
-            <select id="city-select" name="cityId" required class="form-control" disabled>
-                <option value="">Select Province First</option>
+            <select id="city-select" name="cityId" required
+                    hx-get="/api/locations/barangays" hx-trigger="change" hx-target="#barangay-select-wrapper"
+                    th:disabled="${cities == null or cities.isEmpty()}">
+                <option value="">Select City</option>
+                <option th:each="c : ${cities}" th:value="${c.id}" th:text="${c.name}" th:selected="${c.id == address.city?.id}"></option>
             </select>
-            <!-- OOB Swap Target -->
-            <div id="city-feedback"></div>
         </div>
 
-        <!-- Barangay Dropdown (Wrapper is the HTMX target) -->
+        <!-- Barangay Dropdown -->
         <div class="form-group" id="barangay-select-wrapper">
             <label for="barangay-select">Barangay</label>
-            <select id="barangay-select" name="barangayId" required class="form-control" disabled>
-                <option value="">Select City First</option>
+            <select id="barangay-select" name="barangayId" required th:disabled="${barangays == null or barangays.isEmpty()}">
+                <option value="">Select Barangay</option>
+                <option th:each="b : ${barangays}" th:value="${b.id}" th:text="${b.name}" th:selected="${b.id == address.barangay?.id}"></option>
             </select>
         </div>
 
@@ -61,12 +61,20 @@
             <input type="text" id="additionalInfo" th:field="*{additionalInfo}" required>
         </div>
 
+        <!-- Set as Default Checkbox -->
+        <div class="form-group-checkbox">
+            <input type="checkbox" id="isDefault" th:field="*{default}">
+            <label for="isDefault">Set as default address</label>
+        </div>
+
         <!-- Pinpoint Button -->
-        <div class="form-group">
+        <div class="form-group" style="display: flex; align-items: center; gap: 15px;">
             <button type="button" id="pinpoint-btn" class="btn btn-secondary">
                 Pinpoint address (optional)
             </button>
-            <span id="coords-display" style="margin-left: 10px; color: #666; font-size: 0.9em;"></span>
+            <span id="coords-display" style="color: #666; font-size: 0.9em;"
+                  th:if="${address.latitude != null}"
+                  th:text="${'Pinned at: ' + #numbers.formatDecimal(address.latitude, 1, 5) + ', ' + #numbers.formatDecimal(address.longitude, 1, 5)}"></span>
         </div>
 
         <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Save Address</button>

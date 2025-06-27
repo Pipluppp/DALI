@@ -54,4 +54,39 @@ public class AddressController {
         model.addAttribute("context", context);
         return "fragments/address-link-fragment :: link";
     }
+
+    @GetMapping("/address/edit/{id}")
+    public String getEditAddressForm(@PathVariable("id") Integer addressId,
+                                     @RequestParam("context") String context,
+                                     Authentication authentication,
+                                     Model model) {
+        // Fetch the address securely
+        Address address = addressService.findByIdAndAccount(addressId, authentication.getName());
+
+        model.addAttribute("address", address);
+        model.addAttribute("context", context);
+
+        // Pre-populate location dropdowns
+        model.addAttribute("provinces", locationService.getAllProvinces());
+        if (address.getProvince() != null) {
+            model.addAttribute("cities", locationService.getCitiesByProvinceId(address.getProvince().getId()));
+        }
+        if (address.getCity() != null) {
+            model.addAttribute("barangays", locationService.getBarangaysByCityId(address.getCity().getId()));
+        }
+        return "fragments/address-form :: address-form";
+    }
+
+    @PostMapping("/address/update/{id}")
+    public String updateAddress(@PathVariable("id") Integer addressId,
+                                @ModelAttribute Address addressDetails,
+                                @RequestParam("provinceId") Integer provinceId,
+                                @RequestParam("cityId") Integer cityId,
+                                @RequestParam("barangayId") Integer barangayId,
+                                Authentication authentication,
+                                @RequestHeader("Referer") String referer) {
+
+        addressService.updateAddress(addressId, authentication.getName(), addressDetails, provinceId, cityId, barangayId);
+        return "redirect:" + referer;
+    }
 }

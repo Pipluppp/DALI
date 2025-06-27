@@ -76,14 +76,24 @@
             <div class="section-header">
                 <h2>Address</h2>
             </div>
-            <div th:each="address : ${account.addresses}" class="address-box">
-                <p><strong><span th:text="${account.getFullName()}"></span></strong> | <span th:text="${address.phoneNumber}"></span></p>
-                <p th:text="${address.getFullAddress()}"></p>
-                <div class="address-tags">
-                    <span class="tag-home">HOME</span>
-                    <span th:if="${address.isDefault()}" class="tag-default">Default Address</span>
+            <!-- Address Block -->
+            <div th:each="address : ${account.addresses}" th:id="'address-block-' + ${address.addressId}" class="address-box">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div>
+                        <p><strong><span th:text="${account.getFullName()}"></span></strong> | <span th:text="${address.phoneNumber}"></span></p>
+                        <p th:text="${address.getFullAddress()}"></p>
+                        <div class="address-tags">
+                            <span class="tag-home">HOME</span>
+                            <span th:if="${address.isDefault()}" class="tag-default">Default Address</span>
+                        </div>
+                    </div>
+                    <a href="#" class="edit-link"
+                       th:attr="hx-get=@{/address/edit/{id}(id=${address.addressId}, context='profile')},
+                                hx-target='#address-block-' + ${address.addressId}"
+                       hx-swap="outerHTML">Edit</a>
                 </div>
             </div>
+
 
             <!-- HTMX Target for Address Form -->
             <div id="add-address-profile-target">

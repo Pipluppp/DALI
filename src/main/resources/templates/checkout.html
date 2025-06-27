@@ -76,7 +76,8 @@
                     <div th:if="${addresses.isEmpty()}" class="no-address-notice">
                         <p>You have no saved addresses. Please add one below to continue.</p>
                     </div>
-                    <div th:each="addr : ${addresses}" class="address-option">
+                    <!-- Address Block -->
+                    <div th:each="addr : ${addresses}" th:id="'address-block-' + ${addr.addressId}" class="address-option">
                         <input type="radio" name="addressId" th:value="${addr.addressId}" th:id="'addr-' + ${addr.addressId}" required
                                th:checked="${checkoutDetails['addressId'] == addr.addressId or (addr.isDefault() and checkoutDetails['addressId'] == null and !addresses.isEmpty())}">
                         <label th:for="'addr-' + ${addr.addressId}">
@@ -85,7 +86,10 @@
                                     <strong th:text="${account.getFullName()}"></strong>
                                     <span th:text="${addr.phoneNumber}"></span>
                                 </div>
-                                <a href="#" class="edit-link-inline">Edit</a>
+                                <a href="#" class="edit-link-inline"
+                                   th:attr="hx-get=@{/address/edit/{id}(id=${addr.addressId}, context='checkout')},
+                                            hx-target='#address-block-' + ${addr.addressId}"
+                                   hx-swap="outerHTML">Edit</a>
                             </div>
                             <p class="address-line-2" th:text="${addr.getFullAddress()}"></p>
                             <div class="address-tags">
@@ -102,9 +106,7 @@
                     <div th:replace="~{fragments/address-link-fragment :: link(context='checkout')}"></div>
                 </div>
 
-                <!-- ================== THIS IS THE CORRECTED LINE ================== -->
                 <button type="submit" class="btn btn-primary checkout-btn" th:disabled="${addresses.isEmpty()}">Proceed</button>
-                <!-- ================================================================ -->
             </form>
         </div>
 

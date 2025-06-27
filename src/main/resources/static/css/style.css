@@ -1,5 +1,5 @@
 html {
-    scroll-behavior: smooth; 
+    scroll-behavior: smooth;
 }
 
 body, h1, h2, h3, h4, p, a {
@@ -192,7 +192,7 @@ body {
 .why-choose-us-section {
     padding: 80px 0;
     background-color: #fff;
-    scroll-margin-top: 80px; 
+    scroll-margin-top: 80px;
 }
 
 .why-choose-us-section .container {
@@ -374,11 +374,11 @@ body {
 }
 
 .filter-sidebar ul li label:hover {
-    color: #b21984; 
+    color: #b21984;
 }
 
 .filter-sidebar ul li input[type="radio"]:checked + label {
-    color: #b21984; 
+    color: #b21984;
     font-weight: 700;
 }
 /* END: Updated styles for category filter */
@@ -488,17 +488,17 @@ body {
     padding-top: 40px;
     padding-bottom: 50px;
     min-height: calc(100vh - 81px - 61px); /* Ensures content area fills the screen, pushing footer down */
-    align-items: flex-start; 
+    align-items: flex-start;
 }
 
 /* Product Image Styling */
 .product-detail-image {
-    flex-basis: 40%; 
-    max-width: 450px; 
-    background-color: #fff; 
-    border-radius: 8px;    
-    padding: 5px;          
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08); 
+    flex-basis: 40%;
+    max-width: 450px;
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 5px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -507,50 +507,50 @@ body {
 }
 
 .product-detail-image:hover {
-    transform: scale(1.03); 
-    box-shadow: 0 8px 25px rgba(0,0,0,0.12); 
+    transform: scale(1.03);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
 }
 
 .product-detail-image img {
-    max-width: 100%;    
-    height: auto;       
+    max-width: 100%;
+    height: auto;
     object-fit: contain;
 }
 
 .product-detail-info {
-    flex: 1; 
+    flex: 1;
     display: flex;
-    flex-direction: column; 
+    flex-direction: column;
 }
 
-.product-detail-info h1 { 
+.product-detail-info h1 {
     font-size: 2.2rem;
     font-weight: 700;
-    margin-bottom: 10px; 
+    margin-bottom: 10px;
 }
 
 .product-detail-price {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #b21984; 
-    margin-bottom: 25px; 
+    color: #b21984;
+    margin-bottom: 25px;
 }
 
 .product-actions {
-    margin-bottom: 30px; 
+    margin-bottom: 30px;
 }
 
 .product-actions form {
     display: flex;
-    flex-direction: column; 
-    align-items: flex-start; 
-    gap: 20px; 
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
 }
 
 .quantity-selector {
     display: flex;
-    align-items: center; 
-    gap: 10px; 
+    align-items: center;
+    gap: 10px;
 }
 
 .quantity-selector label {
@@ -568,26 +568,26 @@ body {
 }
 
 .quantity-selector input[type="number"]:focus {
-    border-color: #b21984; 
+    border-color: #b21984;
     outline: none;
     box-shadow: 0 0 0 2px rgba(178, 25, 132, 0.2);
 }
 
 .product-description {
-    margin-top: 10px; 
+    margin-top: 10px;
 }
 
 .product-description h3 {
     font-size: 1.25rem;
     font-weight: 600;
-    margin-bottom: 12px; 
+    margin-bottom: 12px;
     padding-bottom: 8px;
-    border-bottom: 1px solid #eee; 
+    border-bottom: 1px solid #eee;
 }
 
 .product-description p {
     font-size: 0.95rem;
-    line-height: 1.7; 
+    line-height: 1.7;
     color: #555;
 }
 
@@ -809,7 +809,12 @@ body {
 .address-selection .address-option, .delivery-selection .delivery-option, .payment-selection .payment-option {
     border: 1px solid #ccc; border-radius: 8px; margin-bottom: 15px; display: flex;
 }
-.address-selection input, .delivery-selection input, .payment-selection input { display: none; }
+/* THIS IS THE FIX: The selector is now more specific */
+.address-selection input[type="radio"],
+.delivery-selection input[type="radio"],
+.payment-selection input[type="radio"] {
+    display: none;
+}
 .address-selection label, .delivery-selection label, .payment-selection label {
     padding: 20px; width: 100%; cursor: pointer;
 }
@@ -855,10 +860,68 @@ body {
 .tag-home { background-color: #e9ecef; color: #495057; border: 1px solid #ddd; }
 .add-new-address-link { color: #b21984; font-weight: 700; text-decoration: none; display: inline-block; margin: 20px 0; cursor: pointer; }
 .no-address-notice { padding: 20px; background-color: #fef3cd; border: 1px solid #ffeeba; color: #856404; border-radius: 8px; margin-bottom: 20px; }
-.address-form-container { margin-top: 10px; padding: 20px; border: 1px dashed #ccc; border-radius: 8px; }
-.address-form .form-group { margin-bottom: 15px; }
-.address-form label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
-.address-form input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+.address-form-container { margin-top: 10px; padding: 30px; border: 1px dashed #ccc; border-radius: 8px; }
+
+/* CORRECTED: New styles for address form to match image */
+.address-form-container .address-form { display: flex; flex-direction: column; gap: 25px; }
+.address-form .form-group { margin-bottom: 0; }
+.address-form label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 1.1rem; color: #333; }
+
+/* This rule applies the boxed style to text and telephone inputs in the address form */
+.address-form input[type="text"],
+.address-form input[type="tel"] {
+    width: 100%;
+    padding: 10px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+.address-form input[type="text"]:focus,
+.address-form input[type="tel"]:focus {
+    outline: none;
+    border-color: #b21984;
+    box-shadow: 0 0 0 2px rgba(178, 25, 132, 0.2);
+}
+.address-form select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2724%27%20height%3D%2724%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M7%2010l5%205%205-5z%27%20fill%3D%27%23555%27/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 1.5em;
+    width: 100%;
+    max-width: 300px;
+    padding: 10px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    font-size: 1rem;
+}
+.address-form select:focus {
+    outline: none;
+    border-color: #b21984;
+    box-shadow: 0 0 0 2px rgba(178, 25, 132, 0.2);
+}
+.address-form .form-group-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+.address-form .form-group-checkbox input[type="checkbox"] {
+    height: 1.1em;
+    width: 1.1em;
+}
+.address-form .form-group-checkbox label {
+    margin-bottom: 0;
+    font-weight: normal;
+    font-size: 0.9rem;
+    color: #555;
+}
+
 
 /* =================================
    12. Order Detail Page Styles (NEW)
@@ -1471,20 +1534,20 @@ body {
 .logout-button-linkstyle {
     background: none;
     border: none;
-    padding: 0; 
-    font-family: 'Poppins', sans-serif; 
-    font-size: inherit; 
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    font-size: inherit;
     cursor: pointer;
     color: #555;
     font-weight: 600;
-    margin-left: 20px; 
-    text-decoration: none; 
-    transition: all 0.3s ease; 
-    position: relative; 
+    margin-left: 20px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
 }
 
 .logout-button-linkstyle:hover {
-    color: #b21984; 
+    color: #b21984;
 }
 
 /* Underline animation for logout button (similar to nav a and header-actions a) */
@@ -1505,113 +1568,113 @@ body {
 
 
 .logout-button-linkstyle:focus {
-    outline: 2px solid #b21984; 
+    outline: 2px solid #b21984;
     outline-offset: 2px;
 }
-.logout-button-linkstyle:focus-visible { 
+.logout-button-linkstyle:focus-visible {
     outline: 2px solid #b21984;
     outline-offset: 2px;
 }
 
 .logout-button-linkstyle:focus:not(:focus-visible) {
-  outline: none;
+    outline: none;
 }
 
 /* Footer Styles */
 .footer {
-    background-color: #f9f9f9; 
-    color: #333; 
-    padding: 50px 0; 
-    border-top: 1px solid #e0e0e0; 
-    text-align: left; 
+    background-color: #f9f9f9;
+    color: #333;
+    padding: 50px 0;
+    border-top: 1px solid #e0e0e0;
+    text-align: left;
 }
 
 
 .footer-container {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start; 
-    gap: 30px; 
+    align-items: flex-start;
+    gap: 30px;
 }
 
 .footer-left {
-    flex: 1; 
-    max-width: 40%; 
+    flex: 1;
+    max-width: 40%;
 }
 
 .footer-logo {
-    width: 100px; 
+    width: 100px;
     margin-bottom: 15px;
 }
 
 .copyright-text {
-    font-size: 0.8rem; 
-    color: #6c757d; 
+    font-size: 0.8rem;
+    color: #6c757d;
     line-height: 1.6;
 }
 
 .footer-right {
-    flex: 1; 
-    max-width: 55%; 
+    flex: 1;
+    max-width: 55%;
     display: flex;
     flex-direction: column;
-    align-items: flex-end; 
+    align-items: flex-end;
     text-align: right;
 }
 
 .social-contact {
-    margin-bottom: 25px; 
+    margin-bottom: 25px;
 }
 
 .social-cta-text {
-    font-size: 2.8rem; 
-    font-weight: 950; 
-    color: #b21984; 
-    line-height: 1.1; 
-    margin-bottom: 6px; 
+    font-size: 2.8rem;
+    font-weight: 950;
+    color: #b21984;
+    line-height: 1.1;
+    margin-bottom: 6px;
 }
 
 .social-subtext {
-    font-size: 1.6rem; 
-    font-weight: 950; 
-    color: #333; 
-    line-height: 1.1; 
-    margin-bottom: 20px; 
+    font-size: 1.6rem;
+    font-weight: 950;
+    color: #333;
+    line-height: 1.1;
+    margin-bottom: 20px;
 }
 
 .social-icons {
     display: flex;
-    gap: 18px; 
-    justify-content: flex-end; 
+    gap: 18px;
+    justify-content: flex-end;
 }
 
 .social-icons a {
-    color: #b21984; 
-    font-size: 2.2rem; 
+    color: #b21984;
+    font-size: 2.2rem;
     transition: color 0.3s ease, transform 0.2s ease;
-    display: inline-block; 
+    display: inline-block;
 }
 
 .social-icons a:hover {
-    color: #9e1673; 
+    color: #9e1673;
     transform: translateY(-2px);
 }
 
 .footer-links {
-    margin-top: auto; 
-    font-size: 0.85rem; 
+    margin-top: auto;
+    font-size: 0.85rem;
     color: #6c757d;
 }
 
 .footer-links a {
-    color: #6c757d; 
+    color: #6c757d;
     text-decoration: none;
-    margin: 0 5px; 
+    margin: 0 5px;
     transition: color 0.3s ease;
 }
 
-.footer-links span { 
-    color: #adb5bd; 
+.footer-links span {
+    color: #adb5bd;
     user-select: none;
 }
 
@@ -1635,15 +1698,15 @@ body {
         justify-content: center; /* Center icons */
     }
     .footer-right {
-      margin-top: 30px;
+        margin-top: 30px;
     }
     .social-cta-text {
-     font-size: 1.8rem;
+        font-size: 1.8rem;
     }
     .social-subtext {
-     font-size: 1.4rem;
+        font-size: 1.4rem;
     }
     .social-icons a {
-     font-size: 2rem;
+        font-size: 2rem;
     }
 }
