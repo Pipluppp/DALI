@@ -48,7 +48,7 @@ public class OrderServiceImpl implements OrderService {
         order.setAddress(address);
         order.setDeliveryMethod((String) checkoutDetails.get("deliveryMethod"));
         order.setPaymentMethod((String) checkoutDetails.get("paymentMethod"));
-        order.setStatus("Processing");
+        order.setStatus(OrderStatus.PROCESSING); // Use the enum
 
         double subtotal = cartItems.stream().mapToDouble(CartItem::getSubtotal).sum();
         // 2. Get the dynamically calculated shipping fee from the checkout session details.
@@ -94,5 +94,55 @@ public class OrderServiceImpl implements OrderService {
     public Order findOrderById(Integer orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+    }
+
+    @Override
+    @Transactional
+    public void updateOrderStatus(Integer orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+
+        // If order is being cancelled, restore product stock
+        if (newStatus == OrderStatus.CANCELLED && order.getStatus() != OrderStatus.CANCELLED) {
+            restoreStockForOrder(order);
+        }
+
+        order.setStatus(newStatus);
+        orderRepository.save(order);
+
+        // TODO: Add email notification logic here later
+        // emailService.sendOrderStatusUpdate(order.getAccount().getEmail(), order);
+    }
+
+    @Override
+    @Transactional
+    public void cancelOrder(Integer orderId, String username) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found."));
+
+        // Security Check: Ensure the user owns this order
+        if (!order.getAccount().getEmail().equals(username)) {
+            throw new SecurityException("User does not have permission to cancel this order.");
+        }
+
+        // Business Logic: Only allow cancellation if the order is still processing
+        if (order.getStatus() != OrderStatus.PROCESSING) {
+            throw new IllegalStateException("Order cannot be cancelled as it is already being fulfilled.");
+        }
+
+        restoreStockForOrder(order);
+        order.setStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+
+        // TODO: Email notification
+    }
+
+    private void restoreStockForOrder(Order order) {
+        for (OrderItem item : order.getOrderItems()) {
+            Product product = item.getProduct();
+            int newQuantity = product.getProductQuantity() + item.getQuantity();
+            product.setProductQuantity(newQuantity);
+            productRepository.save(product);
+        }
     }
 }

@@ -1,4 +1,3 @@
-// pipluppp-dali/src/main/java/com/dali/ecommerce/config/SecurityConfig.java
 package com.dali.ecommerce.config;
 
 import com.dali.ecommerce.service.AdminUserDetailsService;

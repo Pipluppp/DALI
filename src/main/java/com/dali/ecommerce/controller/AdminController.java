@@ -2,6 +2,7 @@
 package com.dali.ecommerce.controller;
 
 import com.dali.ecommerce.model.Order;
+import com.dali.ecommerce.model.OrderStatus;
 import com.dali.ecommerce.model.Product;
 import com.dali.ecommerce.repository.OrderRepository;
 import com.dali.ecommerce.repository.ProductRepository;
@@ -124,5 +125,18 @@ public class AdminController {
         Order order = orderService.findOrderById(id);
         model.addAttribute("order", order);
         return "admin-order-detail";
+    }
+
+    @PostMapping("/order/{id}/update-status")
+    public String updateOrderStatus(@PathVariable("id") Integer orderId,
+                                    @RequestParam("status") OrderStatus status,
+                                    RedirectAttributes redirectAttributes) {
+        try {
+            orderService.updateOrderStatus(orderId, status);
+            redirectAttributes.addFlashAttribute("successMessage", "Order status updated to " + status.name());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error updating status: " + e.getMessage());
+        }
+        return "redirect:/admin/order/" + orderId;
     }
 }

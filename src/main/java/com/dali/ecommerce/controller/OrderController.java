@@ -7,6 +7,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class OrderController {
@@ -29,5 +31,16 @@ public class OrderController {
 
         model.addAttribute("order", order);
         return "order-detail";
+    }
+
+    @PostMapping("/order/{id}/cancel")
+    public String cancelOrder(@PathVariable("id") Integer id, Authentication authentication, RedirectAttributes redirectAttributes) {
+        try {
+            orderService.cancelOrder(id, authentication.getName());
+            redirectAttributes.addFlashAttribute("successMessage", "Order #" + id + " has been successfully cancelled.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Could not cancel order: " + e.getMessage());
+        }
+        return "redirect:/order/" + id;
     }
 }

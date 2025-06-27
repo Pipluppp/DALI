@@ -17,7 +17,13 @@
         <a th:href="@{/admin/orders}" class="order-detail-back-link">
             <span>←</span>  Back to all orders
         </a>
-        <div class="order-detail-card">
+
+        <!-- Success/Error Messages -->
+        <div th:if="${successMessage}" class="auth-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}"></div>
+
+
+        <div class="order-detail-card" style="margin-top: 20px;">
             <div class="order-detail-header">
                 <h1 th:text="'Order #' + *{orderId}">Order #2200113271</h1>
                 <p class="order-meta">
@@ -52,8 +58,8 @@
             <div class="order-status-section">
                 <h3>Order Status</h3>
                 <div class="status-display">
-                    <span class="status-dot" th:classappend="*{status.toLowerCase()}"></span>
-                    <span th:text="*{status}">Processing</span>
+                    <span class="status-dot" th:classappend="*{status.cssClass}"></span>
+                    <span th:text="*{status.description}">Processing</span>
                 </div>
             </div>
 
@@ -73,6 +79,36 @@
                     <div th:text="'₱' + ${#numbers.formatDecimal(item.product.price, 1, 'COMMA', 2, 'POINT')}"></div>
                     <div th:text="${item.quantity}"></div>
                     <div th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 'COMMA', 2, 'POINT')}"></div>
+                </div>
+            </div>
+
+            <!-- Admin Status Update Section -->
+            <div class="order-status-section" style="border-top: 1px solid #eee; padding-top: 25px; margin-top:25px;">
+                <h3>Update Order Status</h3>
+                <div th:object="${order}">
+                    <!-- Form for PROCESSING state -->
+                    <form th:if="*{status.name() == 'PROCESSING'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
+                        <button type="submit" name="status" th:value="PREPARING_FOR_SHIPMENT" class="btn btn-primary">Start Preparing</button>
+                        <button type="submit" name="status" th:value="CANCELLED" class="btn btn-secondary">Cancel Order</button>
+                    </form>
+
+                    <!-- Form for PREPARING_FOR_SHIPMENT state -->
+                    <form th:if="*{status.name() == 'PREPARING_FOR_SHIPMENT'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post">
+                        <button type="submit" name="status" th:value="SHIPPED" class="btn btn-primary">Mark as Shipped</button>
+                    </form>
+
+                    <!-- Form for SHIPPED state -->
+                    <form th:if="*{status.name() == 'SHIPPED'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
+                        <button type="submit" name="status" th:value="DELIVERED" class="btn btn-primary">Mark as Delivered</button>
+                        <button type="submit" name="status" th:value="DELIVERY_FAILED" class="btn btn-secondary">Mark Delivery Failed</button>
+                    </form>
+
+                    <!-- Form for DELIVERY_FAILED state -->
+                    <form th:if="*{status.name() == 'DELIVERY_FAILED'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
+                        <button type="submit" name="status" th:value="SHIPPED" class="btn btn-primary">Re-attempt Delivery</button>
+                    </form>
+
+                    <p th:if="*{status.name() == 'DELIVERED' or status.name() == 'CANCELLED'}">This order is in a terminal state and cannot be updated.</p>
                 </div>
             </div>
         </div>

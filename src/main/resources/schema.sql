@@ -56,7 +56,8 @@ CREATE TABLE accounts (
                           account_last_name   VARCHAR(255),
                           account_email       VARCHAR(255) UNIQUE NOT NULL,
                           password_hash       VARCHAR(255) NOT NULL,
-                          phone_number        VARCHAR(50)
+                          phone_number        VARCHAR(50),
+                          reset_password_token VARCHAR(255)
 );
 
 CREATE TABLE admin_accounts (
@@ -93,7 +94,7 @@ CREATE TABLE orders (
                         store_id         INTEGER REFERENCES stores(store_id),
                         account_id       INTEGER NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
                         address_id       INTEGER NOT NULL REFERENCES addresses(address_id),
-                        status           VARCHAR(255) NOT NULL,
+                        status           VARCHAR(255) NOT NULL CHECK (status IN ('PROCESSING', 'PREPARING_FOR_SHIPMENT', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'DELIVERY_FAILED')),
                         delivery_method  VARCHAR(255) NOT NULL,
                         payment_method   VARCHAR(255) NOT NULL,
                         total_price      NUMERIC(10, 2) NOT NULL,

@@ -13,11 +13,17 @@
 <header class="header" th:replace="~{fragments/header :: header}"></header>
 
 <main class="order-detail-page">
-    <div class="container" th:object="${order}">
+    <div class="container">
         <a th:href="@{/profile}" class="order-detail-back-link">
             <span>←</span>  Back to all orders
         </a>
-        <div class="order-detail-card">
+
+        <!-- Success/Error Messages -->
+        <div th:if="${successMessage}" class="auth-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}"></div>
+
+
+        <div class="order-detail-card" th:object="${order}" style="margin-top: 20px;">
             <div class="order-detail-header">
                 <h1 th:text="'Order #' + *{orderId}">Order #2200113271</h1>
                 <p class="order-meta">
@@ -53,8 +59,8 @@
             <div class="order-status-section">
                 <h3>Order Status</h3>
                 <div class="status-display">
-                    <span class="status-dot" th:classappend="*{status.toLowerCase()}"></span>
-                    <span th:text="*{status}">Processing</span>
+                    <span class="status-dot" th:classappend="*{status.cssClass}"></span>
+                    <span th:text="*{status.description}">Processing</span>
                 </div>
             </div>
 
@@ -71,11 +77,19 @@
                         <img th:src="@{'/images/products/' + ${item.product.image}}">
                         <span th:text="${item.product.name}"></span>
                     </div>
-                    <div th:text="'₱' + ${#numbers.formatDecimal(item.product.price, 0, 'COMMA', 0, 'POINT')}"></div>
+                    <div th:text="'₱' + ${#numbers.formatDecimal(item.product.price, 0, 'COMMA', 2, 'POINT')}"></div>
                     <div th:text="${item.quantity}"></div>
-                    <div th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 0, 'COMMA', 0, 'POINT')}"></div>
+                    <div th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 0, 'COMMA', 2, 'POINT')}"></div>
                 </div>
             </div>
+
+            <!-- User Cancellation Button -->
+            <div th:if="${order.status.name() == 'PROCESSING'}" style="padding-top: 25px; border-top: 1px solid #eee; margin-top: 25px; text-align: right;">
+                <form th:action="@{/order/{id}/cancel(id=${order.orderId})}" method="post" onsubmit="return confirm('Are you sure you want to cancel this order? This action cannot be undone.');">
+                    <button type="submit" class="btn btn-secondary">Cancel Order</button>
+                </form>
+            </div>
+
         </div>
     </div>
 </main>

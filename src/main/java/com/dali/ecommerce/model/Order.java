@@ -26,8 +26,9 @@ public class Order {
     @JoinColumn(name = "address_id", nullable = false)
     private Address address;
 
+    @Enumerated(EnumType.STRING) // Store the enum as a string
     @Column(nullable = false)
-    private String status;
+    private OrderStatus status; // Changed from String to OrderStatus
 
     @Column(name = "delivery_method", nullable = false)
     private String deliveryMethod;
@@ -91,8 +92,8 @@ public class Order {
     public void setAccount(Account account) { this.account = account; }
     public Address getAddress() { return address; }
     public void setAddress(Address address) { this.address = address; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public OrderStatus getStatus() { return status; } // Updated getter
+    public void setStatus(OrderStatus status) { this.status = status; } // Updated setter
     public String getDeliveryMethod() { return deliveryMethod; }
     public void setDeliveryMethod(String deliveryMethod) { this.deliveryMethod = deliveryMethod; }
     public String getPaymentMethod() { return paymentMethod; }
