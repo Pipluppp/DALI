@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- This fragment contains the individual pieces for OOB swapping -->
+
+<!-- OOB Swap for Shipping Cost -->
+<span id="shipping-display" hx-swap-oob="true"
+      th:text="${shipping == 0.0} ? 'FREE' : '₱' + ${#numbers.formatDecimal(shipping, 1, 'COMMA', 2, 'POINT')}">
+</span>
+
+<!-- OOB Swap for Total Cost -->
+<span id="total-display" hx-swap-oob="true"
+      th:text="'₱' + ${#numbers.formatDecimal(total, 1, 'COMMA', 2, 'POINT')}">
+</span>
+
+</body>
+</html>

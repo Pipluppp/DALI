@@ -193,4 +193,34 @@ public class CheckoutController {
     public String getAddAddressLink() {
         return "fragments/add-address-link :: add-address-link";
     }
+
+    @PostMapping("/recalculate")
+    public String recalculateShipping(@RequestParam("deliveryMethod") String deliveryMethod,
+                                      Authentication authentication,
+                                      HttpSession session,
+                                      @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails,
+                                      Model model) {
+        Integer addressId = (Integer) checkoutDetails.get("addressId");
+        if (addressId == null) {
+            populateCheckoutModel(model, authentication, session, checkoutDetails);
+            // In case of an error, we still need to provide the fragment
+            return "fragments/checkout-summary-update";
+        }
+
+        Address customerAddress = addressRepository.findById(addressId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Selected address not found"));
+
+        // Recalculate the fee with the chosen delivery method
+        double finalShippingFee = shippingService.calculateShippingFee(customerAddress, deliveryMethod);
+
+        // Update the session details
+        checkoutDetails.put("shippingFee", finalShippingFee);
+        checkoutDetails.put("deliveryMethod", deliveryMethod);
+
+        // Repopulate the model with the new values
+        populateCheckoutModel(model, authentication, session, checkoutDetails);
+
+        // Return the new fragment dedicated to OOB swaps
+        return "fragments/checkout-summary-update";
+    }
 }
