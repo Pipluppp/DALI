@@ -1,4 +1,3 @@
-// DALI/src/main/java/com/dali/ecommerce/model/Order.java
 package com.dali.ecommerce.model;
 
 import jakarta.persistence.*;
@@ -26,9 +25,9 @@ public class Order {
     @JoinColumn(name = "address_id", nullable = false)
     private Address address;
 
-    @Enumerated(EnumType.STRING) // Store the enum as a string
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrderStatus status; // Changed from String to OrderStatus
+    private OrderStatus status;
 
     @Column(name = "delivery_method", nullable = false)
     private String deliveryMethod;
@@ -45,9 +44,13 @@ public class Order {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Change FetchType to EAGER and add orphanRemoval
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private List<OrderItem> orderItems;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OrderBy("eventTimestamp DESC")
+    private List<OrderHistory> orderHistory;
+
 
     @PrePersist
     protected void onCreate() {
@@ -60,7 +63,6 @@ public class Order {
         updatedAt = LocalDateTime.now();
     }
 
-    // Add these transient helper methods
     @Transient
     public double getSubtotal() {
         if (orderItems == null) {
@@ -73,12 +75,10 @@ public class Order {
 
     @Transient
     public double getShippingFee() {
-        // This is a calculated value based on what's stored
         if (totalPrice == null) {
             return 0.0;
         }
         double subtotal = getSubtotal();
-        // Ensure shipping isn't negative if there are rounding issues
         return Math.max(0, totalPrice - subtotal);
     }
 
@@ -92,8 +92,8 @@ public class Order {
     public void setAccount(Account account) { this.account = account; }
     public Address getAddress() { return address; }
     public void setAddress(Address address) { this.address = address; }
-    public OrderStatus getStatus() { return status; } // Updated getter
-    public void setStatus(OrderStatus status) { this.status = status; } // Updated setter
+    public OrderStatus getStatus() { return status; }
+    public void setStatus(OrderStatus status) { this.status = status; }
     public String getDeliveryMethod() { return deliveryMethod; }
     public void setDeliveryMethod(String deliveryMethod) { this.deliveryMethod = deliveryMethod; }
     public String getPaymentMethod() { return paymentMethod; }
@@ -106,4 +106,6 @@ public class Order {
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
     public List<OrderItem> getOrderItems() { return orderItems; }
     public void setOrderItems(List<OrderItem> orderItems) { this.orderItems = orderItems; }
+    public List<OrderHistory> getOrderHistory() { return orderHistory; } // New Getter
+    public void setOrderHistory(List<OrderHistory> orderHistory) { this.orderHistory = orderHistory; } // New Setter
 }

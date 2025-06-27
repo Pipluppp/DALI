@@ -1716,3 +1716,81 @@ body {
         font-size: 2rem;
     }
 }
+
+/* =================================
+   Order History Timeline
+   ================================= */
+.timeline-container {
+    padding-top: 25px;
+    margin-top: 25px;
+    border-top: 1px solid #eee;
+}
+
+.timeline-header {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+.timeline {
+    list-style: none;
+    padding: 0;
+    position: relative;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    left: 5px;
+    width: 2px;
+    background-color: #e0e0e0;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    padding-left: 30px;
+    margin-bottom: 25px;
+}
+
+.timeline-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    position: absolute;
+    left: 0;
+    top: 5px;
+    z-index: 1;
+}
+
+/* Match colors from the status dots */
+.timeline-dot.processing { background-color: #ffc107; }
+.timeline-dot.shipped { background-color: #17a2b8; }
+.timeline-dot.delivered { background-color: #28a745; }
+.timeline-dot.cancelled { background-color: #dc3545; }
+
+.timeline-content {
+    flex: 1;
+}
+
+.timeline-description {
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 4px;
+}
+
+.timeline-timestamp {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.timeline-notes {
+    font-size: 0.85rem;
+    color: #6c757d; /* A muted grey color */
+    margin: 4px 0 0;
+    font-style: italic;
+    padding-left: 2px;
+}

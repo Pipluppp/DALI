@@ -1,4 +1,5 @@
 -- Drop tables in order of dependency to avoid foreign key constraints errors.
+DROP TABLE IF EXISTS order_history CASCADE;
 DROP TABLE IF EXISTS admin_accounts CASCADE;
 DROP TABLE IF EXISTS order_items CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
@@ -107,4 +108,12 @@ CREATE TABLE order_items (
                              order_id      INTEGER NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
                              product_id    INTEGER NOT NULL REFERENCES products(product_id),
                              quantity      INTEGER NOT NULL
+);
+
+CREATE TABLE order_history (
+                               history_id      SERIAL PRIMARY KEY,
+                               order_id        INTEGER NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+                               status          VARCHAR(255) NOT NULL,
+                               notes           VARCHAR(1024) NOT NULL,
+                               event_timestamp TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

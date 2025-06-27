@@ -5,6 +5,7 @@ import com.dali.ecommerce.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,15 +18,17 @@ public class OrderServiceImpl implements OrderService {
     private final AccountRepository accountRepository;
     private final AddressRepository addressRepository;
     private final CartItemRepository cartItemRepository;
-    private final ProductRepository productRepository; // To update stock
+    private final ProductRepository productRepository;
+    private final OrderHistoryRepository orderHistoryRepository; // Inject new repository
 
-    public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, AccountRepository accountRepository, AddressRepository addressRepository, CartItemRepository cartItemRepository, ProductRepository productRepository) {
+    public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, AccountRepository accountRepository, AddressRepository addressRepository, CartItemRepository cartItemRepository, ProductRepository productRepository, OrderHistoryRepository orderHistoryRepository) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.accountRepository = accountRepository;
         this.addressRepository = addressRepository;
         this.cartItemRepository = cartItemRepository;
         this.productRepository = productRepository;
+        this.orderHistoryRepository = orderHistoryRepository; // Add to constructor
     }
 
     @Override
@@ -48,13 +51,11 @@ public class OrderServiceImpl implements OrderService {
         order.setAddress(address);
         order.setDeliveryMethod((String) checkoutDetails.get("deliveryMethod"));
         order.setPaymentMethod((String) checkoutDetails.get("paymentMethod"));
-        order.setStatus(OrderStatus.PROCESSING); // Use the enum
+        order.setStatus(OrderStatus.PROCESSING);
 
         double subtotal = cartItems.stream().mapToDouble(CartItem::getSubtotal).sum();
-        // 2. Get the dynamically calculated shipping fee from the checkout session details.
         Number shippingFeeNumber = (Number) checkoutDetails.get("shippingFee");
         if (shippingFeeNumber == null) {
-            // This is a safety check. This should not happen in a normal flow.
             throw new IllegalStateException("Shipping fee is missing from checkout details.");
         }
         double shippingFee = shippingFeeNumber.doubleValue();
@@ -62,6 +63,9 @@ public class OrderServiceImpl implements OrderService {
         order.setTotalPrice(subtotal + shippingFee);
 
         Order savedOrder = orderRepository.save(order);
+
+        // Create initial history event
+        createOrderHistoryEvent(savedOrder, OrderStatus.PROCESSING, "Order placed by customer.");
 
         List<OrderItem> orderItems = new ArrayList<>();
         for (CartItem cartItem : cartItems) {
@@ -71,7 +75,6 @@ public class OrderServiceImpl implements OrderService {
             orderItem.setQuantity(cartItem.getQuantity());
             orderItems.add(orderItem);
 
-            // Decrease product stock
             Product product = cartItem.getProduct();
             int newQuantity = product.getProductQuantity() - cartItem.getQuantity();
             if (newQuantity < 0) {
@@ -84,7 +87,6 @@ public class OrderServiceImpl implements OrderService {
         orderItemRepository.saveAll(orderItems);
         savedOrder.setOrderItems(orderItems);
 
-        // Clear user's cart
         cartItemRepository.deleteByAccountAccountId(account.getAccountId());
 
         return savedOrder;
@@ -102,7 +104,6 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
 
-        // If order is being cancelled, restore product stock
         if (newStatus == OrderStatus.CANCELLED && order.getStatus() != OrderStatus.CANCELLED) {
             restoreStockForOrder(order);
         }
@@ -110,8 +111,9 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(newStatus);
         orderRepository.save(order);
 
-        // TODO: Add email notification logic here later
-        // emailService.sendOrderStatusUpdate(order.getAccount().getEmail(), order);
+        // Create history event for admin update
+        String notes = "Order status updated to '" + newStatus.name() + "' by DALI Admin.";
+        createOrderHistoryEvent(order, newStatus, notes);
     }
 
     @Override
@@ -120,12 +122,10 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found."));
 
-        // Security Check: Ensure the user owns this order
         if (!order.getAccount().getEmail().equals(username)) {
             throw new SecurityException("User does not have permission to cancel this order.");
         }
 
-        // Business Logic: Only allow cancellation if the order is still processing
         if (order.getStatus() != OrderStatus.PROCESSING) {
             throw new IllegalStateException("Order cannot be cancelled as it is already being fulfilled.");
         }
@@ -134,7 +134,8 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
 
-        // TODO: Email notification
+        // Create history event for user cancellation
+        createOrderHistoryEvent(order, OrderStatus.CANCELLED, "Order cancelled by customer.");
     }
 
     private void restoreStockForOrder(Order order) {
@@ -144,5 +145,14 @@ public class OrderServiceImpl implements OrderService {
             product.setProductQuantity(newQuantity);
             productRepository.save(product);
         }
+    }
+
+    private void createOrderHistoryEvent(Order order, OrderStatus status, String notes) {
+        OrderHistory historyEvent = new OrderHistory();
+        historyEvent.setOrder(order);
+        historyEvent.setStatus(status);
+        historyEvent.setNotes(notes);
+        historyEvent.setEventTimestamp(LocalDateTime.now());
+        orderHistoryRepository.save(historyEvent);
     }
 }

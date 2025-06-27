@@ -56,12 +56,15 @@
             </div>
 
             <div class="order-status-section">
-                <h3>Order Status</h3>
+                <h3>Current Status</h3>
                 <div class="status-display">
                     <span class="status-dot" th:classappend="*{status.cssClass}"></span>
                     <span th:text="*{status.description}">Processing</span>
                 </div>
             </div>
+
+            <!-- Include the timeline fragment -->
+            <div th:replace="~{fragments/order-timeline :: timeline(history=${order.orderHistory})}"></div>
 
             <div class="order-products-section">
                 <h3>Products</h3>
