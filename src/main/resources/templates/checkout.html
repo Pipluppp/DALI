@@ -112,11 +112,14 @@
         <!-- Shipping Step -->
         <div th:if="${step == 'shipping'}" class="checkout-content">
             <h2>Delivery Option</h2>
+            <p class="sub-header">Your shipping fee has been calculated based on your selected address. Please choose a delivery type to continue.</p>
             <form th:action="@{/checkout/shipping}" method="post">
                 <div class="delivery-selection">
+
                     <div class="delivery-option">
                         <input type="radio" name="deliveryMethod" value="Standard Delivery" id="del-standard" required
-                               th:checked="${checkoutDetails['deliveryMethod'] == 'Standard Delivery'}">
+                               th:data-base-fee="${shipping}"
+                        th:checked="${checkoutDetails['deliveryMethod'] == 'Standard Delivery' or checkoutDetails['deliveryMethod'] == null}">
                         <label for="del-standard">
                             <strong>Standard Delivery</strong>
                             <p>Within the day</p>
@@ -124,10 +127,11 @@
                     </div>
                     <div class="delivery-option">
                         <input type="radio" name="deliveryMethod" value="Priority Delivery" id="del-priority" required
+                               th:data-additional-fee="${priorityFeeAddition}"
                                th:checked="${checkoutDetails['deliveryMethod'] == 'Priority Delivery'}">
                         <label for="del-priority">
                             <strong>Priority Delivery</strong>
-                            <p>Within hours</p>
+                            <p>Within hours (+P<span th:text="${#numbers.formatDecimal(priorityFeeAddition, 1, 2)}">150.00</span>)</p>
                         </label>
                     </div>
                     <div class="delivery-option">
@@ -201,16 +205,18 @@
         <hr>
         <div class="summary-row">
             <span>Subtotal</span>
-            <span th:text="'₱' + ${#numbers.formatDecimal(subtotal, 1, 'COMMA', 2, 'POINT')}"></span>
+            <span id="subtotal-display"
+                  th:data-subtotal="${subtotal}"
+            th:text="'₱' + ${#numbers.formatDecimal(subtotal, 1, 'COMMA', 2, 'POINT')}"></span>
         </div>
         <div class="summary-row">
             <span>Shipping</span>
-            <span th:text="'₱' + ${#numbers.formatDecimal(shipping, 1, 'COMMA', 2, 'POINT')}"></span>
+            <span id="shipping-display" th:text="'₱' + ${#numbers.formatDecimal(shipping, 1, 'COMMA', 2, 'POINT')}"></span>
         </div>
         <hr>
         <div class="summary-row total-row">
             <span>Total</span>
-            <span th:text="'₱' + ${#numbers.formatDecimal(total, 1, 'COMMA', 2, 'POINT')}"></span>
+            <span id="total-display" th:text="'₱' + ${#numbers.formatDecimal(total, 1, 'COMMA', 2, 'POINT')}"></span>
         </div>
     </div>
 </div>
@@ -226,5 +232,54 @@
     </div>
 </div>
 
+<script th:if="${step == 'shipping'}">
+    document.addEventListener('DOMContentLoaded', () => {
+        const subtotalEl = document.getElementById('subtotal-display');
+        const shippingEl = document.getElementById('shipping-display');
+        const totalEl = document.getElementById('total-display');
+        const deliveryRadios = document.querySelectorAll('input[name="deliveryMethod"]');
+
+        const subtotal = parseFloat(subtotalEl.dataset.subtotal) || 0;
+
+        function formatCurrency(amount) {
+            if (amount === 0) return 'FREE';
+            return 'P' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function updateSummary() {
+            const selectedRadio = document.querySelector('input[name="deliveryMethod"]:checked');
+            if (!selectedRadio) return;
+
+            let currentShippingFee = 0;
+            const standardRadio = document.getElementById('del-standard');
+            const baseFee = parseFloat(standardRadio.dataset.baseFee) || 0;
+
+            switch (selectedRadio.id) {
+                case 'del-standard':
+                    currentShippingFee = baseFee;
+                    break;
+                case 'del-priority':
+                    const additionalFee = parseFloat(selectedRadio.dataset.additionalFee) || 0;
+                    currentShippingFee = baseFee + additionalFee;
+                    break;
+                case 'del-pickup':
+                    currentShippingFee = 0;
+                    break;
+            }
+
+            const newTotal = subtotal + currentShippingFee;
+
+            shippingEl.textContent = formatCurrency(currentShippingFee);
+            totalEl.textContent = 'P' + newTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        deliveryRadios.forEach(radio => {
+            radio.addEventListener('change', updateSummary);
+        });
+
+        // Run once on page load to set initial state correctly
+        updateSummary();
+    });
+</script>
 </body>
 </html>

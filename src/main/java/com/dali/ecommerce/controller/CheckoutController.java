@@ -19,6 +19,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.dali.ecommerce.repository.AddressRepository;
+import com.dali.ecommerce.service.ShippingService;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
+
 @Controller
 @RequestMapping("/checkout")
 @SessionAttributes("checkoutDetails")
@@ -27,11 +32,15 @@ public class CheckoutController {
     private final AccountRepository accountRepository;
     private final CartService cartService;
     private final OrderService orderService;
+    private final ShippingService shippingService;
+    private final AddressRepository addressRepository;
 
-    public CheckoutController(AccountRepository accountRepository, CartService cartService, OrderService orderService) {
+    public CheckoutController(AccountRepository accountRepository, CartService cartService, OrderService orderService, ShippingService shippingService, AddressRepository addressRepository) {
         this.accountRepository = accountRepository;
         this.cartService = cartService;
         this.orderService = orderService;
+        this.shippingService = shippingService;
+        this.addressRepository = addressRepository;
     }
 
     @ModelAttribute("checkoutDetails")
@@ -39,10 +48,11 @@ public class CheckoutController {
         return new HashMap<>();
     }
 
-    private void populateCheckoutModel(Model model, Authentication authentication, HttpSession session) {
+    private void populateCheckoutModel(Model model, Authentication authentication, HttpSession session, Map<String, Object> checkoutDetails) {
         List<CartItem> cartItems = cartService.getCartItems(authentication, session);
         double subtotal = cartService.getCartTotal(cartItems);
-        double shipping = cartItems.isEmpty() ? 0 : 50.0;
+        double shipping = ((Number) checkoutDetails.getOrDefault("shippingFee", 0.0)).doubleValue();
+
         model.addAttribute("cartItems", cartItems);
         model.addAttribute("subtotal", subtotal);
         model.addAttribute("shipping", shipping);
@@ -59,12 +69,12 @@ public class CheckoutController {
     }
 
     @GetMapping("/address")
-    public String selectAddress(Model model, Authentication authentication, HttpSession session) {
+    public String selectAddress(Model model, Authentication authentication, HttpSession session, @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails) {
         Account account = accountRepository.findByEmail(authentication.getName()).orElseThrow();
         model.addAttribute("account", account);
         model.addAttribute("addresses", account.getAddresses());
         model.addAttribute("step", "address");
-        populateCheckoutModel(model, authentication, session);
+        populateCheckoutModel(model, authentication, session,  checkoutDetails);
         return "checkout";
     }
 
@@ -78,18 +88,56 @@ public class CheckoutController {
     @GetMapping("/shipping")
     public String selectDelivery(Model model, Authentication authentication, HttpSession session,
                                  @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails) {
-        if (checkoutDetails.get("addressId") == null) {
+        Integer addressId = (Integer) checkoutDetails.get("addressId");
+        if (addressId == null) {
             return "redirect:/checkout/address";
         }
+
+        // 1. Fetch the selected address from the database
+        Address customerAddress = addressRepository.findById(addressId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Selected address not found"));
+
+        // 2. FIX: Calculate the initial shipping fee using the default "Standard Delivery" method.
+        // This provides the base fee that the JavaScript on the frontend will use.
+        String defaultDeliveryMethod = "Standard Delivery";
+        double calculatedShipping = shippingService.calculateShippingFee(customerAddress, defaultDeliveryMethod);
+
+        // 3. Store the calculated base fee in the session
+        checkoutDetails.put("shippingFee", calculatedShipping);
+
+        // Optional but good practice: set a default delivery method in the session
+        checkoutDetails.putIfAbsent("deliveryMethod", defaultDeliveryMethod);
+
         model.addAttribute("step", "shipping");
-        populateCheckoutModel(model, authentication, session);
+
+        model.addAttribute("priorityFeeAddition", ShippingService.PRIORITY_FEE_ADDITION);
+
+        // 4. Populate the model with the new, correct shipping fee
+        populateCheckoutModel(model, authentication, session, checkoutDetails);
+
         return "checkout";
     }
 
     @PostMapping("/shipping")
     public String saveDelivery(@RequestParam("deliveryMethod") String deliveryMethod,
                                @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails) {
+
+        Integer addressId = (Integer) checkoutDetails.get("addressId");
+        if (addressId == null) {
+            return "redirect:/checkout/address"; // Should not happen, but good practice
+        }
+
+        // Fetch the selected address again
+        Address customerAddress = addressRepository.findById(addressId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Selected address not found"));
+
+        // Recalculate the fee with the chosen delivery method
+        double finalShippingFee = shippingService.calculateShippingFee(customerAddress, deliveryMethod);
+
+        // Update the session details
         checkoutDetails.put("deliveryMethod", deliveryMethod);
+        checkoutDetails.put("shippingFee", finalShippingFee); // <-- IMPORTANT
+
         return "redirect:/checkout/payment";
     }
 
@@ -100,7 +148,7 @@ public class CheckoutController {
             return "redirect:/checkout/shipping";
         }
         model.addAttribute("step", "payment");
-        populateCheckoutModel(model, authentication, session);
+        populateCheckoutModel(model, authentication, session, checkoutDetails);
         return "checkout";
     }
 

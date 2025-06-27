@@ -51,7 +51,14 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus("Processing");
 
         double subtotal = cartItems.stream().mapToDouble(CartItem::getSubtotal).sum();
-        double shippingFee = 100.0; // Updated to match design
+        // 2. Get the dynamically calculated shipping fee from the checkout session details.
+        Number shippingFeeNumber = (Number) checkoutDetails.get("shippingFee");
+        if (shippingFeeNumber == null) {
+            // This is a safety check. This should not happen in a normal flow.
+            throw new IllegalStateException("Shipping fee is missing from checkout details.");
+        }
+        double shippingFee = shippingFeeNumber.doubleValue();
+
         order.setTotalPrice(subtotal + shippingFee);
 
         Order savedOrder = orderRepository.save(order);
