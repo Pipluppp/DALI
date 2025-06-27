@@ -91,16 +91,18 @@ CREATE TABLE cart_items (
 );
 
 CREATE TABLE orders (
-                        order_id         SERIAL PRIMARY KEY,
-                        store_id         INTEGER REFERENCES stores(store_id),
-                        account_id       INTEGER NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
-                        address_id       INTEGER NOT NULL REFERENCES addresses(address_id),
-                        status           VARCHAR(255) NOT NULL CHECK (status IN ('PENDING_PAYMENT', 'PROCESSING', 'PREPARING_FOR_SHIPMENT', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'DELIVERY_FAILED')),
-                        delivery_method  VARCHAR(255) NOT NULL,
-                        payment_method   VARCHAR(255) NOT NULL,
-                        total_price      NUMERIC(10, 2) NOT NULL,
-                        created_at       TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        updated_at       TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                        order_id                SERIAL PRIMARY KEY,
+                        store_id                INTEGER REFERENCES stores(store_id),
+                        account_id              INTEGER NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
+                        address_id              INTEGER NOT NULL REFERENCES addresses(address_id),
+                        payment_status          VARCHAR(255) NOT NULL CHECK (payment_status IN ('PENDING', 'PAID')),
+                        shipping_status         VARCHAR(255) NOT NULL CHECK (shipping_status IN ('PROCESSING', 'PREPARING_FOR_SHIPMENT', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED', 'DELIVERY_FAILED')),
+                        payment_transaction_id  VARCHAR(255),
+                        delivery_method         VARCHAR(255) NOT NULL,
+                        payment_method          VARCHAR(255) NOT NULL,
+                        total_price             NUMERIC(10, 2) NOT NULL,
+                        created_at              TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        updated_at              TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE order_items (

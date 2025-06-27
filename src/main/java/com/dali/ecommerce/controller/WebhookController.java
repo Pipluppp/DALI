@@ -26,21 +26,22 @@ public class WebhookController {
     public ResponseEntity<Void> handleMayaWebhook(@RequestBody String payload) {
         System.out.println("Received Maya Webhook: " + payload);
 
-        // In a production environment, you MUST verify the webhook signature from Maya
-        // to ensure the request is authentic. This involves checking a header and
-        // performing a cryptographic check. For this project, we will skip this step.
-
         try {
             JsonNode rootNode = objectMapper.readTree(payload);
             String event = rootNode.path("event").asText();
+            JsonNode dataNode = rootNode.path("data");
+
             // The requestReferenceNumber is what we set as our order ID.
-            String requestReferenceNumber = rootNode.path("data").path("requestReferenceNumber").asText();
+            String requestReferenceNumber = dataNode.path("requestReferenceNumber").asText();
+            // The "id" is the unique checkout ID from Maya.
+            String mayaCheckoutId = dataNode.path("id").asText();
+
 
             if (requestReferenceNumber != null && !requestReferenceNumber.isEmpty()) {
                 Integer orderId = Integer.parseInt(requestReferenceNumber);
 
                 if ("CHECKOUT_SUCCESS".equals(event)) {
-                    orderService.processSuccessfulPayment(orderId);
+                    orderService.processSuccessfulPayment(orderId, mayaCheckoutId);
                 } else if ("CHECKOUT_FAILURE".equals(event)) {
                     orderService.failOrderPayment(orderId);
                 }

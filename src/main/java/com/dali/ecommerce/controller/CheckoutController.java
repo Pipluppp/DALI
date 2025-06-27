@@ -182,11 +182,12 @@ public class CheckoutController {
                 redirectAttributes.addFlashAttribute("errorMessage", "Could not place order: " + e.getMessage());
                 return "redirect:/checkout/payment";
             }
-            // --- CORRECTED: Use "Maya" as the payment method string ---
         } else if ("Maya".equals(paymentMethod) || "Credit/Debit Card".equals(paymentMethod)) {
             try {
                 Order pendingOrder = orderService.createPendingOrder(username, checkoutDetails);
                 CheckoutResponse mayaResponse = mayaService.createCheckout(pendingOrder);
+                // Save the transaction ID immediately after creation
+                orderService.setPaymentTransactionId(pendingOrder.getOrderId(), mayaResponse.getCheckoutId());
                 return "redirect:" + mayaResponse.getRedirectUrl();
             } catch (Exception e) {
                 e.printStackTrace();

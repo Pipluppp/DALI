@@ -4,21 +4,17 @@
 
 <div th:fragment="timeline(history)" class="timeline-container">
     <h3 class="timeline-header">Order History</h3>
-    <div th:if="${history.isEmpty()}">
-        <p>No tracking history available for this order.</p>
-    </div>
-    <ul class="timeline" th:unless="${history.isEmpty()}">
+    <ul class="timeline" th:if="${!history.isEmpty()}">
         <li th:each="event : ${history}" class="timeline-item">
             <div class="timeline-dot" th:classappend="${event.status.cssClass}"></div>
             <div class="timeline-content">
-                <p class="timeline-description" th:text="${event.status.description}">Your order has been shipped.</p>
-                <p class="timeline-notes" th:text="${event.notes}">Status was updated by DALI.</p>
-                <time class="timeline-timestamp" th:text="${#temporals.format(event.eventTimestamp, 'MMMM d, yyyy, h:mm a')}">
-                    October 26, 2025, 3:30 PM
-                </time>
+                <h4 class="timeline-description" th:text="${event.status.description}"></h4>
+                <p class="timeline-timestamp" th:text="${#temporals.format(event.eventTimestamp, 'MMMM dd, yyyy hh:mm a')}"></p>
+                <p class="timeline-notes" th:text="${event.notes}"></p>
             </div>
         </li>
     </ul>
+    <p th:if="${history.isEmpty()}">No history events for this order yet.</p>
 </div>
 
 </body>

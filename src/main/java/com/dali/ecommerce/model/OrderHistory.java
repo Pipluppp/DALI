@@ -18,7 +18,7 @@ public class OrderHistory {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrderStatus status;
+    private ShippingStatus status;
 
     @Column(nullable = false, length = 1024)
     private String notes;
@@ -50,11 +50,11 @@ public class OrderHistory {
         this.order = order;
     }
 
-    public OrderStatus getStatus() {
+    public ShippingStatus getStatus() {
         return status;
     }
 
-    public void setStatus(OrderStatus status) {
+    public void setStatus(ShippingStatus status) {
         this.status = status;
     }
 

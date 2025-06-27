@@ -15,7 +15,7 @@
 <main class="order-detail-page">
     <div class="container">
         <a th:href="@{/profile}" class="order-detail-back-link">
-            <span>←</span>  Back to all orders
+            <span>←</span>  Back to all orders
         </a>
 
         <!-- Success/Error Messages -->
@@ -36,12 +36,16 @@
 
             <div class="order-detail-grid">
                 <div class="payment-method-section">
-                    <h3>Payment Method</h3>
+                    <h3>Payment</h3>
                     <div class="payment-box">
-                        <img th:if="*{paymentMethod.contains('GCash')}" th:src="@{/images/gcash.png}" alt="GCash">
+                        <img th:if="*{paymentMethod.contains('Maya')}" th:src="@{/images/gcash.png}" alt="Maya">
                         <img th:if="*{paymentMethod.contains('COD')}" th:src="@{/images/cod.png}" alt="COD">
                         <img th:if="*{paymentMethod.contains('Card')}" th:src="@{/images/credit-card.png}" alt="Card">
                         <span th:text="*{paymentMethod}">GCash e-Wallet</span>
+                    </div>
+                    <div style="margin-top: 10px; font-weight: 600;"
+                         th:classappend="*{paymentStatus.name() == 'PAID'} ? 'text-success' : 'text-warning'">
+                        Status: <span th:text="*{paymentStatus.displayName}"></span>
                     </div>
                 </div>
                 <div class="order-summary-section">
@@ -56,10 +60,10 @@
             </div>
 
             <div class="order-status-section">
-                <h3>Current Status</h3>
+                <h3>Current Shipping Status</h3>
                 <div class="status-display">
-                    <span class="status-dot" th:classappend="*{status.cssClass}"></span>
-                    <span th:text="*{status.description}">Processing</span>
+                    <span class="status-dot" th:classappend="*{shippingStatus.cssClass}"></span>
+                    <span th:text="*{shippingStatus.description}">Processing</span>
                 </div>
             </div>
 
@@ -86,7 +90,7 @@
             </div>
 
             <!-- User Cancellation Button -->
-            <div th:if="${order.status.name() == 'PROCESSING'}" style="padding-top: 25px; border-top: 1px solid #eee; margin-top: 25px; text-align: right;">
+            <div th:if="${order.shippingStatus.name() == 'PROCESSING'}" style="padding-top: 25px; border-top: 1px solid #eee; margin-top: 25px; text-align: right;">
                 <form th:action="@{/order/{id}/cancel(id=${order.orderId})}" method="post" onsubmit="return confirm('Are you sure you want to cancel this order? This action cannot be undone.');">
                     <button type="submit" class="btn btn-secondary">Cancel Order</button>
                 </form>

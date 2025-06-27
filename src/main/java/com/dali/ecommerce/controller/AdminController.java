@@ -1,9 +1,8 @@
-// DALI/src/main/java/com/dali/ecommerce/controller/AdminController.java
 package com.dali.ecommerce.controller;
 
 import com.dali.ecommerce.model.Order;
-import com.dali.ecommerce.model.OrderStatus;
 import com.dali.ecommerce.model.Product;
+import com.dali.ecommerce.model.ShippingStatus;
 import com.dali.ecommerce.repository.OrderRepository;
 import com.dali.ecommerce.repository.ProductRepository;
 import com.dali.ecommerce.service.OrderService;
@@ -128,11 +127,11 @@ public class AdminController {
     }
 
     @PostMapping("/order/{id}/update-status")
-    public String updateOrderStatus(@PathVariable("id") Integer orderId,
-                                    @RequestParam("status") OrderStatus status,
-                                    RedirectAttributes redirectAttributes) {
+    public String updateShippingStatus(@PathVariable("id") Integer orderId,
+                                       @RequestParam("status") ShippingStatus status,
+                                       RedirectAttributes redirectAttributes) {
         try {
-            orderService.updateOrderStatus(orderId, status);
+            orderService.updateShippingStatus(orderId, status);
             redirectAttributes.addFlashAttribute("successMessage", "Order status updated to " + status.name());
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error updating status: " + e.getMessage());

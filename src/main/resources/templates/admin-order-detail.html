@@ -15,7 +15,7 @@
 <main class="order-detail-page">
     <div class="container" th:object="${order}">
         <a th:href="@{/admin/orders}" class="order-detail-back-link">
-            <span>←</span>  Back to all orders
+            <span>←</span>  Back to all orders
         </a>
 
         <!-- Success/Error Messages -->
@@ -32,16 +32,23 @@
                     <span th:text="*{account.getFullName()}"></span> •
                     <span th:text="*{address.phoneNumber}"></span>
                 </p>
+                <div th:if="*{paymentTransactionId}" style="font-size: 0.8rem; color: #666; margin-top: 5px;">
+                    Maya Transaction ID: <span th:text="*{paymentTransactionId}"></span>
+                </div>
             </div>
 
             <div class="order-detail-grid">
                 <div class="payment-method-section">
-                    <h3>Payment Method</h3>
+                    <h3>Payment</h3>
                     <div class="payment-box">
-                        <img th:if="*{paymentMethod.contains('GCash')}" th:src="@{/images/gcash.png}" alt="GCash">
+                        <img th:if="*{paymentMethod.contains('Maya')}" th:src="@{/images/gcash.png}" alt="Maya">
                         <img th:if="*{paymentMethod.contains('COD')}" th:src="@{/images/cod.png}" alt="COD">
                         <img th:if="*{paymentMethod.contains('Card')}" th:src="@{/images/credit-card.png}" alt="Card">
                         <span th:text="*{paymentMethod}">GCash e-Wallet</span>
+                    </div>
+                    <div style="margin-top: 10px; font-weight: 600;"
+                         th:classappend="*{paymentStatus.name() == 'PAID'} ? 'text-success' : 'text-warning'">
+                        Status: <span th:text="*{paymentStatus.displayName}"></span>
                     </div>
                 </div>
                 <div class="order-summary-section">
@@ -56,10 +63,10 @@
             </div>
 
             <div class="order-status-section">
-                <h3>Current Status</h3>
+                <h3>Current Shipping Status</h3>
                 <div class="status-display">
-                    <span class="status-dot" th:classappend="*{status.cssClass}"></span>
-                    <span th:text="*{status.description}">Processing</span>
+                    <span class="status-dot" th:classappend="*{shippingStatus.cssClass}"></span>
+                    <span th:text="*{shippingStatus.description}">Processing</span>
                 </div>
             </div>
 
@@ -87,35 +94,35 @@
 
             <!-- Admin Status Update Section -->
             <div class="order-status-section" style="border-top: 1px solid #eee; padding-top: 25px; margin-top:25px;">
-                <h3>Update Order Status</h3>
+                <h3>Update Shipping Status</h3>
                 <div th:object="${order}">
                     <!-- Form for PROCESSING state -->
-                    <form th:if="*{status.name() == 'PROCESSING'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
+                    <form th:if="*{shippingStatus.name() == 'PROCESSING'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
                         <button type="submit" name="status" th:value="PREPARING_FOR_SHIPMENT" class="btn btn-primary">Start Preparing</button>
                         <button type="submit" name="status" th:value="CANCELLED" class="btn btn-secondary">Cancel Order</button>
                     </form>
 
                     <!-- Form for PREPARING_FOR_SHIPMENT state -->
-                    <form th:if="*{status.name() == 'PREPARING_FOR_SHIPMENT'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
-                        <button type="submit" name="status" th:value="SHIPPED" class="btn btn-primary">Mark as Shipped</button>
+                    <form th:if="*{shippingStatus.name() == 'PREPARING_FOR_SHIPMENT'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
+                        <button type="submit" name="status" th:value="IN_TRANSIT" class="btn btn-primary">Mark as In Transit</button>
                         <button type="submit" name="status" th:value="DELIVERED" class="btn btn-primary">Mark as Delivered (e.g. Pickup)</button>
                         <button type="submit" name="status" th:value="CANCELLED" class="btn btn-secondary">Cancel Order</button>
                     </form>
 
-                    <!-- Form for SHIPPED state -->
-                    <form th:if="*{status.name() == 'SHIPPED'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
+                    <!-- Form for IN_TRANSIT state -->
+                    <form th:if="*{shippingStatus.name() == 'IN_TRANSIT'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
                         <button type="submit" name="status" th:value="DELIVERED" class="btn btn-primary">Mark as Delivered</button>
                         <button type="submit" name="status" th:value="DELIVERY_FAILED" class="btn btn-secondary">Mark Delivery Failed</button>
                         <button type="submit" name="status" th:value="CANCELLED" class="btn btn-secondary">Cancel / Return</button>
                     </form>
 
                     <!-- Form for DELIVERY_FAILED state -->
-                    <form th:if="*{status.name() == 'DELIVERY_FAILED'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
-                        <button type="submit" name="status" th:value="SHIPPED" class="btn btn-primary">Re-attempt Delivery</button>
+                    <form th:if="*{shippingStatus.name() == 'DELIVERY_FAILED'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
+                        <button type="submit" name="status" th:value="IN_TRANSIT" class="btn btn-primary">Re-attempt Delivery</button>
                         <button type="submit" name="status" th:value="CANCELLED" class="btn btn-secondary">Cancel Order</button>
                     </form>
 
-                    <p th:if="*{status.name() == 'DELIVERED' or status.name() == 'CANCELLED'}">This order is in a terminal state and cannot be updated.</p>
+                    <p th:if="*{shippingStatus.name() == 'DELIVERED' or shippingStatus.name() == 'CANCELLED'}">This order is in a terminal state and cannot be updated.</p>
                 </div>
             </div>
         </div>

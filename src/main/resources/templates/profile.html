@@ -33,6 +33,14 @@
         .order-card { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; overflow: hidden; }
         .order-header { background-color: #f8f9fa; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         .order-header-info { font-weight: 600; }
+        .order-status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .order-status-badge.paid { background-color: #d4edda; color: #155724; }
+        .order-status-badge.pending { background-color: #fff3cd; color: #856404; }
         .order-body { padding: 20px; }
         .order-footer { padding: 15px 20px; text-align: right; }
         .btn-track { background-color: #b21984; color: #fff; padding: 10px 25px; border-radius: 5px; text-decoration: none; }
@@ -55,13 +63,45 @@
                 <p>Hello,</p>
                 <h1 th:text="${account.getFullName()}"></h1>
             </div>
+            <a th:href="@{/profile/change-password}" class="edit-link">Change Password</a>
         </div>
+
+        <!-- Order History Section -->
+        <section class="profile-section">
+            <div class="section-header">
+                <h2>Order History</h2>
+            </div>
+            <div th:if="${!hasOrders}">
+                <p>You have not placed any orders yet.</p>
+                <a th:href="@{/shop}" class="btn btn-primary" style="margin-top: 10px;">Start Shopping</a>
+            </div>
+            <div th:if="${hasOrders}">
+                <div th:each="order : ${orders}" class="order-card">
+                    <div class="order-header">
+                        <div class="order-header-info">
+                            Order <span th:text="'#' + ${order.orderId}"></span> •
+                            <span th:text="${#temporals.format(order.createdAt, 'MMM dd, yyyy')}"></span>
+                        </div>
+                        <span class="order-status-badge"
+                              th:classappend="${order.paymentStatus.name() == 'PAID' ? 'paid' : 'pending'}"
+                              th:text="${order.paymentStatus.displayName}">PAID</span>
+                    </div>
+                    <div class="order-body">
+                        <p><strong>Shipping Status:</strong> <span th:text="${order.shippingStatus.description}"></span></p>
+                        <p><strong>Total:</strong> <span th:text="'₱' + ${#numbers.formatDecimal(order.totalPrice, 1, 'COMMA', 2, 'POINT')}"></span></p>
+                    </div>
+                    <div class="order-footer">
+                        <a th:href="@{/order/{id}(id=${order.orderId})}" class="btn-track">View Details</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
 
         <!-- Personal Details Section -->
         <section class="profile-section">
             <div class="section-header">
                 <h2>Personal details</h2>
-                <a href="#" class="edit-link">Edit</a>
             </div>
             <dl class="details-grid">
                 <dt>First Name:</dt> <dd th:text="${account.firstName}"></dd>
@@ -74,86 +114,43 @@
         <!-- Address Section -->
         <section class="profile-section">
             <div class="section-header">
-                <h2>Address</h2>
+                <h2>Address Book</h2>
             </div>
-            <!-- Address Block -->
-            <div th:each="address : ${account.addresses}" th:id="'address-block-' + ${address.addressId}" class="address-box">
-                <div style="display: flex; justify-content: space-between; align-items: start;">
-                    <div>
-                        <p><strong><span th:text="${account.getFullName()}"></span></strong> | <span th:text="${address.phoneNumber}"></span></p>
-                        <p th:text="${address.getFullAddress()}"></p>
-                        <div class="address-tags">
-                            <span class="tag-home">HOME</span>
-                            <span th:if="${address.isDefault()}" class="tag-default">Default Address</span>
-                        </div>
+            <div id="address-list-container">
+                <div th:each="addr : ${account.addresses}" th:id="'address-block-' + ${addr.addressId}" class="address-box">
+                    <p>
+                        <strong th:text="${account.getFullName()}"></strong>
+                        (<span th:text="${addr.phoneNumber}"></span>)
+                    </p>
+                    <p th:text="${addr.getFullAddress()}"></p>
+                    <div class="address-tags">
+                        <span class="tag-home">HOME</span>
+                        <span th:if="${addr.isDefault()}" class="tag-default">Default Address</span>
                     </div>
                     <a href="#" class="edit-link"
-                       th:attr="hx-get=@{/address/edit/{id}(id=${address.addressId}, context='profile')},
-                                hx-target='#address-block-' + ${address.addressId}"
+                       th:attr="hx-get=@{/address/edit/{id}(id=${addr.addressId}, context='profile')}, hx-target='#address-block-' + ${addr.addressId}"
                        hx-swap="outerHTML">Edit</a>
                 </div>
             </div>
-
-
-            <!-- HTMX Target for Address Form -->
-            <div id="add-address-profile-target">
-                <div th:replace="~{fragments/address-link-fragment :: link(context='profile')}"></div>
-            </div>
-        </section>
-
-        <!-- Security Section -->
-        <section class="profile-section">
-            <div class="section-header">
-                <h2>Security</h2>
-                <!-- This is now just a normal link to a separate page -->
-                <a th:href="@{/profile/change-password}" class="edit-link">Change Password</a>
-            </div>
-        </section>
-
-        <!-- Orders Section -->
-        <section class="profile-section">
-            <div class="section-header">
-                <h2>Orders</h2>
-            </div>
-            <div th:if="${hasOrders}">
-                <div th:each="order : ${orders}" class="order-card">
-                    <div class="order-header">
-                        <span class="order-header-info" th:text="'Order #' + ${order.orderId}"></span>
-                        <span th:text="${#temporals.format(order.createdAt, 'MMMM dd, yyyy')}"></span>
-                    </div>
-                    <div class="order-body">
-                        <p th:text="${order.orderItems.size()} + ' products'"></p>
-                        <p>Total: <strong th:text="'₱' + ${#numbers.formatDecimal(order.totalPrice, 1, 'COMMA', 2, 'POINT')}"></strong></p>
-                    </div>
-                    <div class="order-footer">
-                        <a th:href="@{/order/{id}(id=${order.orderId})}" class="btn-track">Track Order</a>
-                    </div>
-                </div>
-            </div>
-            <div th:if="!${hasOrders}">
-                <p>You have no orders yet.</p>
+            <div id="add-address-target">
+                <a href="#" class="add-new-address-link"
+                   th:attr="hx-get=@{/address/new(context='profile')}, hx-target='#add-address-target'"
+                   hx-swap="innerHTML">
+                    + Add New Address
+                </a>
             </div>
         </section>
     </div>
 </main>
-
-<footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
-
-<!-- Map Modal HTML -->
 <div id="map-modal" class="map-modal-overlay">
     <div class="map-modal-content">
         <span id="close-modal-btn" class="map-modal-close">×</span>
         <h3>Pinpoint Your Location</h3>
-        <p>Drag the pin to your exact delivery address.</p>
+        <p>Pan the map to center the pin on your exact location.</p>
         <div id="map"></div>
         <button id="confirm-pin-btn" class="btn btn-primary" style="margin-top: 15px;">Confirm Location</button>
     </div>
 </div>
-
-
-<!-- This empty div is where the success modal will be loaded by HTMX -->
-<div id="modal-container"></div>
-
-
+<footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>
