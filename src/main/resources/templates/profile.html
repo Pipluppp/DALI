@@ -95,16 +95,8 @@
         <section class="profile-section">
             <div class="section-header">
                 <h2>Security</h2>
-            </div>
-
-            <!-- This div is the HTMX target. It will be updated with the form. -->
-            <div id="change-password-target">
-                <!-- The initial state: a button to open the form -->
-                <a hx-get="/profile/password/form"
-                hx-target="#change-password-target"
-                hx-swap="innerHTML"
-                class="btn btn-secondary"
-                style="border-radius: 8px;">Change Password</a>
+                <!-- This is now just a normal link to a separate page -->
+                <a th:href="@{/profile/change-password}" class="edit-link">Change Password</a>
             </div>
         </section>
 
@@ -147,6 +139,11 @@
         <button id="confirm-pin-btn" class="btn btn-primary" style="margin-top: 15px;">Confirm Location</button>
     </div>
 </div>
+
+
+<!-- This empty div is where the success modal will be loaded by HTMX -->
+<div id="modal-container"></div>
+
 
 </body>
 </html>
