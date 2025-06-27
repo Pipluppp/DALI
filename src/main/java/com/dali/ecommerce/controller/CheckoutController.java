@@ -1,5 +1,7 @@
 package com.dali.ecommerce.controller;
 
+import com.dali.ecommerce.maya.MayaService;
+import com.dali.ecommerce.maya.CheckoutResponse;
 import com.dali.ecommerce.model.Account;
 import com.dali.ecommerce.model.Address;
 import com.dali.ecommerce.model.CartItem;
@@ -34,13 +36,15 @@ public class CheckoutController {
     private final OrderService orderService;
     private final ShippingService shippingService;
     private final AddressRepository addressRepository;
+    private final MayaService mayaService;
 
-    public CheckoutController(AccountRepository accountRepository, CartService cartService, OrderService orderService, ShippingService shippingService, AddressRepository addressRepository) {
+    public CheckoutController(AccountRepository accountRepository, CartService cartService, OrderService orderService, ShippingService shippingService, AddressRepository addressRepository, MayaService mayaService) {
         this.accountRepository = accountRepository;
         this.cartService = cartService;
         this.orderService = orderService;
         this.shippingService = shippingService;
         this.addressRepository = addressRepository;
+        this.mayaService = mayaService;
     }
 
     @ModelAttribute("checkoutDetails")
@@ -50,6 +54,10 @@ public class CheckoutController {
 
     private void populateCheckoutModel(Model model, Authentication authentication, HttpSession session, Map<String, Object> checkoutDetails) {
         List<CartItem> cartItems = cartService.getCartItems(authentication, session);
+        if (cartItems.isEmpty()) {
+            model.addAttribute("isCartEmpty", true);
+            return;
+        }
         double subtotal = cartService.getCartTotal(cartItems);
         double shipping = ((Number) checkoutDetails.getOrDefault("shippingFee", 0.0)).doubleValue();
 
@@ -74,7 +82,10 @@ public class CheckoutController {
         model.addAttribute("account", account);
         model.addAttribute("addresses", account.getAddresses());
         model.addAttribute("step", "address");
-        populateCheckoutModel(model, authentication, session,  checkoutDetails);
+        populateCheckoutModel(model, authentication, session, checkoutDetails);
+        if (model.containsAttribute("isCartEmpty")) {
+            return "redirect:/cart";
+        }
         return "checkout";
     }
 
@@ -92,30 +103,24 @@ public class CheckoutController {
         if (addressId == null) {
             return "redirect:/checkout/address";
         }
+        populateCheckoutModel(model, authentication, session, checkoutDetails);
+        if (model.containsAttribute("isCartEmpty")) {
+            return "redirect:/cart";
+        }
 
-        // 1. Fetch the selected address from the database
         Address customerAddress = addressRepository.findById(addressId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Selected address not found"));
 
-        // 2. FIX: Calculate the initial shipping fee using the default "Standard Delivery" method.
-        // This provides the base fee that the JavaScript on the frontend will use.
         String defaultDeliveryMethod = "Standard Delivery";
         double calculatedShipping = shippingService.calculateShippingFee(customerAddress, defaultDeliveryMethod);
 
-        // 3. Store the calculated base fee in the session
         checkoutDetails.put("shippingFee", calculatedShipping);
-
-        // Optional but good practice: set a default delivery method in the session
         checkoutDetails.putIfAbsent("deliveryMethod", defaultDeliveryMethod);
 
         model.addAttribute("step", "shipping");
-
         model.addAttribute("priorityFeeAddition", ShippingService.PRIORITY_FEE_ADDITION);
-
-        // 4. Populate the model with the new, correct shipping fee
         populateCheckoutModel(model, authentication, session, checkoutDetails);
 
-        // Expose warehouse and user coordinates to the template for the map modal
         model.addAttribute("warehouseLat", shippingService.getWarehouseLat());
         model.addAttribute("warehouseLon", shippingService.getWarehouseLon());
         model.addAttribute("customerAddress", customerAddress);
@@ -129,19 +134,16 @@ public class CheckoutController {
 
         Integer addressId = (Integer) checkoutDetails.get("addressId");
         if (addressId == null) {
-            return "redirect:/checkout/address"; // Should not happen, but good practice
+            return "redirect:/checkout/address";
         }
 
-        // Fetch the selected address again
         Address customerAddress = addressRepository.findById(addressId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Selected address not found"));
 
-        // Recalculate the fee with the chosen delivery method
         double finalShippingFee = shippingService.calculateShippingFee(customerAddress, deliveryMethod);
 
-        // Update the session details
         checkoutDetails.put("deliveryMethod", deliveryMethod);
-        checkoutDetails.put("shippingFee", finalShippingFee); // <-- IMPORTANT
+        checkoutDetails.put("shippingFee", finalShippingFee);
 
         return "redirect:/checkout/payment";
     }
@@ -154,31 +156,49 @@ public class CheckoutController {
         }
         model.addAttribute("step", "payment");
         populateCheckoutModel(model, authentication, session, checkoutDetails);
+        if (model.containsAttribute("isCartEmpty")) {
+            return "redirect:/cart";
+        }
         return "checkout";
     }
 
     @PostMapping("/payment")
-    public String savePayment(@RequestParam("paymentMethod") String paymentMethod,
-                              @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails) {
-        checkoutDetails.put("paymentMethod", paymentMethod);
-        return "redirect:/checkout/finish";
-    }
+    public String processAndPlaceOrder(@RequestParam("paymentMethod") String paymentMethod,
+                                       @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails,
+                                       Authentication authentication,
+                                       SessionStatus sessionStatus,
+                                       RedirectAttributes redirectAttributes) {
 
-    @GetMapping("/finish")
-    public String finishOrder(Authentication authentication,
-                              @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails,
-                              SessionStatus status,
-                              RedirectAttributes redirectAttributes) {
-        try {
-            Order order = orderService.createOrder(authentication.getName(), checkoutDetails);
-            status.setComplete(); // Clears the @SessionAttributes
-            redirectAttributes.addFlashAttribute("orderId", order.getOrderId());
-            return "redirect:/checkout/success";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Could not place order: " + e.getMessage());
+        checkoutDetails.put("paymentMethod", paymentMethod);
+        String username = authentication.getName();
+
+        if ("Cash on delivery (COD)".equals(paymentMethod)) {
+            try {
+                Order order = orderService.createOrder(username, checkoutDetails);
+                sessionStatus.setComplete(); // Clear checkoutDetails from session for COD
+                redirectAttributes.addFlashAttribute("orderId", order.getOrderId());
+                return "redirect:/checkout/success";
+            } catch (Exception e) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Could not place order: " + e.getMessage());
+                return "redirect:/checkout/payment";
+            }
+            // --- CORRECTED: Use "Maya" as the payment method string ---
+        } else if ("Maya".equals(paymentMethod) || "Credit/Debit Card".equals(paymentMethod)) {
+            try {
+                Order pendingOrder = orderService.createPendingOrder(username, checkoutDetails);
+                CheckoutResponse mayaResponse = mayaService.createCheckout(pendingOrder);
+                return "redirect:" + mayaResponse.getRedirectUrl();
+            } catch (Exception e) {
+                e.printStackTrace();
+                redirectAttributes.addFlashAttribute("errorMessage", "Could not connect to payment gateway. Please try again or select another payment method.");
+                return "redirect:/checkout/payment";
+            }
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Invalid payment method selected.");
             return "redirect:/checkout/payment";
         }
     }
+
 
     @GetMapping("/success")
     public String orderSuccess(Model model) {
@@ -186,17 +206,6 @@ public class CheckoutController {
             return "redirect:/";
         }
         return "order-success";
-    }
-
-    @GetMapping("/address/form")
-    public String getAddressForm(Model model) {
-        model.addAttribute("address", new Address());
-        return "fragments/address-form :: address-form";
-    }
-
-    @GetMapping("/address/link")
-    public String getAddAddressLink() {
-        return "fragments/add-address-link :: add-address-link";
     }
 
     @PostMapping("/recalculate")
@@ -208,24 +217,19 @@ public class CheckoutController {
         Integer addressId = (Integer) checkoutDetails.get("addressId");
         if (addressId == null) {
             populateCheckoutModel(model, authentication, session, checkoutDetails);
-            // In case of an error, we still need to provide the fragment
             return "fragments/checkout-summary-update";
         }
 
         Address customerAddress = addressRepository.findById(addressId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Selected address not found"));
 
-        // Recalculate the fee with the chosen delivery method
         double finalShippingFee = shippingService.calculateShippingFee(customerAddress, deliveryMethod);
 
-        // Update the session details
         checkoutDetails.put("shippingFee", finalShippingFee);
         checkoutDetails.put("deliveryMethod", deliveryMethod);
 
-        // Repopulate the model with the new values
         populateCheckoutModel(model, authentication, session, checkoutDetails);
 
-        // Return the new fragment dedicated to OOB swaps
         return "fragments/checkout-summary-update";
     }
 }

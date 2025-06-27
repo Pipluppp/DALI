@@ -1,6 +1,7 @@
 package com.dali.ecommerce.model;
 
 public enum OrderStatus {
+    PENDING_PAYMENT("Awaiting payment.", "processing"),
     PROCESSING("Order is being processed.", "processing"),
     PREPARING_FOR_SHIPMENT("Your order is being prepared for shipment.", "shipped"), // Using 'shipped' for CSS class consistency
     SHIPPED("Your order has been shipped.", "shipped"),
