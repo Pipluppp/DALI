@@ -18,8 +18,22 @@
         <div class="product-card-actions">
             <form th:action="@{/cart/add}" method="post">
                 <input type="hidden" name="productId" th:value="${product.id}" />
-                <button type="submit" th:if="${product.productQuantity > 0}" class="add-to-cart-btn">Add to Cart</button>
-                <button type="button" th:if="${product.productQuantity <= 0}" class="add-to-cart-btn-disabled" disabled>Out of Stock</button>
+
+                <!-- Use th:with to get the available quantity for this product -->
+                <th:block th:with="availableToAdd=${availableQuantities.get(product.id)}">
+
+                    <!-- Case 1: Product has stock and user can add more -->
+                    <div th:if="${availableToAdd != null and availableToAdd > 0}" style="display: flex; align-items: center; gap: 10px;">
+                        <input type="number" name="quantity" value="1" min="1" th:max="${availableToAdd}"
+                               style="width: 55px; padding: 10px; text-align: center; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+                        <button type="submit" class="add-to-cart-btn" style="width: auto; flex-grow: 1;">Add</button>
+                    </div>
+
+                    <!-- Case 2: Product is out of stock OR user has all available stock in cart -->
+                    <button th:if="${availableToAdd == null or availableToAdd <= 0}" type="button" class="add-to-cart-btn-disabled" disabled
+                            th:text="${product.productQuantity > 0} ? 'All in Cart' : 'Out of Stock'">
+                    </button>
+                </th:block>
             </form>
         </div>
     </div>
