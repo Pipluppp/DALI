@@ -20,16 +20,46 @@ public class PaymentController {
     }
 
     @GetMapping("/success")
-    public String handleSuccess(@RequestParam("orderId") Integer orderId, SessionStatus sessionStatus, Model model) {
-        // The webhook is the source of truth, but we can clear the session here
-        // as the checkout flow is complete from the user's perspective.
-        sessionStatus.setComplete();
-        model.addAttribute("orderId", orderId);
-        return "payment-success";
+    public String handleSuccess(@RequestParam("orderId") Integer orderId,
+                                @RequestParam(name = "id", required = false) String mayaCheckoutId, // Maya adds its checkoutId as a param named "id"
+                                SessionStatus sessionStatus, Model model) {
+
+        System.out.println("Payment callback success for Order ID: " + orderId);
+
+        try {
+            // This is the key change. We now trigger the successful payment logic here.
+            // We pass the mayaCheckoutId if it exists, otherwise null.
+            orderService.processSuccessfulPayment(orderId, mayaCheckoutId);
+            System.out.println("Successfully processed payment for Order ID: " + orderId);
+
+            // Clear the checkout session attributes.
+            sessionStatus.setComplete();
+
+            // Prepare the model for the success page.
+            model.addAttribute("orderId", orderId);
+            return "payment-success";
+
+        } catch (Exception e) {
+            // If something goes wrong (e.g., out of stock), redirect with an error.
+            System.err.println("Error processing payment success for order " + orderId + ": " + e.getMessage());
+            e.printStackTrace();
+
+            // Fail the payment in the DB to be safe
+            orderService.failOrderPayment(orderId);
+            sessionStatus.setComplete();
+
+            RedirectAttributes redirectAttributes = (RedirectAttributes) model.asMap().get("redirectAttributes");
+            if (redirectAttributes != null) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Payment was confirmed, but we couldn't finalize your order: " + e.getMessage());
+            }
+
+            return "redirect:/checkout/payment";
+        }
     }
 
     @GetMapping("/failure")
     public String handleFailure(@RequestParam("orderId") Integer orderId, SessionStatus sessionStatus, RedirectAttributes redirectAttributes) {
+        System.out.println("Payment callback failure for Order ID: " + orderId);
         orderService.failOrderPayment(orderId);
         sessionStatus.setComplete();
         redirectAttributes.addFlashAttribute("errorMessage", "Your payment failed. Please try again or select a different payment method.");
@@ -38,9 +68,10 @@ public class PaymentController {
 
     @GetMapping("/cancel")
     public String handleCancel(@RequestParam("orderId") Integer orderId, SessionStatus sessionStatus, RedirectAttributes redirectAttributes) {
+        System.out.println("Payment callback cancelled for Order ID: " + orderId);
         orderService.failOrderPayment(orderId);
         sessionStatus.setComplete();
-        redirectAttributes.addFlashAttribute("errorMessage", "Payment was cancelled. Please feel free to try again.");
+        redirectAttributes.addFlashAttribute("errorMessage", "Payment was cancelled. You can try again anytime.");
         return "redirect:/checkout/payment";
     }
 }

@@ -1,6 +1,5 @@
 package com.dali.ecommerce.maya;
 
-import com.dali.ecommerce.maya.*;
 import com.dali.ecommerce.model.Order;
 import com.dali.ecommerce.model.OrderItem;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,7 +27,6 @@ public class MayaServiceImpl implements MayaService {
 
     public MayaServiceImpl(ObjectMapper objectMapper,
                            @Value("${maya.api.url.checkout}") String mayaCheckoutUrl,
-                           // --- CORRECTED: Inject the public key, not the secret one ---
                            @Value("${maya.api.key.public}") String mayaPublicApiKey,
                            @Value("${app.base.url}") String appBaseUrl) {
         this.httpClient = HttpClient.newHttpClient();
@@ -36,6 +34,10 @@ public class MayaServiceImpl implements MayaService {
         this.mayaCheckoutUrl = mayaCheckoutUrl;
         this.mayaPublicApiKey = mayaPublicApiKey;
         this.appBaseUrl = appBaseUrl;
+    }
+
+    private double roundToTwoDecimals(double value) {
+        return Math.round(value * 100.0) / 100.0;
     }
 
     @Override
@@ -65,7 +67,8 @@ public class MayaServiceImpl implements MayaService {
     private CheckoutRequest buildCheckoutRequest(Order order) {
         // Create Total Amount
         TotalAmount totalAmount = new TotalAmount();
-        totalAmount.setValue(order.getTotalPrice());
+        // --- FIX: Round the total price to two decimal places ---
+        totalAmount.setValue(roundToTwoDecimals(order.getTotalPrice()));
         totalAmount.setCurrency("PHP");
 
         // Create Buyer
@@ -107,7 +110,7 @@ public class MayaServiceImpl implements MayaService {
         item.setDescription(orderItem.getProduct().getCategory());
 
         TotalAmount itemTotal = new TotalAmount();
-        itemTotal.setValue(orderItem.getSubtotal());
+        itemTotal.setValue(roundToTwoDecimals(orderItem.getSubtotal()));
         itemTotal.setCurrency("PHP");
         item.setTotalAmount(itemTotal);
 
