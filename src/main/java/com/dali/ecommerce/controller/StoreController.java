@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 
@@ -31,11 +32,17 @@ public class StoreController {
     public String searchStores(@RequestParam(value = "query", required = false) String query, Model model) {
         List<Store> stores;
         if (query != null && !query.trim().isEmpty()) {
-            stores = storeRepository.findByNameContainingIgnoreCaseOrLocationContainingIgnoreCase(query, query);
+            stores = storeRepository.findByNameContainingIgnoreCase(query);
         } else {
             stores = storeRepository.findAll();
         }
         model.addAttribute("stores", stores);
         return "fragments/store-list :: store-list-fragment";
+    }
+
+    @GetMapping("/api/stores")
+    @ResponseBody
+    public List<Store> getAllStoresApi() {
+        return storeRepository.findAll();
     }
 }

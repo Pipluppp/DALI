@@ -19,16 +19,14 @@ public class Store {
     @Column(name = "store_name", nullable = false)
     private String name;
 
-    @Column(name = "store_location")
-    private String location;
+    @Column(name = "store_lat")
+    private Double latitude;
+
+    @Column(name = "store_lng")
+    private Double longitude;
 
     // Constructors
     public Store() {
-    }
-
-    public Store(String name, String location) {
-        this.name = name;
-        this.location = location;
     }
 
     // Getters and Setters
@@ -48,12 +46,20 @@ public class Store {
         this.name = name;
     }
 
-    public String getLocation() {
-        return location;
+    public Double getLatitude() {
+        return latitude;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 
     @Override
@@ -61,7 +67,8 @@ public class Store {
         return "Store{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", location='" + location + '\'' +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
                 '}';
     }
 }

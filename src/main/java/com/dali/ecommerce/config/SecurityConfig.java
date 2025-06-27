@@ -1,3 +1,4 @@
+// pipluppp-dali/src/main/java/com/dali/ecommerce/config/SecurityConfig.java
 package com.dali.ecommerce.config;
 
 import com.dali.ecommerce.service.AdminUserDetailsService;
@@ -88,7 +89,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login").anonymous()
-                        .requestMatchers("/", "/register", "/shop/**", "/stores", "/stores/search", "/product/**", "/css/**", "/images/**", "/cart/**", "/forgot-password", "/reset-password", "/api/locations/**").permitAll()
+                        .requestMatchers("/", "/register", "/shop/**", "/stores", "/stores/search", "/api/stores", "/product/**", "/css/**", "/images/**", "/js/**", "/cart/**", "/forgot-password", "/reset-password", "/api/locations/**").permitAll()
 
                         .requestMatchers("/profile", "/checkout/**").authenticated()
                         .anyRequest().authenticated()
