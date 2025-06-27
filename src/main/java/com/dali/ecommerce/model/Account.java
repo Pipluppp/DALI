@@ -47,6 +47,9 @@ public class Account {
     @OrderBy("createdAt DESC")
     private List<Order> orders;
 
+    @Column(name = "reset_password_token")
+    private String resetPasswordToken;
+
     // Getters and Setters
     public Integer getAccountId() { return accountId; }
     public void setAccountId(Integer accountId) { this.accountId = accountId; }
@@ -66,6 +69,9 @@ public class Account {
     public void setCartItems(List<CartItem> cartItems) { this.cartItems = cartItems; }
     public List<Order> getOrders() { return orders; }
     public void setOrders(List<Order> orders) { this.orders = orders; }
+    public String getResetPasswordToken() {return resetPasswordToken; }
+    public void setResetPasswordToken(String resetPasswordToken) {
+        this.resetPasswordToken = resetPasswordToken; }
 
     public String getFullName() {
         return firstName + " " + lastName;
