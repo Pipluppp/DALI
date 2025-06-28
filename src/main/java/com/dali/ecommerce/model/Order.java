@@ -88,6 +88,16 @@ public class Order {
         return Math.max(0, totalPrice - subtotal);
     }
 
+    @Transient
+    public int getTotalItemCount() {
+        if (orderItems == null) {
+            return 0;
+        }
+        return orderItems.stream()
+                .mapToInt(OrderItem::getQuantity)
+                .sum();
+    }
+
 
     // Getters and Setters
     public Integer getOrderId() { return orderId; }
