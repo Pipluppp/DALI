@@ -2,12 +2,12 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div th:fragment="address-form" class="address-form-container" style="position: relative;">
+<div th:fragment="address-form" class="address-form-container">
     <!-- Cancel Button -->
     <a th:href="${context == 'checkout'} ? @{/checkout/address} : @{/profile}"
-       style="position: absolute; top: 15px; right: 20px; font-size: 1.8rem; text-decoration: none; color: #888; cursor: pointer; line-height: 1;">×</a>
+       class="address-form-cancel-btn">×</a>
 
-    <h3 style="margin-top: 30px; margin-bottom: 20px;" th:text="${address.addressId != null} ? 'Edit Address' : 'Add a New Address'">Add a New Address</h3>
+    <h3 th:text="${address.addressId != null} ? 'Edit Address' : 'Add a New Address'">Add a New Address</h3>
 
     <!-- Dynamic Form Action -->
     <form th:action="${address.addressId != null} ? @{/address/update/{id}(id=${address.addressId})} : @{/address/add}"
@@ -68,16 +68,16 @@
         </div>
 
         <!-- Pinpoint Button -->
-        <div class="form-group" style="display: flex; align-items: center; gap: 15px;">
+        <div class="form-group form-group-pinpoint">
             <button type="button" id="pinpoint-btn" class="btn btn-secondary">
                 Pinpoint address
             </button>
-            <span id="coords-display" style="color: #666; font-size: 0.9em;"
+            <span id="coords-display"
                   th:if="${address.latitude != null}"
                   th:text="${'Pinned at: ' + #numbers.formatDecimal(address.latitude, 1, 5) + ', ' + #numbers.formatDecimal(address.longitude, 1, 5)}"></span>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Save Address</button>
+        <button type="submit" class="btn btn-primary">Save Address</button>
     </form>
 </div>
 
