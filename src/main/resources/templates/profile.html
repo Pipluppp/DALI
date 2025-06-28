@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>My Profile - DALI</title>
+
+    <!-- FIX: CSRF Meta Tags for HTMX and JavaScript -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
     <!-- CSS and other head elements -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -77,11 +82,17 @@
         .profile-sidebar li a:hover {
             color: #b21984;
         }
-        .profile-main h2 {
-            font-size: 1.8rem;
+        .profile-main .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 25px;
             padding-bottom: 15px;
             border-bottom: 1px solid #eee;
+        }
+        .profile-main h2 {
+            font-size: 1.8rem;
+            margin: 0;
         }
         .address-box, .order-card {
             border: 1px solid #e0e0e0;
@@ -133,7 +144,9 @@
 
             <div class="profile-main">
                 <section id="orders">
-                    <h2>My Orders</h2>
+                    <div class="section-header">
+                        <h2>My Orders</h2>
+                    </div>
                     <div th:if="${!hasOrders}" class="no-content-notice">
                         You have not placed any orders yet.
                     </div>
@@ -165,14 +178,13 @@
                 </section>
 
                 <section id="addresses" style="margin-top: 40px;">
-                    <h2>My Addresses</h2>
+                    <div class="section-header">
+                        <h2>My Addresses</h2>
+                    </div>
                     <div th:if="*{addresses.isEmpty()}" class="no-content-notice">
                         You have no saved addresses.
                     </div>
-
-                    <!-- Container for the list of addresses -->
                     <div id="address-list-container">
-                        <!-- Each address block needs a unique ID for HTMX to target -->
                         <div th:each="addr : *{addresses}" th:id="'address-block-' + ${addr.addressId}" class="address-box">
                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div>
@@ -185,7 +197,6 @@
                                         <span class="tag-default" th:if="${addr.isDefault()}">Default Address</span>
                                     </div>
                                 </div>
-                                <!-- RESTORED: Edit link with correct HTMX attributes -->
                                 <a href="#" class="edit-link"
                                    th:attr="hx-get=@{/address/edit/{id}(id=${addr.addressId}, context='profile')},
                                             hx-target='#address-block-' + ${addr.addressId}"
@@ -193,8 +204,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- RESTORED: HTMX Target and link for adding a new address -->
                     <div id="add-address-target">
                         <a href="#" class="add-new-address-link"
                            th:attr="hx-get=@{/address/new(context='profile')}, hx-target='#add-address-target'"
@@ -205,20 +214,22 @@
                 </section>
 
                 <section id="details" style="margin-top: 40px;">
-                    <h2>Personal Details</h2>
-                    <dl class="details-grid">
-                        <dt>First Name:</dt> <dd th:text="*{firstName}"></dd>
-                        <dt>Last Name:</dt> <dd th:text="*{lastName}"></dd>
-                        <dt>Phone Number:</dt> <dd th:text="*{phoneNumber}"></dd>
-                        <dt>Email:</dt> <dd th:text="*{email}"></dd>
-                    </dl>
+                    <div class="section-header">
+                        <h2>Personal Details</h2>
+                        <a href="#" class="edit-link"
+                           th:hx-get="@{/profile/details/edit}"
+                           hx-target="#profile-details-container"
+                           hx-swap="innerHTML">Edit</a>
+                    </div>
+                    <div id="profile-details-container">
+                        <div th:replace="~{fragments/profile-details-view :: details-view}"></div>
+                    </div>
                 </section>
             </div>
         </div>
     </div>
 </main>
 
-<!-- RESTORED: Map Modal HTML from original commit -->
 <div id="map-modal" class="map-modal-overlay">
     <div class="map-modal-content">
         <span id="close-modal-btn" class="map-modal-close">×</span>
@@ -230,5 +241,19 @@
 </div>
 
 <footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
+
+<!-- FIX: JavaScript to configure HTMX with the CSRF token -->
+<script>
+    document.body.addEventListener('htmx:configRequest', function(evt) {
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+        // Add the CSRF token to the request headers for state-changing methods
+        if (evt.detail.verb !== 'get') {
+            evt.detail.headers[csrfHeader] = csrfToken;
+        }
+    });
+</script>
+
 </body>
 </html>

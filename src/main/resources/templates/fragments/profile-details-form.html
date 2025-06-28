@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="details-form" th:object="${account}">
+    <!--
+      FIX A: Added th:action to ensure Spring Security processes this form and adds the CSRF token.
+      FIX B: Changed hx-post to th:hx-post and hx-get to th:hx-get for Thymeleaf URL processing.
+    -->
+    <form th:action="@{/profile/details/update}"
+          th:hx-post="@{/profile/details/update}"
+          hx-target="#profile-details-container"
+          hx-swap="innerHTML">
+
+        <!-- Bind object to the form -->
+        <input type="hidden" th:field="*{accountId}"/>
+        <input type="hidden" th:field="*{email}"/>
+
+        <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input type="text" id="firstName" class="auth-form-panel input" th:field="*{firstName}" style="width: 100%; box-sizing: border-box;">
+        </div>
+
+        <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input type="text" id="lastName" class="auth-form-panel input" th:field="*{lastName}" style="width: 100%; box-sizing: border-box;">
+        </div>
+
+        <div class="form-group">
+            <label for="phoneNumber">Phone Number</label>
+            <input type="tel" id="phoneNumber" class="auth-form-panel input" th:field="*{phoneNumber}" style="width: 100%; box-sizing: border-box;">
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-small">Save Changes</button>
+            <button type="button" class="btn btn-secondary btn-small"
+                    th:hx-get="@{/profile/details/view}"
+                    hx-target="#profile-details-container"
+                    hx-swap="innerHTML">
+                Cancel
+            </button>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

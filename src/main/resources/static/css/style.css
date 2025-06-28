@@ -1794,3 +1794,66 @@ body {
     font-style: italic;
     padding-left: 2px;
 }
+
+/* =================================
+   Profile Page - Personal Details
+   ================================= */
+
+/* Read-only view styling for the details grid */
+.details-grid {
+    display: grid;
+    grid-template-columns: 140px 1fr; /* Fixed width for labels */
+    gap: 15px 20px; /* Row gap and column gap */
+    align-items: center;
+    font-size: 0.95rem;
+}
+
+.details-grid dt {
+    font-weight: 600;
+    color: #666; /* Muted color for labels */
+    text-align: right; /* Align labels to the right for a clean look */
+}
+
+.details-grid dd {
+    margin: 0;
+    color: #333;
+    font-weight: 500;
+}
+
+/* Edit form styling specifically within the profile section */
+.profile-main .form-group {
+    margin-bottom: 15px;
+}
+
+.profile-main .form-group label {
+    display: block;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.profile-main .form-group input[type="text"],
+.profile-main .form-group input[type="tel"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.2s ease-in-out;
+}
+
+.profile-main .form-group input[type="text"]:focus,
+.profile-main .form-group input[type="tel"]:focus {
+    outline: none;
+    border-color: #b21984;
+    box-shadow: 0 0 0 2px rgba(178, 25, 132, 0.2);
+}
+
+/* Container for the form action buttons */
+.profile-main .form-actions {
+    margin-top: 25px;
+    display: flex;
+    gap: 10px;
+}

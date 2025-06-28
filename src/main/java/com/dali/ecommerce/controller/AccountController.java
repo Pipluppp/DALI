@@ -1,6 +1,7 @@
 package com.dali.ecommerce.controller;
 
 import com.dali.ecommerce.model.Account;
+import com.dali.ecommerce.model.Address;
 import com.dali.ecommerce.model.Order;
 import com.dali.ecommerce.repository.AccountRepository;
 import com.dali.ecommerce.repository.OrderRepository;
@@ -8,6 +9,7 @@ import com.dali.ecommerce.service.AccountService;
 import com.dali.ecommerce.service.CartService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,22 +22,15 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import com.dali.ecommerce.model.Address;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-
-
 
 import java.util.List;
-import jakarta.validation.Valid;
-import org.springframework.validation.BindingResult;
+
 
 @Controller
 public class AccountController {
@@ -73,7 +68,7 @@ public class AccountController {
                                       HttpServletResponse response,
                                       RedirectAttributes redirectAttributes,
                                       Model model) {
-        if  (bindingResult.hasErrors()) {
+        if (bindingResult.hasErrors()) {
             model.addAttribute("account", account);
             return "register";
         }
@@ -131,45 +126,33 @@ public class AccountController {
         return "profile";
     }
 
-    /*@GetMapping("/forgot-password")
-    public String showForgotPasswordPage() {
-        // This string "forgot-password" MUST match your HTML file name.
-        return "forgot-password";
-    }*/
-
-    @GetMapping("/account/address/form")
-    public String getProfileAddressForm(Model model) {
-        model.addAttribute("address", new Address());
-        // This will return the content of a NEW file you will create: 'profile-address-form.html'
-        return "fragments/profile-address-form :: profile-address-form";
+    @GetMapping("/profile/details/edit")
+    public String getProfileDetailsEditForm(Model model, Authentication authentication) {
+        Account account = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        model.addAttribute("account", account);
+        return "fragments/profile-details-form :: details-form";
     }
 
-    @GetMapping("/account/address/link")
-    public String getProfileAddAddressLink() {
-        // This will return the content of a NEW file you will create: 'profile-add-address-link.html'
-        return "fragments/profile-add-address-link :: profile-add-address-link";
+    @GetMapping("/profile/details/view")
+    public String getProfileDetailsView(Model model, Authentication authentication) {
+        Account account = accountRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        model.addAttribute("account", account);
+        return "fragments/profile-details-view :: details-view";
     }
 
+    @PostMapping("/profile/details/update")
+    public String updateProfileDetails(@ModelAttribute Account profileUpdates, Authentication authentication, Model model) {
+        accountService.updateUserProfile(authentication.getName(), profileUpdates);
 
-    @PostMapping("/account/address/add")
-    public String saveNewAddressFromProfile(@ModelAttribute Address address, Authentication authentication) {
+        // Fetch the updated account to pass to the view fragment
+        Account updatedAccount = accountService.findByEmail(authentication.getName());
+        model.addAttribute("account", updatedAccount);
 
-        return "redirect:/profile";
+        // Return the view fragment to show the updated, non-editable details
+        return "fragments/profile-details-view :: details-view";
     }
-
-    //@GetMapping("/profile/password/form")
-    //public String getChangePasswordForm() {
-        // This correctly returns the path to the HTML fragment.
-     //   System.out.println(">>>>>>>>> AccountController: getChangePasswordForm() was called! <<<<<<<<<");
-    //    return "fragments/change-password-form :: change-password-form";
-        
-    //}
-
-    //@GetMapping("/profile/password/link")
-    //public String getChangePasswordLink() {
-    // This serves the content of 'fragments/change-password-link.html'
-      //  return "fragments/change-password-link :: change-password-link";
-    //}
 
     // Add this GET mapping to show the new page
     @GetMapping("/profile/change-password")
@@ -180,30 +163,26 @@ public class AccountController {
 
     @PostMapping("/profile/change-password")
     public String processChangePasswordRedirect(Authentication authentication,
-                                          @RequestParam("currentPassword") String currentPassword,
-                                          @RequestParam("newPassword") String newPassword,
-                                          @RequestParam("confirmPassword") String confirmPassword,
-                                          RedirectAttributes redirectAttributes) {
+                                                @RequestParam("currentPassword") String currentPassword,
+                                                @RequestParam("newPassword") String newPassword,
+                                                @RequestParam("confirmPassword") String confirmPassword,
+                                                RedirectAttributes redirectAttributes) {
 
-    if (!newPassword.equals(confirmPassword)) {
-        redirectAttributes.addFlashAttribute("errorMessage", "New passwords do not match.");
-        return "redirect:/profile/change-password";
-    }
+        if (!newPassword.equals(confirmPassword)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "New passwords do not match.");
+            return "redirect:/profile/change-password";
+        }
 
-    try {
-        accountService.changeUserPassword(authentication.getName(), currentPassword, newPassword);
-    } catch (Exception e) {
-        redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        return "redirect:/profile/change-password";
-    }
+        try {
+            accountService.changeUserPassword(authentication.getName(), currentPassword, newPassword);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/profile/change-password";
+        }
 
-    // On success, redirect back to the main profile page with a success message.
-    // The user will need to log in again, which is the secure default.
-    redirectAttributes.addFlashAttribute("successMessage", "Password updated successfully! Please log in again for your security.");
+        // On success, redirect back to the main profile page with a success message.
+        // The user will need to log in again, which is the secure default.
+        redirectAttributes.addFlashAttribute("successMessage", "Password updated successfully! Please log in again for your security.");
         return "redirect:/login";
     }
-
-    
-
-
 }

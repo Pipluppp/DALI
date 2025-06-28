@@ -7,6 +7,8 @@ public interface AccountService {
 
     void changeUserPassword(String email, String currentPassword, String newPassword);
 
+    void updateUserProfile(String email, Account profileUpdates);
+
     Account findByEmail(String email);
     Account findByResetPasswordToken(String token);
 

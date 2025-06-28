@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- This fragment displays the user's details in a read-only format -->
+<div th:fragment="details-view" th:object="${account}">
+    <dl class="details-grid">
+        <dt>First Name:</dt>
+        <dd th:text="*{firstName}"></dd>
+
+        <dt>Last Name:</dt>
+        <dd th:text="*{lastName}"></dd>
+
+        <dt>Phone Number:</dt>
+        <dd th:text="*{phoneNumber}"></dd>
+
+        <dt>Email:</dt>
+        <dd th:text="*{email}"></dd>
+    </dl>
+</div>
+
+</body>
+</html>
