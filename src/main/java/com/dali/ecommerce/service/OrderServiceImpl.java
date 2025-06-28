@@ -41,6 +41,7 @@ public class OrderServiceImpl implements OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
+        // Create OrderItems from the cart, same as in createPendingOrder
         List<CartItem> cartItems = cartItemRepository.findByAccountAccountId(savedOrder.getAccount().getAccountId());
         List<OrderItem> orderItems = new ArrayList<>();
         for (CartItem cartItem : cartItems) {
@@ -246,7 +247,19 @@ public class OrderServiceImpl implements OrderService {
             }
         }
         order.setShippingStatus(newStatus);
-        createOrderHistoryEvent(order, newStatus, "Order status updated to '" + newStatus.name() + "' by DALI Admin.");
+
+        String historyNotes;
+        if (newStatus == ShippingStatus.CANCELLED) {
+            if (order.getPaymentStatus() == PaymentStatus.PAID) {
+                historyNotes = "Order cancelled by DALI Admin. Customer has paid, refund is required.";
+            } else {
+                historyNotes = "Order cancelled by DALI Admin.";
+            }
+        } else {
+            historyNotes = "Order status updated to '" + newStatus.name() + "' by DALI Admin.";
+        }
+        createOrderHistoryEvent(order, newStatus, historyNotes);
+
         orderRepository.save(order);
     }
 
@@ -264,7 +277,15 @@ public class OrderServiceImpl implements OrderService {
             restoreStockForOrder(order);
         }
         order.setShippingStatus(ShippingStatus.CANCELLED);
-        createOrderHistoryEvent(order, ShippingStatus.CANCELLED, "Order cancelled by customer.");
+
+        String historyNotes;
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            historyNotes = "Order cancelled by customer. Refund is required.";
+        } else {
+            historyNotes = "Order cancelled by customer.";
+        }
+        createOrderHistoryEvent(order, ShippingStatus.CANCELLED, historyNotes);
+
         orderRepository.save(order);
     }
 
