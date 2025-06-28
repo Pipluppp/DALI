@@ -38,7 +38,21 @@ public class OrderServiceImpl implements OrderService {
         Order order = createBaseOrder(username, checkoutDetails);
         order.setPaymentStatus(PaymentStatus.PENDING);
         order.setShippingStatus(ShippingStatus.PROCESSING);
+
         Order savedOrder = orderRepository.save(order);
+
+        List<CartItem> cartItems = cartItemRepository.findByAccountAccountId(savedOrder.getAccount().getAccountId());
+        List<OrderItem> orderItems = new ArrayList<>();
+        for (CartItem cartItem : cartItems) {
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(savedOrder);
+            orderItem.setProduct(cartItem.getProduct());
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItems.add(orderItem);
+        }
+        orderItemRepository.saveAll(orderItems);
+        savedOrder.setOrderItems(orderItems); // Associate the items with the saved order object
+
         createOrderHistoryEvent(savedOrder, ShippingStatus.PROCESSING, "Order placed successfully (COD). Awaiting delivery and payment.");
         processStockForPaidOrder(savedOrder.getOrderId());
         return savedOrder;
