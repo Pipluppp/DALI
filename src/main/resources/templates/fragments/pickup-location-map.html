@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Reusable Map Fragment
+  - Renders a Leaflet map for a specific pickup location.
+  - Parameters:
+    - lat: The latitude of the store.
+    - lng: The longitude of the store.
+    - name: The name of the store for the popup.
+-->
+<div th:fragment="map-fragment(lat, lng, name)">
+    <div id="pickup-location-map"></div>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // This script is self-contained for the fragment.
+        // It uses a self-invoking function to avoid polluting the global scope.
+        (function() {
+            // Ensure Leaflet is loaded before running
+            if (typeof L === 'undefined') {
+                console.error("Leaflet.js is not loaded.");
+                return;
+            }
+
+            const storeLat = /*[[${lat}]]*/ 0;
+            const storeLng = /*[[${lng}]]*/ 0;
+            const storeName = /*[[${name}]]*/ '';
+            const mapContainer = document.getElementById('pickup-location-map');
+
+            if (mapContainer && !mapContainer._leaflet_id) { // Check if map is not already initialized
+                const map = L.map(mapContainer).setView([storeLat, storeLng], 15);
+
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                    attribution: '© OpenStreetMap contributors © CARTO',
+                }).addTo(map);
+
+                L.marker([storeLat, storeLng]).addTo(map)
+                    .bindPopup('<b>' + storeName + '</b><br>Pickup location for this order.')
+                    .openPopup();
+
+                // Invalidate size to ensure it renders correctly
+                setTimeout(() => map.invalidateSize(), 10);
+            }
+        })();
+        /*]]>*/
+    </script>
+    <style>
+        #pickup-location-map {
+            height: 250px;
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            z-index: 0; /* Ensure it's below other page elements if needed */
+        }
+    </style>
+</div>
+
+</body>
+</html>

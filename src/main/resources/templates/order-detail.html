@@ -8,41 +8,51 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <style>
-        #pickup-location-map {
-            height: 250px;
-            width: 100%;
-            border-radius: 8px;
-            margin-top: 15px;
-            z-index: 0;
-        }
-    </style>
 </head>
 <body>
-<header class="header" th:replace="~{fragments/header :: header}"></header>
+<header th:replace="~{fragments/header :: header}"></header>
 
 <main class="order-detail-page">
-    <div class="container">
+    <div class="container" th:object="${order}">
+
         <a th:href="@{/profile}" class="order-detail-back-link">
-            <span>←</span>  Back to all orders
+            <span>←</span>  Back to Profile
         </a>
 
         <!-- Success/Error Messages -->
         <div th:if="${successMessage}" class="auth-success" th:text="${successMessage}"></div>
         <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}"></div>
 
-
-        <div class="order-detail-card" th:object="${order}" style="margin-top: 20px;">
+        <div class="order-detail-card" style="margin-top: 20px;">
             <div class="order-detail-header">
                 <h1 th:text="'Order #' + *{orderId}">Order #2200113271</h1>
                 <p class="order-meta">
                     <span>Online Purchase</span> •
-                    <span th:text="${#temporals.format(order.createdAt, 'EEEE, MMMM d, yyyy')}"></span> •
-                    <span th:text="*{account.getFullName()}"></span> •
-                    <span th:text="*{address.phoneNumber}"></span>
+                    <span th:text="${#temporals.format(order.createdAt, 'EEEE, MMMM d, yyyy')}"></span>
                 </p>
+
+                <!-- PICKUP INFO HIGHLIGHT -->
+                <div th:if="*{deliveryMethod == 'Pickup Delivery' and orderPickup != null}" style="background: #fefce8; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #eab308;">
+                    <h4 style="margin:0; font-size: 1.1rem; color: #854d0e;">Click & Collect Order</h4>
+                    <p style="margin:5px 0 0; color: #854d0e;">
+                        Please pick up from: <strong th:text="*{orderPickup.store.name}"></strong>
+                    </p>
+                    <!-- REUSABLE FRAGMENT: Replace old map code with this single line -->
+                    <div th:if="*{orderPickup.store.latitude != null and orderPickup.store.longitude != null}"
+                         th:replace="~{fragments/pickup-location-map :: map-fragment(lat=*{orderPickup.store.latitude}, lng=*{orderPickup.store.longitude}, name=*{orderPickup.store.name})}">
+                    </div>
+                </div>
+                <div th:if="*{deliveryMethod != 'Pickup Delivery'}" style="margin-top: 15px;">
+                    <strong>Shipping to:</strong> <span th:text="*{address.getFullAddress()}"></span>
+                </div>
+
+                <div th:if="*{paymentTransactionId}" style="font-size: 0.8rem; color: #666; margin-top: 5px;">
+                    Maya Transaction ID: <span th:text="*{paymentTransactionId}"></span>
+                </div>
             </div>
 
             <div class="order-detail-grid">
@@ -52,7 +62,7 @@
                         <img th:if="*{paymentMethod.contains('Maya')}" th:src="@{/images/gcash.png}" alt="Maya">
                         <img th:if="*{paymentMethod.contains('COD')}" th:src="@{/images/cod.png}" alt="COD">
                         <img th:if="*{paymentMethod.contains('Card')}" th:src="@{/images/credit-card.png}" alt="Card">
-                        <span th:text="*{paymentMethod}">GCash e-Wallet</span>
+                        <span th:text="*{paymentMethod}"></span>
                     </div>
                     <div style="margin-top: 10px; font-weight: 600;"
                          th:classappend="*{paymentStatus.name() == 'PAID'} ? 'text-success' : 'text-warning'">
@@ -63,50 +73,21 @@
                     <h3>Order Summary</h3>
                     <div class="summary-details">
                         <div class="summary-line"><span>Subtotal</span> <span th:text="'₱' + ${#numbers.formatDecimal(order.getSubtotal(), 1, 'COMMA', 2, 'POINT')}"></span></div>
-                        <div class="summary-line"><span>Discount</span> <span>₱0</span></div>
-                        <div class="summary-line"><span>Shipping</span> <span th:text="*{shippingFee == 0.0} ? 'FREE' : '₱' + ${#numbers.formatDecimal(order.getShippingFee(), 1, 'COMMA', 2, 'POINT')}"></span></div>
-                        <div class="summary-line total"><span>Total</span> <span th:text="'₱' + ${#numbers.formatDecimal(order.getTotalPrice(), 1, 'COMMA', 2, 'POINT')}"></span></div>
+                        <div class="summary-line"><span>Discount</span> <span>₱0.00</span></div>
+                        <div class="summary-line"><span>Shipping</span> <span th:text="'₱' + ${#numbers.formatDecimal(order.getShippingFee(), 1, 'COMMA', 2, 'POINT')}"></span></div>
+                        <div class="summary-line total"><span>Total</span> <span th:text="'₱' + ${#numbers.formatDecimal(order.totalPrice, 1, 'COMMA', 2, 'POINT')}"></span></div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Shipping / Pickup Info -->
-            <!-- Pickup Location (Styled like admin page) -->
-            <div th:if="*{deliveryMethod == 'Pickup Delivery' and orderPickup != null}" style="background: #fefce8; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #eab308;">
-                <h4 style="margin:0; font-size: 1.2rem; color: #854d0e; margin-bottom: 5px;">Pickup Location</h4>
-                <p style="margin:0; color: #854d0e;">
-                    This order is scheduled for pickup at the following store:
-                </p>
-                <p style="margin:5px 0 15px; color: #854d0e; font-size: 1.1rem;">
-                    <strong th:text="*{orderPickup.store.name}"></strong>
-                </p>
-                <div id="pickup-location-map" th:if="*{orderPickup.store.latitude != null and orderPickup.store.longitude != null}"></div>
-            </div>
-
-            <!-- Shipping Address (for non-pickup orders) -->
-            <div th:if="*{deliveryMethod != 'Pickup Delivery'}" class="order-detail-grid" style="border-top: none; padding-top: 0; padding-bottom: 25px;">
-                <div> <!-- This div is necessary to be a grid item -->
-                    <h3>Shipping Address</h3>
-                    <p th:text="*{address.getFullAddress()}"></p>
-                </div>
-            </div>
-
-
-            <div class="order-status-section">
-                <h3>Current Shipping Status</h3>
-                <div class="status-display">
-                    <span class="status-dot" th:classappend="*{shippingStatus.cssClass}"></span>
-                    <span th:text="*{shippingStatus.description}">Processing</span>
                 </div>
             </div>
 
             <!-- Include the timeline fragment -->
             <div th:replace="~{fragments/order-timeline :: timeline(history=${order.orderHistory})}"></div>
 
+
             <div class="order-products-section">
                 <h3>Products</h3>
                 <div class="product-list-header">
-                    <div class="product-col"></div>
+                    <div class="product-col">Product</div>
                     <div>Price</div>
                     <div>Quantity</div>
                     <div>Total Price</div>
@@ -116,43 +97,22 @@
                         <img th:src="@{'/images/products/' + ${item.product.image}}">
                         <span th:text="${item.product.name}"></span>
                     </div>
-                    <div th:text="'₱' + ${#numbers.formatDecimal(item.product.price, 0, 'COMMA', 2, 'POINT')}"></div>
+                    <div th:text="'₱' + ${#numbers.formatDecimal(item.product.price, 1, 'COMMA', 2, 'POINT')}"></div>
                     <div th:text="${item.quantity}"></div>
-                    <div th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 0, 'COMMA', 2, 'POINT')}"></div>
+                    <div th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 'COMMA', 2, 'POINT')}"></div>
                 </div>
             </div>
 
-            <!-- User Cancellation Button -->
-            <div th:if="${order.shippingStatus.name() == 'PROCESSING'}" style="padding-top: 25px; border-top: 1px solid #eee; margin-top: 25px; text-align: right;">
-                <form th:action="@{/order/{id}/cancel(id=${order.orderId})}" method="post" onsubmit="return confirm('Are you sure you want to cancel this order? This action cannot be undone.');">
-                    <button type="submit" class="btn btn-secondary">Cancel Order</button>
+            <!-- Order Actions (Cancel) -->
+            <div th:if="*{shippingStatus.name() == 'PROCESSING'}" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                <h3>Need to change something?</h3>
+                <form th:action="@{/order/{id}/cancel(id=*{orderId})}" method="post">
+                    <button type="submit" class="btn btn-secondary" onclick="return confirm('Are you sure you want to cancel this order?')">Cancel Order</button>
                 </form>
             </div>
-
         </div>
     </div>
 </main>
-
-<footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
-
-<script th:if="${order.deliveryMethod == 'Pickup Delivery' and order.orderPickup != null and order.orderPickup.store.latitude != null and order.orderPickup.store.longitude != null}" th:inline="javascript">
-    /*<![CDATA[*/
-    document.addEventListener('DOMContentLoaded', function () {
-        const storeLat = /*[[${order.orderPickup.store.latitude}]]*/ 0;
-        const storeLng = /*[[${order.orderPickup.store.longitude}]]*/ 0;
-        const storeName = /*[[${order.orderPickup.store.name}]]*/ '';
-
-        const map = L.map('pickup-location-map').setView([storeLat, storeLng], 15);
-
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap contributors © CARTO',
-        }).addTo(map);
-
-        L.marker([storeLat, storeLng]).addTo(map)
-            .bindPopup('<b>' + storeName + '</b><br>Your pickup location.')
-            .openPopup();
-    });
-    /*]]>*/
-</script>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>
