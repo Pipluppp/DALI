@@ -13,10 +13,11 @@
 
     <!--
       Each store is presented as a radio button option.
-      The 'delivery-option' class is used to maintain consistent styling with other options on the page.
     -->
-    <div th:each="store : ${stores}" class="delivery-option">
-        <!-- The 'name' attribute "storeId" must match the @RequestParam in the CheckoutController's saveDelivery method -->
+    <div th:each="store : ${stores}"
+         class="delivery-option"
+         th:if="${store.latitude != null and store.longitude != null}"
+         th:attr="data-lat=${store.latitude}, data-lng=${store.longitude}, data-store-id=${store.id}">
         <input type="radio" name="storeId" th:value="${store.id}" th:id="'store-' + ${store.id}" required
                th:checked="${selectedStoreId != null and selectedStoreId == store.id}">
         <label th:for="'store-' + ${store.id}">
