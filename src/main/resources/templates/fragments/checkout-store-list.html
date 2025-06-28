@@ -2,15 +2,26 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div th:fragment="store-list-fragment" class="delivery-selection">
-    <div th:each="store : ${stores}" class="delivery-option">
-        <input type="radio" name="storeId" th:value="${store.id}" th:id="'store-' + ${store.id}" th:required="${param.required}">
-        <label th:for="'store-' + ${store.id}">
-            <strong th:text="${store.name}">Store Name</strong>
-        </label>
+<!--
+  This fragment is intended to be swapped into the #store-list-results div in checkout.html.
+  It receives a list of 'stores' and renders them as selectable radio buttons.
+-->
+<div th:fragment="store-list-fragment(stores)">
+    <div th:if="${stores.isEmpty()}">
+        <p style="padding: 20px; text-align: center; color: #666;">No stores found matching your search.</p>
     </div>
-    <div th:if="${stores.isEmpty()}" style="padding: 20px; text-align: center; color: #666;">
-        <p>No stores found matching your search.</p>
+
+    <!--
+      Each store is presented as a radio button option.
+      The 'delivery-option' class is used to maintain consistent styling with other options on the page.
+    -->
+    <div th:each="store : ${stores}" class="delivery-option">
+        <!-- The 'name' attribute "storeId" must match the @RequestParam in the CheckoutController's saveDelivery method -->
+        <input type="radio" name="storeId" th:value="${store.id}" th:id="'store-' + ${store.id}" required
+               th:checked="${selectedStoreId != null and selectedStoreId == store.id}">
+        <label th:for="'store-' + ${store.id}">
+            <strong th:text="${store.name}">DALI Store Name</strong>
+        </label>
     </div>
 </div>
 

@@ -153,11 +153,11 @@
                 <!-- Store chooser for pickup -->
                 <div id="store-pickup-selector" style="display: none; margin-top: 20px; padding: 20px; border: 1px dashed #ccc; border-radius: 8px;">
                     <h4>Select a Pickup Location</h4>
-                    <input type="search" name="storeQuery" placeholder="Search for a DALI store..."
+                    <!-- FIXED: Corrected name to 'query' and removed hx-include -->
+                    <input type="search" name="query" placeholder="Search for a DALI store..."
                            hx-get="/stores/search-for-checkout"
                            hx-trigger="keyup changed delay:300ms, search"
                            hx-target="#store-list-results"
-                           hx-include="this"
                            class="main-search-input" style="margin-bottom: 15px; border-radius: 30px;">
 
                     <div id="store-list-results" style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px;">
