@@ -61,10 +61,10 @@
                 <div class="payment-method-section">
                     <h3>Payment</h3>
                     <div class="payment-box">
-                        <img th:if="*{paymentMethod.contains('Maya')}" th:src="@{/images/gcash.png}" alt="Maya">
+                        <img th:if="*{paymentMethod.contains('Maya')}" th:src="@{/images/maya.png}" alt="Maya">
                         <img th:if="*{paymentMethod.contains('COD')}" th:src="@{/images/cod.png}" alt="COD">
                         <img th:if="*{paymentMethod.contains('Card')}" th:src="@{/images/credit-card.png}" alt="Card">
-                        <span th:text="*{paymentMethod}">GCash e-Wallet</span>
+                        <span th:text="*{paymentMethod}">Maya e-Wallet</span>
                     </div>
                     <div style="margin-top: 10px; font-weight: 600;"
                          th:classappend="*{paymentStatus.name() == 'PAID'} ? 'text-success' : 'text-warning'">
