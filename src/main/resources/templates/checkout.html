@@ -24,21 +24,37 @@
         #shipping-map { height: 450px; width: 100%; margin-top: 15px; border-radius: 5px; }
         .location-map-btn { background: none; border: none; color: #b21984; text-decoration: underline; cursor: pointer; font-size: 0.9rem; padding: 0 5px; }
 
+        /* Hide the actual radio button */
+        #store-list-results input[type="radio"] {
+            display: none;
+        }
+
+        /* The container for each option no longer needs styling itself. */
+        #store-list-results .delivery-option {
+            margin-bottom: 10px;
+            display: flex;
+        }
+
+        /* The label becomes the visible, clickable box. */
         #store-list-results .delivery-option label {
             display: block;
             padding: 15px;
             width: 100%;
             cursor: pointer;
-        }
-        #store-list-results .delivery-option {
-            border-bottom: 1px solid #eee;
-        }
-        #store-list-results .delivery-option:last-child {
-            border-bottom: none;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            transition: all 0.2s ease-in-out;
         }
 
+        /* Hover effect for the label */
+        #store-list-results .delivery-option label:hover {
+            border-color: #adadad;
+        }
+
+        /* Style for the selected (checked) label, mimicking other selectors. */
         #store-list-results input[type="radio"]:checked + label {
-            background-color: #fdeff5;
+            border-color: #b21984;
+            box-shadow: 0 0 0 2px rgba(178, 25, 132, 0.2);
             font-weight: bold;
         }
     </style>
@@ -153,7 +169,6 @@
                 <!-- Store chooser for pickup -->
                 <div id="store-pickup-selector" style="display: none; margin-top: 20px; padding: 20px; border: 1px dashed #ccc; border-radius: 8px;">
                     <h4>Select a Pickup Location</h4>
-                    <!-- FIXED: Corrected name to 'query' and removed hx-include -->
                     <input type="search" name="query" placeholder="Search for a DALI store..."
                            hx-get="/stores/search-for-checkout"
                            hx-trigger="keyup changed delay:300ms, search"
@@ -184,10 +199,9 @@
                         </label>
                     </div>
                     <div class="payment-option">
-                        <!-- --- CORRECTED: Value is now "Maya" --- -->
                         <input type="radio" name="paymentMethod" value="Maya" id="pay-maya" required checked>
                         <label for="pay-maya">
-                            <img th:src="@{/images/gcash.png}" alt="Maya"> <!-- Icon can be updated later -->
+                            <img th:src="@{/images/gcash.png}" alt="Maya">
                             <div><strong>Maya</strong><p>Pay with your Maya wallet.</p></div>
                         </label>
                     </div>
