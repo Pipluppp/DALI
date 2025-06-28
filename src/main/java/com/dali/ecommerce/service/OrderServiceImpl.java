@@ -19,17 +19,21 @@ public class OrderServiceImpl implements OrderService {
     private final AccountRepository accountRepository;
     private final AddressRepository addressRepository;
     private final CartItemRepository cartItemRepository;
+    private final StoreRepository storeRepository;
     private final ProductRepository productRepository;
     private final OrderHistoryRepository orderHistoryRepository;
+    private final OrderPickupRepository orderPickupRepository;
 
-    public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, AccountRepository accountRepository, AddressRepository addressRepository, CartItemRepository cartItemRepository, ProductRepository productRepository, OrderHistoryRepository orderHistoryRepository) {
+    public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, AccountRepository accountRepository, AddressRepository addressRepository, CartItemRepository cartItemRepository, StoreRepository storeRepository, ProductRepository productRepository, OrderHistoryRepository orderHistoryRepository, OrderPickupRepository orderPickupRepository) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.accountRepository = accountRepository;
         this.addressRepository = addressRepository;
         this.cartItemRepository = cartItemRepository;
+        this.storeRepository = storeRepository;
         this.productRepository = productRepository;
         this.orderHistoryRepository = orderHistoryRepository;
+        this.orderPickupRepository = orderPickupRepository;
     }
 
     @Override
@@ -56,6 +60,8 @@ public class OrderServiceImpl implements OrderService {
 
         createOrderHistoryEvent(savedOrder, ShippingStatus.PROCESSING, "Order placed successfully (COD). Awaiting delivery and payment.");
         processStockForPaidOrder(savedOrder.getOrderId());
+        // Handle pickup details if necessary, though this path is mainly for delivery
+        createOrderPickupDetails(savedOrder, checkoutDetails);
         return savedOrder;
     }
 
@@ -78,6 +84,7 @@ public class OrderServiceImpl implements OrderService {
         }
         orderItemRepository.saveAll(orderItems);
         savedOrder.setOrderItems(orderItems);
+        createOrderPickupDetails(savedOrder, checkoutDetails);
         return savedOrder;
     }
 
@@ -225,6 +232,23 @@ public class OrderServiceImpl implements OrderService {
         return order;
     }
 
+    private void createOrderPickupDetails(Order savedOrder, Map<String, Object> checkoutDetails) {
+        if ("Pickup Delivery".equals(savedOrder.getDeliveryMethod())) {
+            Integer storeId = (Integer) checkoutDetails.get("storeId");
+            if (storeId == null) {
+                throw new IllegalStateException("Store ID is required for Pickup Delivery but was not found in checkout details.");
+            }
+            Store pickupStore = storeRepository.findById(storeId)
+                    .orElseThrow(() -> new RuntimeException("Selected pickup store with ID " + storeId + " not found."));
+
+            OrderPickup orderPickup = new OrderPickup();
+            orderPickup.setOrder(savedOrder);
+            orderPickup.setStore(pickupStore);
+            orderPickupRepository.save(orderPickup);
+
+            savedOrder.setOrderPickup(orderPickup);
+        }
+    }
     @Override
     public Order findOrderById(Integer orderId) {
         return orderRepository.findById(orderId)

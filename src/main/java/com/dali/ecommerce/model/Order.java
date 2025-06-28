@@ -15,10 +15,6 @@ public class Order {
     private Integer orderId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "store_id")
-    private Store store;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
@@ -59,6 +55,8 @@ public class Order {
     @OrderBy("eventTimestamp DESC")
     private List<OrderHistory> orderHistory;
 
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private OrderPickup orderPickup;
 
     @PrePersist
     protected void onCreate() {
@@ -94,8 +92,6 @@ public class Order {
     // Getters and Setters
     public Integer getOrderId() { return orderId; }
     public void setOrderId(Integer orderId) { this.orderId = orderId; }
-    public Store getStore() { return store; }
-    public void setStore(Store store) { this.store = store; }
     public Account getAccount() { return account; }
     public void setAccount(Account account) { this.account = account; }
     public Address getAddress() { return address; }
@@ -120,4 +116,12 @@ public class Order {
     public void setOrderItems(List<OrderItem> orderItems) { this.orderItems = orderItems; }
     public List<OrderHistory> getOrderHistory() { return orderHistory; }
     public void setOrderHistory(List<OrderHistory> orderHistory) { this.orderHistory = orderHistory; }
+
+    public OrderPickup getOrderPickup() {
+        return orderPickup;
+    }
+
+    public void setOrderPickup(OrderPickup orderPickup) {
+        this.orderPickup = orderPickup;
+    }
 }

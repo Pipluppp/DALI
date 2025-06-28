@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.dali.ecommerce.repository.AddressRepository;
+import com.dali.ecommerce.repository.StoreRepository;
 import com.dali.ecommerce.service.ShippingService;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -37,14 +38,16 @@ public class CheckoutController {
     private final ShippingService shippingService;
     private final AddressRepository addressRepository;
     private final MayaService mayaService;
+    private final StoreRepository storeRepository;
 
-    public CheckoutController(AccountRepository accountRepository, CartService cartService, OrderService orderService, ShippingService shippingService, AddressRepository addressRepository, MayaService mayaService) {
+    public CheckoutController(AccountRepository accountRepository, CartService cartService, OrderService orderService, ShippingService shippingService, AddressRepository addressRepository, MayaService mayaService, StoreRepository storeRepository) {
         this.accountRepository = accountRepository;
         this.cartService = cartService;
         this.orderService = orderService;
         this.shippingService = shippingService;
         this.addressRepository = addressRepository;
         this.mayaService = mayaService;
+        this.storeRepository = storeRepository;
     }
 
     @ModelAttribute("checkoutDetails")
@@ -125,26 +128,37 @@ public class CheckoutController {
         model.addAttribute("warehouseLon", shippingService.getWarehouseLon());
         model.addAttribute("customerAddress", customerAddress);
 
+        // For pickup option, load all stores
+        model.addAttribute("stores", storeRepository.findAll());
+
         return "checkout";
     }
 
     @PostMapping("/shipping")
-    public String saveDelivery(@RequestParam("deliveryMethod") String deliveryMethod,
-                               @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails) {
+    public String saveDelivery(@RequestParam("deliveryMethod") String deliveryMethod, @RequestParam(name="storeId", required = false) Integer storeId,
+                               @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails,
+                               RedirectAttributes redirectAttributes) {
 
-        Integer addressId = (Integer) checkoutDetails.get("addressId");
-        if (addressId == null) {
-            return "redirect:/checkout/address";
+        if ("Pickup Delivery".equalsIgnoreCase(deliveryMethod)) {
+            if (storeId == null) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Please select a pickup store.");
+                return "redirect:/checkout/shipping";
+            }
+            checkoutDetails.put("storeId", storeId);
+            checkoutDetails.put("shippingFee", 0.0);
+        } else {
+            checkoutDetails.remove("storeId");
+            Integer addressId = (Integer) checkoutDetails.get("addressId");
+            if (addressId == null) {
+                return "redirect:/checkout/address";
+            }
+            Address customerAddress = addressRepository.findById(addressId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Selected address not found"));
+            double finalShippingFee = shippingService.calculateShippingFee(customerAddress, deliveryMethod);
+            checkoutDetails.put("shippingFee", finalShippingFee);
         }
 
-        Address customerAddress = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Selected address not found"));
-
-        double finalShippingFee = shippingService.calculateShippingFee(customerAddress, deliveryMethod);
-
         checkoutDetails.put("deliveryMethod", deliveryMethod);
-        checkoutDetails.put("shippingFee", finalShippingFee);
-
         return "redirect:/checkout/payment";
     }
 
@@ -216,19 +230,24 @@ public class CheckoutController {
                                       @ModelAttribute("checkoutDetails") Map<String, Object> checkoutDetails,
                                       Model model) {
         Integer addressId = (Integer) checkoutDetails.get("addressId");
-        if (addressId == null) {
-            populateCheckoutModel(model, authentication, session, checkoutDetails);
-            return "fragments/checkout-summary-update";
+
+        // For pickup, the fee is always 0.
+        if ("Pickup Delivery".equalsIgnoreCase(deliveryMethod)) {
+            checkoutDetails.put("shippingFee", 0.0);
+        } else {
+            // For other methods, calculate based on address
+            if (addressId == null) {
+                // Fallback if address isn't set, though it should be
+                populateCheckoutModel(model, authentication, session, checkoutDetails);
+                return "fragments/checkout-summary-update";
+            }
+            Address customerAddress = addressRepository.findById(addressId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Selected address not found"));
+            double finalShippingFee = shippingService.calculateShippingFee(customerAddress, deliveryMethod);
+            checkoutDetails.put("shippingFee", finalShippingFee);
         }
 
-        Address customerAddress = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Selected address not found"));
-
-        double finalShippingFee = shippingService.calculateShippingFee(customerAddress, deliveryMethod);
-
-        checkoutDetails.put("shippingFee", finalShippingFee);
         checkoutDetails.put("deliveryMethod", deliveryMethod);
-
         populateCheckoutModel(model, authentication, session, checkoutDetails);
 
         return "fragments/checkout-summary-update";

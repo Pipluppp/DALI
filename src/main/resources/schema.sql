@@ -1,5 +1,6 @@
 -- Drop tables in order of dependency to avoid foreign key constraints errors.
 DROP TABLE IF EXISTS order_history CASCADE;
+DROP TABLE IF EXISTS order_pickups CASCADE;
 DROP TABLE IF EXISTS admin_accounts CASCADE;
 DROP TABLE IF EXISTS order_items CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
@@ -91,7 +92,6 @@ CREATE TABLE cart_items (
 
 CREATE TABLE orders (
                         order_id                SERIAL PRIMARY KEY,
-                        store_id                INTEGER REFERENCES stores(store_id),
                         account_id              INTEGER NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
                         address_id              INTEGER NOT NULL REFERENCES addresses(address_id),
                         payment_status          VARCHAR(255) NOT NULL CHECK (payment_status IN ('PENDING', 'PAID')),
@@ -109,6 +109,12 @@ CREATE TABLE order_items (
                              order_id      INTEGER NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
                              product_id    INTEGER NOT NULL REFERENCES products(product_id),
                              quantity      INTEGER NOT NULL
+);
+
+CREATE TABLE order_pickups (
+                               order_pickup_id SERIAL PRIMARY KEY,
+                               order_id        INTEGER NOT NULL UNIQUE REFERENCES orders(order_id) ON DELETE CASCADE, -- The link to the orders table. It MUST be unique.
+                               store_id        INTEGER NOT NULL REFERENCES stores(store_id)
 );
 
 CREATE TABLE order_history (

@@ -23,7 +23,39 @@
         #shipping-map-modal .map-modal-content { max-width: 800px; }
         #shipping-map { height: 450px; width: 100%; margin-top: 15px; border-radius: 5px; }
         .location-map-btn { background: none; border: none; color: #b21984; text-decoration: underline; cursor: pointer; font-size: 0.9rem; padding: 0 5px; }
+
+        #store-list-results .delivery-option label {
+            display: block;
+            padding: 15px;
+            width: 100%;
+            cursor: pointer;
+        }
+        #store-list-results .delivery-option {
+            border-bottom: 1px solid #eee;
+        }
+        #store-list-results .delivery-option:last-child {
+            border-bottom: none;
+        }
+
+        #store-list-results input[type="radio"]:checked + label {
+            background-color: #fdeff5;
+            font-weight: bold;
+        }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const deliveryOptions = document.querySelectorAll('input[name="deliveryMethod"]');
+            const storeSelector = document.getElementById('store-pickup-selector');
+
+            function toggleStoreSelector() {
+                const selectedOption = document.querySelector('input[name="deliveryMethod"]:checked');
+                storeSelector.style.display = (selectedOption && selectedOption.value === 'Pickup Delivery') ? 'block' : 'none';
+            }
+
+            deliveryOptions.forEach(option => option.addEventListener('change', toggleStoreSelector));
+            toggleStoreSelector(); // Initial check on page load
+        });
+    </script>
 </head>
 <body>
 <div class="checkout-page-wrapper">
@@ -102,7 +134,7 @@
                      hx-trigger="change"
                      hx-swap="none">
                     <div class="delivery-option">
-                        <input type="radio" name="deliveryMethod" value="Standard Delivery" id="del-standard" required
+                        <input type="radio" name="deliveryMethod" value="Standard Delivery" id="del-standard"
                                th:checked="${checkoutDetails['deliveryMethod'] == 'Standard Delivery' or checkoutDetails['deliveryMethod'] == null}">
                         <label for="del-standard"><strong>Standard Delivery</strong><p>Within the day</p></label>
                     </div>
@@ -117,6 +149,23 @@
                         <label for="del-pickup"><strong>Pickup Delivery</strong><p>Pickup after 2-3 hours</p></label>
                     </div>
                 </div>
+
+                <!-- Store chooser for pickup -->
+                <div id="store-pickup-selector" style="display: none; margin-top: 20px; padding: 20px; border: 1px dashed #ccc; border-radius: 8px;">
+                    <h4>Select a Pickup Location</h4>
+                    <input type="search" name="storeQuery" placeholder="Search for a DALI store..."
+                           hx-get="/stores/search-for-checkout"
+                           hx-trigger="keyup changed delay:300ms, search"
+                           hx-target="#store-list-results"
+                           hx-include="this"
+                           class="main-search-input" style="margin-bottom: 15px; border-radius: 30px;">
+
+                    <div id="store-list-results" style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px;">
+                        <!-- Initial store list will be loaded here via fragment -->
+                        <div th:replace="~{fragments/checkout-store-list :: store-list-fragment(stores=${stores})}"></div>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-primary checkout-btn">Proceed</button>
             </form>
         </div>

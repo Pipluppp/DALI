@@ -45,4 +45,17 @@ public class StoreController {
     public List<Store> getAllStoresApi() {
         return storeRepository.findAll();
     }
+
+    // Endpoint for the checkout store chooser
+    @GetMapping("/stores/search-for-checkout")
+    public String searchStoresForCheckout(@RequestParam(value = "query", required = false) String query, Model model) {
+        List<Store> stores;
+        if (query != null && !query.trim().isEmpty()) {
+            stores = storeRepository.findByNameContainingIgnoreCase(query);
+        } else {
+            stores = storeRepository.findAll();
+        }
+        model.addAttribute("stores", stores);
+        return "fragments/checkout-store-list :: store-list-fragment";
+    }
 }
