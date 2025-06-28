@@ -2,122 +2,15 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login - DALI</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <style>
-        body {
-            background-color: #b21984;
-            font-family: 'Poppins', sans-serif;
-        }
-        .admin-login-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .admin-login-card {
-            display: flex;
-            max-width: 800px;
-            width: 100%;
-            background-color: #fff;
-            border-radius: 16px;
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-            overflow: hidden;
-        }
-        .admin-image-panel {
-            flex-basis: 45%;
-            padding: 24px;
-            background: linear-gradient(160deg, #fef08a, #f9a8d4, #a5f3fc); /* Yellow, Pink, Teal */
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .admin-image-panel .back-to-shop-btn {
-            display: inline-flex;
-            align-items: center;
-            padding: 8px 16px;
-            border-radius: 9999px;
-            border: 1px solid rgba(0,0,0,0.1);
-            text-decoration: none;
-            color: #1e293b;
-            font-weight: 600;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(4px);
-            font-size: 0.875rem;
-        }
-        .admin-image-panel .cart-image-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        /* We assume an image exists at /images/mini-cart.png */
-        .admin-image-panel .cart-image-container img {
-            max-width: 90%;
-            height: auto;
-            filter: drop-shadow(0 10px 8px rgba(0,0,0,0.2));
-        }
-        .admin-form-panel {
-            flex-basis: 55%;
-            padding: 48px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .admin-form-panel h2 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #111827;
-            text-align: center;
-            margin-bottom: 32px;
-        }
-        .form-group { margin-bottom: 1rem; }
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 1rem;
-        }
-        .form-control::placeholder {
-            color: #9ca3af;
-        }
-        .forgot-password-link {
-            display: block;
-            text-align: right;
-            font-size: 0.875rem;
-            color: #6b7280;
-            text-decoration: none;
-            margin-top: -8px; /* Pull it up a bit */
-            margin-bottom: 24px;
-        }
-        .login-btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            background-color: #b21984;
-            color: #fff;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .login-btn:hover { background-color: #b21984; }
-        .auth-error {
-            background-color: #fee2e2;
-            color: #991b1b;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            text-align: center;
-            font-size: 0.875rem;
-        }
-    </style>
+    
+
 </head>
 <body>
 <div class="admin-login-wrapper">
