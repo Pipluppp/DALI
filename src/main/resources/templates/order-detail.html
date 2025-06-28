@@ -2,23 +2,20 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title th:text="'Order #' + ${order.orderId} + ' - DALI'">Order Details</title>
+    <title th:text="'Order #' + ${order.orderId}">Order Details</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 <body>
-<header th:replace="~{fragments/header :: header}"></header>
-
+<header class="header" th:replace="~{fragments/header :: header}"></header>
 <main class="order-detail-page">
     <div class="container" th:object="${order}">
-
         <a th:href="@{/profile}" class="order-detail-back-link">
             <span>←</span>  Back to Profile
         </a>
@@ -27,67 +24,59 @@
         <div th:if="${successMessage}" class="auth-success" th:text="${successMessage}"></div>
         <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}"></div>
 
+
         <div class="order-detail-card" style="margin-top: 20px;">
             <div class="order-detail-header">
                 <h1 th:text="'Order #' + *{orderId}">Order #2200113271</h1>
-                <p class="order-meta">
-                    <span>Online Purchase</span> •
-                    <span th:text="${#temporals.format(order.createdAt, 'EEEE, MMMM d, yyyy')}"></span>
+                <p class="order-meta" th:text="'Placed on ' + ${#temporals.format(order.createdAt, 'EEEE, MMMM d, yyyy')}">Placed on Friday, March 29, 2024</p>
+            </div>
+
+            <!-- Pickup Info Highlight -->
+            <div th:if="*{deliveryMethod == 'Pickup Delivery' and orderPickup != null}" style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #22c55e;">
+                <h4 style="margin:0; font-size: 1.1rem; color: #15803d;">Click & Collect Order</h4>
+                <p style="margin:5px 0 0; color: #166534;">
+                    Pickup Location: <strong th:text="*{orderPickup.store.name}"></strong>
                 </p>
-
-                <!-- PICKUP INFO HIGHLIGHT -->
-                <div th:if="*{deliveryMethod == 'Pickup Delivery' and orderPickup != null}" style="background: #fefce8; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #eab308;">
-                    <h4 style="margin:0; font-size: 1.1rem; color: #854d0e;">Click & Collect Order</h4>
-                    <p style="margin:5px 0 0; color: #854d0e;">
-                        Please pick up from: <strong th:text="*{orderPickup.store.name}"></strong>
-                    </p>
-                    <!-- REUSABLE FRAGMENT: Replace old map code with this single line -->
-                    <div th:if="*{orderPickup.store.latitude != null and orderPickup.store.longitude != null}"
-                         th:replace="~{fragments/pickup-location-map :: map-fragment(lat=*{orderPickup.store.latitude}, lng=*{orderPickup.store.longitude}, name=*{orderPickup.store.name})}">
-                    </div>
-                </div>
-                <div th:if="*{deliveryMethod != 'Pickup Delivery'}" style="margin-top: 15px;">
-                    <strong>Shipping to:</strong> <span th:text="*{address.getFullAddress()}"></span>
-                </div>
-
-                <div th:if="*{paymentTransactionId}" style="font-size: 0.8rem; color: #666; margin-top: 5px;">
-                    Maya Transaction ID: <span th:text="*{paymentTransactionId}"></span>
+                <div th:if="*{orderPickup.store.latitude != null and orderPickup.store.longitude != null}"
+                     th:replace="~{fragments/pickup-location-map :: map-fragment(lat=*{orderPickup.store.latitude}, lng=*{orderPickup.store.longitude}, name=*{orderPickup.store.name})}">
                 </div>
             </div>
 
-            <div class="order-detail-grid">
-                <div class="payment-method-section">
-                    <h3>Payment</h3>
-                    <div class="payment-box">
-                        <img th:if="*{paymentMethod.contains('Maya')}" th:src="@{/images/maya.png}" alt="Maya">
-                        <img th:if="*{paymentMethod.contains('COD')}" th:src="@{/images/cod.png}" alt="COD">
-                        <img th:if="*{paymentMethod.contains('Card')}" th:src="@{/images/credit-card.png}" alt="Card">
-                        <span th:text="*{paymentMethod}"></span>
+            <!-- Shipping Info -->
+            <div th:if="*{deliveryMethod != 'Pickup Delivery'}" style="margin-top: 15px;">
+                <strong>Shipping to:</strong> <span th:text="*{address.getFullAddress()}"></span>
+            </div>
+
+            <div class="order-status-section">
+                <h3>Current Status</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div class="status-display">
+                        <span class="status-dot" th:classappend="*{shippingStatus.cssClass}"></span>
+                        <!-- Conditional text for pickup -->
+                        <span th:if="*{deliveryMethod == 'Pickup Delivery' and shippingStatus.name() == 'DELIVERED'}">Your order is ready for pickup.</span>
+                        <span th:if="*{deliveryMethod != 'Pickup Delivery' or shippingStatus.name() != 'DELIVERED'}" th:text="*{shippingStatus.description}">Processing</span>
                     </div>
-                    <div style="margin-top: 10px; font-weight: 600;"
-                         th:classappend="*{paymentStatus.name() == 'PAID'} ? 'text-success' : 'text-warning'">
-                        Status: <span th:text="*{paymentStatus.displayName}"></span>
-                    </div>
-                </div>
-                <div class="order-summary-section">
-                    <h3>Order Summary</h3>
-                    <div class="summary-details">
-                        <div class="summary-line"><span>Subtotal</span> <span th:text="'₱' + ${#numbers.formatDecimal(order.getSubtotal(), 1, 'COMMA', 2, 'POINT')}"></span></div>
-                        <div class="summary-line"><span>Discount</span> <span>₱0.00</span></div>
-                        <div class="summary-line"><span>Shipping</span> <span th:text="'₱' + ${#numbers.formatDecimal(order.getShippingFee(), 1, 'COMMA', 2, 'POINT')}"></span></div>
-                        <div class="summary-line total"><span>Total</span> <span th:text="'₱' + ${#numbers.formatDecimal(order.totalPrice, 1, 'COMMA', 2, 'POINT')}"></span></div>
+                    <div style="font-weight: 600; padding-left: 22px;"
+                         th:classappend="*{paymentStatus.name() == 'PAID'} ? 'text-success' : (*{paymentStatus.name() == 'PENDING'} ? 'text-warning' : 'text-danger')">
+                        Payment Status: <span th:text="*{paymentStatus.displayName}"></span>
                     </div>
                 </div>
+            </div>
+
+            <!-- Order Cancel Button -->
+            <div th:if="*{shippingStatus.name() == 'PROCESSING'}" style="margin-top: 20px;">
+                <form th:action="@{/order/{id}/cancel(id=*{orderId})}" method="post" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                    <button type="submit" class="btn btn-secondary btn-small">Cancel Order</button>
+                </form>
             </div>
 
             <!-- Include the timeline fragment -->
             <div th:replace="~{fragments/order-timeline :: timeline(history=${order.orderHistory})}"></div>
 
-
             <div class="order-products-section">
                 <h3>Products</h3>
                 <div class="product-list-header">
-                    <div class="product-col">Product</div>
+                    <div class="product-col"></div>
                     <div>Price</div>
                     <div>Quantity</div>
                     <div>Total Price</div>
@@ -102,17 +91,9 @@
                     <div th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 'COMMA', 2, 'POINT')}"></div>
                 </div>
             </div>
-
-            <!-- Order Actions (Cancel) -->
-            <div th:if="*{shippingStatus.name() == 'PROCESSING'}" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-                <h3>Need to change something?</h3>
-                <form th:action="@{/order/{id}/cancel(id=*{orderId})}" method="post">
-                    <button type="submit" class="btn btn-secondary" onclick="return confirm('Are you sure you want to cancel this order?')">Cancel Order</button>
-                </form>
-            </div>
         </div>
     </div>
 </main>
-<footer th:replace="~{fragments/footer :: footer}"></footer>
+<footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

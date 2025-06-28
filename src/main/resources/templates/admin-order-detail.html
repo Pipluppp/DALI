@@ -67,7 +67,7 @@
                         <span th:text="*{paymentMethod}">Maya e-Wallet</span>
                     </div>
                     <div style="margin-top: 10px; font-weight: 600;"
-                         th:classappend="*{paymentStatus.name() == 'PAID'} ? 'text-success' : 'text-warning'">
+                         th:classappend="*{paymentStatus.name() == 'PAID'} ? 'text-success' : (*{paymentStatus.name() == 'PENDING'} ? 'text-warning' : 'text-danger')">
                         Status: <span th:text="*{paymentStatus.displayName}"></span>
                     </div>
                 </div>
@@ -86,7 +86,9 @@
                 <h3>Current Shipping Status</h3>
                 <div class="status-display">
                     <span class="status-dot" th:classappend="*{shippingStatus.cssClass}"></span>
-                    <span th:text="*{shippingStatus.description}">Processing</span>
+                    <!-- Conditional text for pickup -->
+                    <span th:if="*{deliveryMethod == 'Pickup Delivery' and shippingStatus.name() == 'DELIVERED'}">Your order is ready for pickup.</span>
+                    <span th:if="*{deliveryMethod != 'Pickup Delivery' or shippingStatus.name() != 'DELIVERED'}" th:text="*{shippingStatus.description}">Processing</span>
                 </div>
             </div>
 
@@ -124,8 +126,8 @@
 
                     <!-- Form for PREPARING_FOR_SHIPMENT state -->
                     <form th:if="*{shippingStatus.name() == 'PREPARING_FOR_SHIPMENT'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
-                        <button type="submit" name="status" th:value="IN_TRANSIT" class="btn btn-primary">Mark as In Transit</button>
-                        <button type="submit" name="status" th:value="DELIVERED" class="btn btn-primary">Mark as Delivered (e.g. Pickup)</button>
+                        <button th:if="*{deliveryMethod != 'Pickup Delivery'}" type="submit" name="status" th:value="IN_TRANSIT" class="btn btn-primary">Mark as In Transit</button>
+                        <button th:if="*{deliveryMethod == 'Pickup Delivery'}" type="submit" name="status" th:value="DELIVERED" class="btn btn-primary">Mark as Ready for Pickup</button>
                         <button type="submit" name="status" th:value="CANCELLED" class="btn btn-secondary">Cancel Order</button>
                     </form>
 
@@ -142,7 +144,13 @@
                         <button type="submit" name="status" th:value="CANCELLED" class="btn btn-secondary">Cancel Order</button>
                     </form>
 
-                    <p th:if="*{shippingStatus.name() == 'DELIVERED' or shippingStatus.name() == 'CANCELLED'}">This order is in a terminal state and cannot be updated.</p>
+                    <!-- Form for DELIVERED (Pickup) state -->
+                    <form th:if="*{shippingStatus.name() == 'DELIVERED' and deliveryMethod == 'Pickup Delivery'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
+                        <button type="submit" name="status" th:value="COLLECTED" class="btn btn-primary" style="background-color: #16a34a;">Mark as Collected by Customer</button>
+                    </form>
+
+                    <!-- Terminal State Message -->
+                    <p th:if="(*{shippingStatus.name() == 'DELIVERED' and deliveryMethod != 'Pickup Delivery'}) or *{shippingStatus.name() == 'COLLECTED'} or *{shippingStatus.name() == 'CANCELLED'}">This order is in a terminal state and cannot be updated.</p>
                 </div>
             </div>
         </div>

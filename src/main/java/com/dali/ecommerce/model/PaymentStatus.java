@@ -2,7 +2,8 @@ package com.dali.ecommerce.model;
 
 public enum PaymentStatus {
     PENDING("Pending"),
-    PAID("Paid");
+    PAID("Paid"),
+    CANCELLED("Cancelled");
 
     private final String displayName;
 

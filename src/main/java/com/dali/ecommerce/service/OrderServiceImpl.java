@@ -208,6 +208,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
         if (order.getShippingStatus() != ShippingStatus.CANCELLED) {
             order.setShippingStatus(ShippingStatus.CANCELLED);
+            order.setPaymentStatus(PaymentStatus.CANCELLED); // Set payment status to cancelled
             createOrderHistoryEvent(order, ShippingStatus.CANCELLED, "Payment failed or was cancelled by the user.");
             orderRepository.save(order);
         }
@@ -262,12 +263,18 @@ public class OrderServiceImpl implements OrderService {
         if (order.getPaymentStatus() == PaymentStatus.PENDING && !"Cash on delivery (COD)".equals(order.getPaymentMethod())) {
             throw new IllegalStateException("Cannot update shipping for an order with PENDING online payment.");
         }
-        if (order.getShippingStatus() == ShippingStatus.DELIVERED || order.getShippingStatus() == ShippingStatus.CANCELLED) {
+
+        if (order.getShippingStatus() == ShippingStatus.COLLECTED || order.getShippingStatus() == ShippingStatus.CANCELLED) {
             throw new IllegalStateException("Cannot update order from its current terminal state: " + order.getShippingStatus());
         }
+
         if (newStatus == ShippingStatus.CANCELLED && order.getShippingStatus() != ShippingStatus.CANCELLED) {
             if(order.getPaymentStatus() == PaymentStatus.PAID || "Cash on delivery (COD)".equals(order.getPaymentMethod())) {
                 restoreStockForOrder(order);
+            }
+            // If the payment was pending, also mark it as cancelled.
+            if (order.getPaymentStatus() == PaymentStatus.PENDING) {
+                order.setPaymentStatus(PaymentStatus.CANCELLED);
             }
         }
         order.setShippingStatus(newStatus);
@@ -279,7 +286,12 @@ public class OrderServiceImpl implements OrderService {
             } else {
                 historyNotes = "Order cancelled by DALI Admin.";
             }
-        } else {
+        } else if (newStatus == ShippingStatus.COLLECTED) {
+            historyNotes = "Order collected by customer from " + order.getOrderPickup().getStore().getName() + ".";
+        } else if (newStatus == ShippingStatus.DELIVERED && "Pickup Delivery".equals(order.getDeliveryMethod())) {
+            historyNotes = "Order has arrived at " + order.getOrderPickup().getStore().getName() + " and is ready for customer pickup.";
+        }
+        else {
             historyNotes = "Order status updated to '" + newStatus.name() + "' by DALI Admin.";
         }
         createOrderHistoryEvent(order, newStatus, historyNotes);
@@ -299,6 +311,10 @@ public class OrderServiceImpl implements OrderService {
         }
         if(order.getPaymentStatus() == PaymentStatus.PAID || "Cash on delivery (COD)".equals(order.getPaymentMethod())) {
             restoreStockForOrder(order);
+        }
+        // If the payment was pending, also mark it as cancelled.
+        if (order.getPaymentStatus() == PaymentStatus.PENDING) {
+            order.setPaymentStatus(PaymentStatus.CANCELLED);
         }
         order.setShippingStatus(ShippingStatus.CANCELLED);
 
