@@ -228,9 +228,7 @@ body {
 }
 
 
-/* =================================
-   4. Store Finder Page Styles
-   ================================= */
+
 /* =================================
    4. Store Finder Page Styles
    ================================= */
@@ -238,6 +236,8 @@ body {
     display: flex;
     /* Match the header and footer height to fill the screen */
     height: calc(100vh - 81px - 195px);
+    min-height: calc(100vh - 81px - 61px);
+    
 }
 
 .store-list-panel {
@@ -782,7 +782,7 @@ body {
    ================================= */
 .cart-page { padding: 50px 0; }
 .cart-page h1 { margin-bottom: 30px; }
-.cart-container { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; align-items: flex-start; }
+.cart-container { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; align-items: flex-start; min-height: calc(100vh - 81px - 61px); }
 .cart-items-panel { background: #fff; padding: 20px; border-radius: 8px; }
 .cart-item-header { display: grid; grid-template-columns: 3fr 1fr 1fr 0.5fr; padding: 10px 20px; font-weight: 600; color: #888; border-bottom: 1px solid #eee; }
 .cart-item-row { display: grid; grid-template-columns: 3fr 1fr 1fr 0.5fr; align-items: center; padding: 20px; border-bottom: 1px solid #eee; }
