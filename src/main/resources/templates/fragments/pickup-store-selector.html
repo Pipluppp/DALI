@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Pickup Store Selector Fragment
+  - A self-contained component for finding and selecting a pickup store.
+  - Includes an interactive map, search bar, and dynamic list.
+  - Expects 'stores' and 'selectedStoreId' to be passed in the model.
+-->
+<div th:fragment="selector(stores, selectedStoreId)">
+    <style>
+        /* Styles for the store map and list, scoped to this fragment */
+        #pickup-store-map {
+            height: 300px;
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+        #store-list-results input[type="radio"] {
+            display: none;
+        }
+        #store-list-results .delivery-option {
+            margin-bottom: 10px;
+            display: flex;
+        }
+        #store-list-results .delivery-option label {
+            display: block;
+            padding: 15px;
+            width: 100%;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            transition: all 0.2s ease-in-out;
+        }
+        #store-list-results .delivery-option label:hover {
+            border-color: #adadad;
+        }
+        #store-list-results input[type="radio"]:checked + label {
+            border-color: #b21984;
+            box-shadow: 0 0 0 2px rgba(178, 25, 132, 0.2);
+            font-weight: bold;
+        }
+    </style>
+
+    <h4>Select a Pickup Location</h4>
+
+    <!-- Map container -->
+    <div id="pickup-store-map"></div>
+
+    <!-- Search input -->
+    <input type="search" id="store-search-input" name="query" placeholder="Search or select a pin from the map..."
+           hx-get="/stores/search-for-checkout"
+           hx-trigger="keyup changed delay:300ms, search"
+           hx-target="#store-list-results"
+           class="main-search-input" style="margin-bottom: 15px; border-radius: 30px;">
+
+    <!-- HTMX results container -->
+    <div id="store-list-results" style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px;">
+        <!-- The store list is rendered by its own fragment, passed in from the controller -->
+        <div th:replace="~{fragments/checkout-store-list :: store-list-fragment(stores=${stores}, selectedStoreId=${selectedStoreId})}"></div>
+    </div>
+
+    <!-- JavaScript for map interactivity -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let pickupMap;
+            const markerMap = new Map();
+            const mapContainer = document.getElementById('pickup-store-map');
+            const storeListResults = document.getElementById('store-list-results');
+            const storeSelectorSection = document.getElementById('store-pickup-selector');
+            let storeIdToSelectAfterLoad = null; // Variable to hold the ID of the clicked store
+
+            function initializePickupMap() {
+                if (!mapContainer || pickupMap) return;
+
+                pickupMap = L.map(mapContainer).setView([14.5995, 120.9842], 11);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                    attribution: '© OpenStreetMap contributors © CARTO',
+                }).addTo(pickupMap);
+
+                const pinkIcon = L.divIcon({
+                    html: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#b21984" width="32px" height="32px"><path d="M12 0C7.8 0 4 3.8 4 8.5c0 5.1 8 15.5 8 15.5s8-10.4 8-15.5C20 3.8 16.2 0 12 0zm0 12a3 3 0 110-6 3 3 0 010 6z"/></svg>`,
+                    className: '', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
+                });
+
+                fetch('/api/stores')
+                    .then(response => response.json())
+                    .then(stores => {
+                        stores.forEach(store => {
+                            if (store.latitude && store.longitude) {
+                                const marker = L.marker([store.latitude, store.longitude], { icon: pinkIcon }).addTo(pickupMap);
+                                marker.bindPopup(`<b>${store.name}</b>`);
+                                markerMap.set(store.id, marker);
+
+                                // FIX: Updated marker click logic
+                                marker.on('click', () => {
+                                    const searchInput = document.getElementById('store-search-input');
+                                    // 1. Store the ID of the store to be selected
+                                    storeIdToSelectAfterLoad = store.id;
+                                    // 2. Set the search input value
+                                    if (searchInput) searchInput.value = store.name;
+                                    // 3. Trigger the HTMX search
+                                    htmx.trigger(searchInput, 'search');
+                                });
+                            }
+                        });
+                    });
+                setTimeout(() => pickupMap.invalidateSize(), 10);
+            }
+
+            const observer = new MutationObserver((mutations) => {
+                for (let mutation of mutations) {
+                    if (mutation.attributeName === 'style' && storeSelectorSection.style.display === 'block') {
+                        initializePickupMap();
+                    }
+                }
+            });
+
+            if (storeSelectorSection) {
+                observer.observe(storeSelectorSection, { attributes: true });
+            }
+
+            if (storeListResults) {
+                storeListResults.addEventListener('click', (event) => {
+                    const storeItem = event.target.closest('.delivery-option');
+                    if (!storeItem || !pickupMap) return;
+
+                    const lat = parseFloat(storeItem.dataset.lat);
+                    const lng = parseFloat(storeItem.dataset.lng);
+                    const storeId = parseInt(storeItem.dataset.storeId, 10);
+
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        pickupMap.flyTo([lat, lng], 15);
+                        if (markerMap.has(storeId)) {
+                            setTimeout(() => markerMap.get(storeId).openPopup(), 400);
+                        }
+                    }
+                });
+
+                storeListResults.addEventListener('htmx:afterSettle', function() {
+                    if (storeIdToSelectAfterLoad) {
+                        const radioToSelect = document.getElementById('store-' + storeIdToSelectAfterLoad);
+                        if (radioToSelect) {
+                            radioToSelect.checked = true;
+                        }
+                        storeIdToSelectAfterLoad = null;
+                    }
+                });
+            }
+        });
+    </script>
+</div>
+</body>
+</html>
