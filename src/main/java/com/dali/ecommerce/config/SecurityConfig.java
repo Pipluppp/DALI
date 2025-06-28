@@ -87,14 +87,12 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain customerFilterChain(HttpSecurity http) throws Exception {
         http
-                // Disable CSRF for webhooks and payment callbacks
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/webhooks/**")
-                )
+                // CSRF is enabled by default, no need to ignore non-existent webhook paths.
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/checkout/recalculate")) // Keep for HTMX if needed
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login").anonymous()
-                        // PERMIT ALL these paths, including new payment and webhook endpoints
-                        .requestMatchers("/", "/register", "/shop/**", "/stores", "/stores/search", "/api/stores", "/product/**", "/css/**", "/images/**", "/js/**", "/cart/**", "/forgot-password", "/reset-password", "/api/locations/**", "/payment/callback/**", "/webhooks/**").permitAll()
+                        // PERMIT ALL these paths, removing webhooks
+                        .requestMatchers("/", "/register", "/shop/**", "/stores", "/stores/search", "/api/stores", "/product/**", "/css/**", "/images/**", "/js/**", "/cart/**", "/forgot-password", "/reset-password", "/api/locations/**", "/payment/callback/**").permitAll()
                         .requestMatchers("/profile", "/checkout/**").authenticated()
                         .anyRequest().authenticated()
                 )

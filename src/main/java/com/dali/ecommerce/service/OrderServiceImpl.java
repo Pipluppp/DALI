@@ -97,21 +97,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void processSuccessfulPayment(Integer orderId, String mayaCheckoutId) {
-        boolean paymentRecorded = recordPayment(orderId, mayaCheckoutId);
-
-        if (paymentRecorded) {
-            try {
-                this.processStockForPaidOrder(orderId);
-            } catch (Exception e) {
-                System.err.println("CRITICAL: Payment for order " + orderId + " was successful, but stock processing failed: " + e.getMessage());
-                Order order = findOrderById(orderId);
-                createOrderHistoryEvent(order, order.getShippingStatus(), "FULFILLMENT FAILED: Not enough stock. Admin review required.");
-            }
-        }
-    }
-
-    @Override
     @Transactional
     public void confirmPaymentOnSuccessRedirect(Integer orderId) {
         Order order = orderRepository.findById(orderId)
@@ -142,41 +127,6 @@ public class OrderServiceImpl implements OrderService {
             createOrderHistoryEvent(order, order.getShippingStatus(), "FULFILLMENT FAILED: Not enough stock. Admin review required.");
             throw e; // Re-throw to let the controller handle the redirect
         }
-    }
-
-
-    @Transactional
-    protected boolean recordPayment(Integer orderId, String mayaCheckoutId) {
-        if (mayaCheckoutId == null || mayaCheckoutId.trim().isEmpty()) {
-            System.out.println("Webhook for order " + orderId + " skipped due to missing transaction ID.");
-            return false;
-        }
-
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
-
-        if (order.getPaymentStatus() == PaymentStatus.PAID) {
-            System.out.println("Webhook: Order " + orderId + " is already PAID. Ignoring webhook.");
-            return false;
-        }
-
-        if (order.getPaymentTransactionId() != null && !Objects.equals(order.getPaymentTransactionId(), mayaCheckoutId)) {
-            System.err.println("Webhook: Mismatched transaction ID for order " + orderId + ". Stored: " + order.getPaymentTransactionId() + ", Received: " + mayaCheckoutId);
-            return false;
-        }
-
-        order.setPaymentStatus(PaymentStatus.PAID);
-        order.setPaymentTransactionId(mayaCheckoutId);
-
-        OrderHistory lastEvent = order.getOrderHistory().stream().findFirst().orElse(null);
-        if (lastEvent != null && lastEvent.getNotes().contains("Awaiting payment")) {
-            lastEvent.setNotes("Payment confirmed via Maya Webhook. Order is now being processed.");
-            orderHistoryRepository.save(lastEvent);
-        }
-
-        orderRepository.save(order);
-        System.out.println("Webhook: Payment for order " + orderId + " successfully recorded as PAID.");
-        return true;
     }
 
     @Override
