@@ -27,8 +27,7 @@ public class AdminAuthenticationSuccessHandler extends SavedRequestAwareAuthenti
         String username = authentication.getName();
         adminAccountRepository.findByEmail(username).ifPresent(admin -> {
             HttpSession session = request.getSession();
-            session.setAttribute("storeName", admin.getStore().getName());
-            session.setAttribute("storeId", admin.getStore().getId());
+            session.setAttribute("storeName", "DALI Carmona Warehouse Hub");
         });
 
         super.onAuthenticationSuccess(request, response, authentication);

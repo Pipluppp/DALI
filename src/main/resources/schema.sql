@@ -62,8 +62,7 @@ CREATE TABLE accounts (
 );
 
 CREATE TABLE admin_accounts (
-                                account_id      SERIAL PRIMARY KEY,
-                                store_id        INTEGER NOT NULL REFERENCES stores(store_id),
+                                admin_id      SERIAL PRIMARY KEY,
                                 account_email   VARCHAR(255) UNIQUE NOT NULL,
                                 password_hash   VARCHAR(255) NOT NULL
 );
