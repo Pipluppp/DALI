@@ -1,6 +1,6 @@
 /*
  * DALI E-COMMERCE STYLESHEET
- * Version: 1.0.0 (Refactored)
+ * Version: 1.0.1 (Refactored with fixes)
  *
  * TABLE OF CONTENTS
  * -----------------
@@ -32,6 +32,7 @@
  *    - Cart Page
  *    - Order Detail
  *    - Order Success
+ *    - Profile Page
  *    - Admin Pages
  *
  * 5. UTILITIES & STATES
@@ -481,14 +482,51 @@ h1, h2, h3, h4, h5, h6 {
     cursor: pointer;
 }
 
+/* FIX: Shared styles for product card action buttons */
+.add-to-cart-btn,
+.update-stock-btn {
+    padding: 10px;
+    background: #b21984;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    transform: translateY(0);
+}
+.add-to-cart-btn:hover,
+.update-stock-btn:hover {
+    background: #9e1673;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 15px rgba(178, 25, 132, 0.3);
+}
+.add-to-cart-btn {
+    width: auto;
+    flex-grow: 1;
+}
+.update-stock-btn {
+    flex-grow: 1;
+}
+.add-to-cart-btn-disabled {
+    width: 100%;
+    padding: 10px;
+    background: #ccc;
+    color: #666;
+    border: none;
+    border-radius: 5px;
+    cursor: not-allowed;
+    font-weight: 600;
+}
+
 
 /* --- Cards (Product, Category, Order, Auth) --- */
 
-/* Generic Card Base (Optional, for common properties) */
+/* Generic Card Base */
 .card {
     background-color: #fff;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     transition: all 0.3s ease;
 }
 
@@ -556,6 +594,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 .product-card-actions {
     padding: 0 20px 20px;
+}
+.product-card-actions form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 /* Category Card */
@@ -1224,6 +1267,15 @@ h1, h2, h3, h4, h5, h6 {
 .map-panel {
     flex-grow: 1;
     background-color: #e9e9e9;
+    /* FIX: Make map panel a flex container to allow child to fill height */
+    display: flex;
+}
+/* FIX: Make the map itself fill the height of the panel */
+#stores-map {
+    height: 100%;
+    margin-top: 0;
+    border: none;
+    border-radius: 0;
 }
 
 /* --- Shop Page --- */
@@ -1435,6 +1487,68 @@ h1, h2, h3, h4, h5, h6 {
 .success-actions { display: flex; justify-content: center; gap: 15px; }
 .success-actions .btn { border-radius: 8px; }
 
+/* --- Profile Page --- */
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+.profile-header p {
+    color: #666;
+    margin-bottom: 5px;
+}
+.profile-header h1 {
+    font-size: 2.2rem;
+    margin: 0;
+}
+.profile-sidebar {
+    padding: 30px;
+}
+.profile-main {
+    padding: 0;
+    background-color: transparent;
+    box-shadow: none;
+}
+.profile-main .card {
+    padding: 30px;
+}
+.profile-sidebar h3 {
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    color: #b21984;
+}
+.profile-sidebar ul li a {
+    display: block;
+    padding: 12px 0;
+    text-decoration: none;
+    color: #b21984;
+    font-weight: 500;
+    border-bottom: 1px solid #eee;
+}
+.profile-sidebar li:last-child a {
+    border-bottom: none;
+}
+.profile-main .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+.profile-main h2 {
+    font-size: 1.8rem;
+    margin: 0;
+}
+.address-box {
+    border: 1px solid #e0e0e0;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
 /* --- Admin Pages --- */
 .admin-orders-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
 .page-title { font-size: 2.5rem; color: #b21984; font-weight: 700; }
@@ -1442,6 +1556,18 @@ h1, h2, h3, h4, h5, h6 {
 .admin-order-search { width: 100%; padding: 12px 20px; border: 1px solid #ddd; border-radius: 30px; font-size: 1rem; }
 .no-orders-found { grid-column: 1 / -1; text-align: center; padding: 50px; background-color: #fff; border-radius: 12px; color: #666; }
 .product-stock-level { font-size: 1.2rem; font-weight: 600; color: #333; margin-bottom: 20px; }
+.inventory-update-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.inventory-update-form input {
+    width: 70px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+}
 
 
 /* ==========================================================================
