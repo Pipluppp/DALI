@@ -10,10 +10,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     List<Product> findByCategory(String category);
 
-    // Add this for the search bar
     List<Product> findByNameContainingIgnoreCase(String name);
 
-    // Add this for combined search + category filter
     List<Product> findByNameContainingIgnoreCaseAndCategory(String name, String category);
 
     @Query("SELECT DISTINCT p.category FROM Product p ORDER BY p.category ASC")

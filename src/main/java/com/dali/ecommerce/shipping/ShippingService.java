@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class ShippingService {
 
-    // These values can be moved to application.properties for even more flexibility
     public static final double BASE_FEE = 50.0; // Base fee in PHP
     public static final double FEE_PER_KM = 10;   // Fee per kilometer in PHP
     public static final double FREE_SHIPPING_DISTANCE_KM = 0; // Free shipping for pickup

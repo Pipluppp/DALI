@@ -1,4 +1,3 @@
-// DALI/src/main/java/com/dali/ecommerce/model/OrderItem.java
 package com.dali.ecommerce.order;
 
 import com.dali.ecommerce.product.Product;
@@ -17,7 +16,6 @@ public class OrderItem {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    // Change FetchType to EAGER
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
@@ -33,7 +31,6 @@ public class OrderItem {
         return 0.0;
     }
 
-    // Getters and Setters
     public Integer getOrderItemId() { return orderItemId; }
     public void setOrderItemId(Integer orderItemId) { this.orderItemId = orderItemId; }
     public Order getOrder() { return order; }

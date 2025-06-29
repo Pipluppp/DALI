@@ -24,8 +24,6 @@ public class PaymentController {
         System.out.println("Payment callback success for Order ID: " + orderId);
 
         try {
-            // **CORE CHANGE**: Call the new, dedicated method that doesn't rely on a transaction ID from the URL.
-            // We now assume this redirect is the confirmation of a successful payment.
             orderService.confirmPaymentOnSuccessRedirect(orderId);
             System.out.println("Successfully processed payment confirmation for Order ID: " + orderId);
 

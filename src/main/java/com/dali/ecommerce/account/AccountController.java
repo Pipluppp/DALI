@@ -150,7 +150,6 @@ public class AccountController {
         return "fragments/profile-details-view :: details-view";
     }
 
-    // Add this GET mapping to show the new page
     @GetMapping("/profile/change-password")
     public String showChangePasswordPage() {
         return "change-password";

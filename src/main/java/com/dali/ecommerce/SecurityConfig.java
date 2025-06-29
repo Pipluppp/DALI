@@ -59,7 +59,7 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for admin simplicity, can be configured properly later
+                .csrf(AbstractHttpConfigurer::disable)
                 .securityMatcher("/admin/**")
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/login", "/forgot-password").permitAll()

@@ -44,7 +44,6 @@ public class ProductController {
         model.addAttribute("availableQuantities", availableQuantities);
     }
 
-    // This method now ONLY loads the page shell and initial data.
     @GetMapping("/shop")
     public String shop(Model model, HttpSession session) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -58,7 +57,6 @@ public class ProductController {
         return "shop";
     }
 
-    // THIS IS THE NEW HTMX-DEDICATED ENDPOINT
     @GetMapping("/shop/products")
     public String searchAndFilterProducts(
             @RequestParam(value = "query", required = false) String query,
@@ -82,7 +80,6 @@ public class ProductController {
 
         model.addAttribute("products", products);
         addAvailableQuantitiesToModel(model, products, authentication, session);
-        // This tells Thymeleaf to only render the 'product-list-fragment' part of the specified file
         return "fragments/product-list :: product-list-fragment";
     }
 
@@ -106,7 +103,7 @@ public class ProductController {
 
             return "product-detail";
         } else {
-            return "redirect:/shop"; // Or a 404 page
+            return "redirect:/shop";
         }
     }
 }

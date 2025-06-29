@@ -14,7 +14,7 @@ public class EmailService {
     }
 
     public void sendPasswordResetEmail(String to, String token){
-        String resetUrl = "http://localhost:8080/reset-password?token=" + token; // Change to your domain in production
+        String resetUrl = "http://localhost:8080/reset-password?token=" + token;
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("noreply@dali.com");
