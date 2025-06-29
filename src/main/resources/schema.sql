@@ -48,6 +48,7 @@ CREATE TABLE products (
                           product_description TEXT,
                           product_price       NUMERIC(10, 2) NOT NULL, -- Use NUMERIC for currency
                           product_category    VARCHAR(255),
+                          product_subcategory VARCHAR(255),
                           product_quantity    INTEGER NOT NULL,
                           image               VARCHAR(255)
 );

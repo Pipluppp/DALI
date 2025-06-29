@@ -58,17 +58,33 @@ public class PasswordResetController {
     @PostMapping("/reset-password")
     public String processResetPassword(@RequestParam("token") String token,
                                        @RequestParam("password") String newPassword,
+                                       @RequestParam("confirmPassword") String confirmPassword, // Get the confirmation password
                                        RedirectAttributes redirectAttributes) {
 
+        // 1. Check if passwords match
+        if (!newPassword.equals(confirmPassword)) {
+            redirectAttributes.addFlashAttribute("error", "Passwords do not match.");
+            redirectAttributes.addAttribute("token", token); // Pass the token back so the link still works
+            return "redirect:/reset-password";
+        }
+
+        // 2. Find the account by token
         Account account = accountService.findByResetPasswordToken(token);
         if (account == null) {
             redirectAttributes.addFlashAttribute("error", "Invalid or expired password reset token.");
             return "redirect:/login";
         }
 
-        account.setPasswordHash(passwordEncoder.encode(newPassword));
-        account.setResetPasswordToken(null);
-        accountService.save(account);
+        try {
+
+            accountService.resetUserPassword(token, newPassword);
+
+        } catch (IllegalArgumentException e) {
+            // If validation fails, redirect back with the error message
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            redirectAttributes.addAttribute("token", token); // Pass token back
+            return "redirect:/reset-password";
+        }
 
         redirectAttributes.addFlashAttribute("message", "You have successfully reset your password. Please log in.");
         return "redirect:/login";

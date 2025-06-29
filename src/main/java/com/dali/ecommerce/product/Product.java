@@ -31,6 +31,9 @@ public class Product {
     @Column(name = "product_category")
     private String category;
 
+    @Column(name = "product_subcategory")
+    private String subcategory;
+
     @Column(name = "product_quantity", nullable = false)
     private Integer productQuantity;
 
@@ -81,6 +84,10 @@ public class Product {
     public void setCategory(String category) {
         this.category = category;
     }
+
+    public String getSubcategory() { return subcategory; }
+
+    public void setSubcategory(String subcategory) { this.subcategory = subcategory; }
 
     public Integer getProductQuantity() {
         return productQuantity;
