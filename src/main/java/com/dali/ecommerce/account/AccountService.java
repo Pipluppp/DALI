@@ -4,6 +4,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.regex.Pattern;
 
 @Service
 public class AccountService {
@@ -20,6 +21,19 @@ public class AccountService {
         if (account.getEmail() == null || account.getEmail().isBlank()) {
             throw new Exception("Email cannot be empty.");
         }
+
+        // --- START OF PASSWORD VALIDATION LOGIC ---
+        String rawPassword = account.getPasswordHash(); // Get the raw password before it's hashed
+        if (rawPassword == null || rawPassword.length() < 8) {
+            throw new IllegalArgumentException("Password must be at least 8 characters long.");
+        }
+
+        // This regex pattern checks for the presence of at least one special character
+        Pattern specialCharPattern = Pattern.compile("[!@#$%^&*]");
+        if (!specialCharPattern.matcher(rawPassword).find()) {
+            throw new IllegalArgumentException("Password must contain at least one special character (e.g., !@#$%^&*).");
+        }
+
         String trimmedEmail = account.getEmail().trim();
         if (accountRepository.findByEmail(trimmedEmail).isPresent()) {
             throw new Exception("There is already an account with that email address: " + trimmedEmail);
@@ -30,17 +44,43 @@ public class AccountService {
         return accountRepository.save(account);
     }
 
+    public void resetUserPassword(String token, String newPassword) {
+        // Find the user by their reset token
+        Account account = findByResetPasswordToken(token);
+        if (account == null) {
+            throw new UsernameNotFoundException("Invalid password reset token.");
+        }
+
+        validatePassword(newPassword);
+
+
+        account.setPasswordHash(passwordEncoder.encode(newPassword));
+        account.setResetPasswordToken(null);
+
+        accountRepository.save(account);
+    }
+
+    private void validatePassword(String password) {
+        if (password == null || password.length() < 8) {
+            throw new IllegalArgumentException("Password must be at least 8 characters long.");
+        }
+        Pattern specialCharPattern = Pattern.compile("[!@#$%^&*]");
+        if (!specialCharPattern.matcher(password).find()) {
+            throw new IllegalArgumentException("Password must contain at least one special character (e.g., !@#$%^&*).");
+        }
+    }
+
     public void changeUserPassword(String email, String currentPassword, String newPassword) {
         // Find the user in the database
         Account account = accountRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
 
-        // 1. Check if the provided current password matches the one in the database
+
         if (!passwordEncoder.matches(currentPassword, account.getPasswordHash())) {
             throw new RuntimeException("Incorrect current password.");
         }
 
-        // 2. Validate the new password against your rules
+
         String passwordPattern = "^(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
         if (!newPassword.matches(passwordPattern)) {
             throw new RuntimeException("New password does not meet security requirements (8+ chars, 1 special symbol).");

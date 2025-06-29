@@ -57,26 +57,48 @@ public class ProductController {
         return "shop";
     }
 
+    @GetMapping("/shop/subcategories")
+    public String getSubcategories(@RequestParam("category") String category, Model model) {
+        List<String> subcategories = productRepository.findSubcategoriesByCategory(category);
+        model.addAttribute("subcategories", subcategories);
+        model.addAttribute("selectedCategory", category);
+        // This will return ONLY the subcategory list fragment
+        return "fragments/subcategory-list :: subcategory-list-fragment";
+    }
+
     @GetMapping("/shop/products")
     public String searchAndFilterProducts(
             @RequestParam(value = "query", required = false) String query,
             @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "subcategory", required = false) String subcategory,
             Model model, HttpSession session) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         List<Product> products;
+
         boolean hasQuery = query != null && !query.trim().isEmpty();
         boolean hasCategory = category != null && !category.trim().isEmpty();
+        boolean hasSubcategory = subcategory != null && !subcategory.trim().isEmpty();
 
-        if (hasQuery && hasCategory) {
-            products = productRepository.findByNameContainingIgnoreCaseAndCategory(query, category);
-        } else if (hasQuery) {
-            products = productRepository.findByNameContainingIgnoreCase(query);
+        // 1. First, get the list of products based on the category/subcategory filters.
+        if (hasSubcategory) {
+            products = productRepository.findByCategoryAndSubcategory(category, subcategory);
         } else if (hasCategory) {
+
             products = productRepository.findByCategory(category);
         } else {
+
             products = productRepository.findAll();
         }
+
+        // 2. Now, if a search query exists, filter the list we just created.
+        if (hasQuery) {
+            products = products.stream()
+                    .filter(product -> product.getName().toLowerCase().contains(query.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+
 
         model.addAttribute("products", products);
         addAvailableQuantitiesToModel(model, products, authentication, session);
