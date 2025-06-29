@@ -48,11 +48,10 @@
 
             <div class="or-separator">OR</div>
 
-            <!-- START: Admin Login Button Added -->
-            <a th:href="@{/admin/login}" class="btn btn-secondary" style="width: 100%; box-sizing: border-box; text-align: center; display: block;">
+            <!-- The inline style has been replaced with the 'auth-secondary-action' class -->
+            <a th:href="@{/admin/login}" class="btn btn-secondary auth-secondary-action">
                 Admin Login
             </a>
-            <!-- END: Admin Login Button Added -->
 
             <div class="switch-auth-link">
                 Don't have an account? <a th:href="@{/register}">Sign up</a>

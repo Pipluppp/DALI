@@ -25,22 +25,22 @@
         <div th:if="${successMessage}" class="auth-success" th:text="${successMessage}"></div>
         <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}"></div>
 
-        <div class="order-detail-card" style="margin-top: 20px;">
+        <div class="order-detail-card">
             <div class="order-detail-header">
                 <h1 th:text="'Order #' + *{orderId}">Order #123456</h1>
                 <p class="order-meta" th:text="${#temporals.format(order.createdAt, 'EEEE, MMMM d, yyyy')}"></p>
 
                 <!-- Delivery/Pickup Information -->
-                <div th:if="*{deliveryMethod == 'Pickup Delivery' and orderPickup != null}" style="background: #fefce8; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #eab308;">
-                    <h4 style="margin:0; font-size: 1.1rem; color: #854d0e;">Click & Collect Order</h4>
-                    <p style="margin:5px 0 0; color: #854d0e;">
+                <div class="pickup-info-box" th:if="*{deliveryMethod == 'Pickup Delivery' and orderPickup != null}">
+                    <h4>Click & Collect Order</h4>
+                    <p>
                         To be collected from: <strong th:text="*{orderPickup.store.name}"></strong>
                     </p>
                     <div th:if="*{orderPickup.store.latitude != null and orderPickup.store.longitude != null}"
                          th:replace="~{fragments/pickup-location-map :: map-fragment(lat=*{orderPickup.store.latitude}, lng=*{orderPickup.store.longitude}, name=*{orderPickup.store.name})}">
                     </div>
                 </div>
-                <div th:if="*{deliveryMethod != 'Pickup Delivery'}" style="margin-top: 15px;">
+                <div class="shipping-address-info" th:if="*{deliveryMethod != 'Pickup Delivery'}">
                     <strong>Shipping to:</strong> <span th:text="*{address.getFullAddress()}"></span>
                 </div>
             </div>
@@ -55,7 +55,7 @@
                         <img th:if="*{paymentMethod.toLowerCase().contains('card')}" th:src="@{/images/credit-card.png}" alt="Credit Card Logo">
                         <span th:text="*{paymentMethod}">Payment Method</span>
                     </div>
-                    <div style="margin-top: 10px; font-weight: 600;"
+                    <div class="payment-status-line"
                          th:classappend="*{paymentStatus.name() == 'PAID'} ? 'text-success' : (*{paymentStatus.name() == 'PENDING'} ? 'text-warning' : 'text-danger')">
                         Payment Status: <span th:text="*{paymentStatus.displayName}">Paid</span>
                     </div>
@@ -104,15 +104,14 @@
             </div>
 
             <!-- Customer Actions -->
-            <div class="order-actions-section" style="border-top: 1px solid #eee; padding-top: 25px; margin-top:25px;"
-                 th:if="${order.shippingStatus.name() == 'PROCESSING'}">
+            <div class="order-actions-section" th:if="${order.shippingStatus.name() == 'PROCESSING'}">
                 <h3>Actions</h3>
                 <form th:action="@{/order/{id}/cancel(id=*{orderId})}" method="post">
                     <button type="submit" class="btn btn-secondary" onclick="return confirm('Are you sure you want to cancel this order?');">
                         Cancel Order
                     </button>
                 </form>
-                <p style="font-size: 0.8rem; color: #666; margin-top: 10px;">
+                <p>
                     You can only cancel your order while it is still being processed.
                 </p>
             </div>

@@ -726,6 +726,15 @@ body {
     background-color: #9e1673;
 }
 
+/* NEW: Styles for the full-width secondary button */
+.auth-secondary-action {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    display: block;
+    margin-right: 0; /* Override default button margin */
+}
+
 .forgot-password-link {
     display: block;
     text-align: right;
@@ -765,6 +774,16 @@ body {
     color: #b21984;
     font-weight: 700;
     text-decoration: none;
+}
+
+/* NEW: Container for flash messages */
+.flash-message-container {
+    width: 100%;
+    position: absolute;
+    top: 100px;
+    left: 0;
+    padding: 0 20px;
+    box-sizing: border-box;
 }
 
 .auth-error { color: #dc3545; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center; font-size: 0.9rem; }
@@ -811,9 +830,53 @@ body {
 .checkout-main-panel { flex: 3; padding: 40px 60px; overflow-y: auto; }
 .checkout-summary-panel { flex: 2; background-color: #f8f9fa; padding: 40px; border-left: 1px solid #e0e0e0; }
 .checkout-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+
+.checkout-header .logo img { height: 50px; }
 .checkout-steps { font-size: 0.9rem; color: #888; }
 .checkout-steps .active { color: #333; font-weight: 600; }
+
+/* NEW: Style for the 'back' links */
+.checkout-back-link {
+    margin-bottom: 20px;
+    display: inline-block;
+    color: #555;
+    text-decoration: none;
+    font-weight: 600;
+}
+.checkout-back-link:hover {
+    color: #b21984;
+}
+
 .checkout-content h2 { margin-bottom: 25px; }
+
+/* NEW: Styles for the shipping fee notice box */
+.shipping-fee-notice {
+    margin-bottom: 20px;
+    border: 1px solid #eee;
+    padding: 15px;
+    border-radius: 8px;
+}
+.shipping-fee-notice p {
+    margin: 0;
+}
+.location-map-btn {
+    background: none;
+    border: none;
+    color: #b21984;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0 5px;
+}
+
+/* NEW: Styles for the pickup selector container */
+#store-pickup-selector {
+    display: none; /* Initially hidden, controlled by JS */
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px dashed #ccc;
+    border-radius: 8px;
+}
 .address-selection .address-option, .delivery-selection .delivery-option, .payment-selection .payment-option {
     border: 1px solid #ccc; border-radius: 8px; margin-bottom: 15px; display: flex;
 }
@@ -967,7 +1030,7 @@ body {
 }
 
 /* =================================
-   12. Order Detail Page Styles (NEW)
+   12. Order Detail Page Styles (NEW / MODIFIED)
    ================================= */
 .order-detail-page {
     background: #f8f9fa;
@@ -986,6 +1049,7 @@ body {
     border: 1px solid #e0e0e0;
     border-radius: 12px;
     padding: 40px;
+    margin-top: 20px; /* NEW: Moved from inline style */
 }
 .order-detail-header {
     padding-bottom: 20px;
@@ -998,6 +1062,34 @@ body {
 .order-meta {
     color: #666;
 }
+/* NEW: Styles for Click & Collect info box */
+.pickup-info-box {
+    background: #fefce8;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+    border-left: 4px solid #eab308;
+}
+.pickup-info-box h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #854d0e;
+}
+.pickup-info-box p {
+    margin: 5px 0 0;
+    color: #854d0e;
+}
+/* NEW: Style for shipping address text */
+.shipping-address-info {
+    margin-top: 15px;
+}
+
+.payment-transaction-id {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 5px;
+}
+
 .order-detail-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1006,7 +1098,8 @@ body {
     border-top: 1px solid #eee;
     border-bottom: 1px solid #eee;
 }
-.payment-method-section h3, .order-summary-section h3, .order-status-section h3, .order-products-section h3 {
+/* MODIFIED: Added .order-actions-section h3 for consistency */
+.payment-method-section h3, .order-summary-section h3, .order-status-section h3, .order-products-section h3, .order-actions-section h3 {
     font-size: 1.2rem;
     margin-bottom: 15px;
 }
@@ -1022,6 +1115,15 @@ body {
 .payment-box img {
     height: 24px;
 }
+/* NEW: Payment status styles */
+.payment-status-line {
+    margin-top: 10px;
+    font-weight: 600;
+}
+.text-success { color: #28a745; }
+.text-warning { color: #ffc107; }
+.text-danger { color: #dc3545; }
+
 .summary-details .summary-line {
     display: flex;
     justify-content: space-between;
@@ -1105,6 +1207,31 @@ body {
 .product-list-item .product-col {
     text-align: left;
 }
+/* NEW: Styles for the customer actions section */
+.order-actions-section {
+    border-top: 1px solid #eee;
+    padding-top: 25px;
+    margin-top: 25px;
+}
+.order-actions-section p {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 10px;
+}
+
+.status-update-form {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-collected {
+    background-color: #16a34a; /* A success green */
+}
+
+.btn-collected:hover {
+    background-color: #15803d; /* A darker green for hover */
+}
+
 /* =================================
    13. Admin Inventory Page Styles (NEW)
    ================================= */
@@ -1139,6 +1266,31 @@ body {
     color: #333;
     margin-bottom: 20px;
 }
+
+/* NEW: Styles for Admin Product Detail page form */
+.stock-update-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.stock-update-input {
+    width: 100px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* NEW: Styles for Admin Inventory Banner */
+.admin-inventory-banner {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.banner-flash-wrapper {
+    padding: 20px;
+}
+
 
 /* =================================
    14. Admin Orders Page Styles (NEW)
@@ -1234,6 +1386,15 @@ body {
     background-color: #fff;
     border-radius: 12px;
     color: #666;
+}
+
+/* =================================
+   Admin Dashboard (NEW)
+   ================================= */
+.admin-dashboard-main {
+    padding-top: 40px;
+    padding-bottom: 40px;
+    min-height: calc(100vh - 81px - 61px);
 }
 
 /* =================================
@@ -2095,6 +2256,22 @@ body {
 .map-modal-content { background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; position: relative; }
 .map-modal-close { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
         #map { height: 400px; width: 100%; margin-top: 15px; }
+
+/* NEW: Styles for the confirm button inside the modal */
+#confirm-pin-btn {
+    margin-top: 15px;
+}
+/* NEW: Styles specific to the shipping map modal */
+#shipping-map-modal .map-modal-content {
+    max-width: 800px;
+}
+#shipping-map {
+    height: 450px;
+    width: 100%;
+    margin-top: 15px;
+    border-radius: 5px;
+}
+
 
 /* =================================
    Custom Searchable Dropdown (Choices.js) Styles

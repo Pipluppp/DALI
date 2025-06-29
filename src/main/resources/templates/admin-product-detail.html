@@ -14,7 +14,7 @@
 <header th:replace="~{fragments/admin-header :: header}"></header>
 
 <main class="product-detail-container container">
-    <div style="width:100%; position: absolute; top: 100px; left: 0; padding: 0 20px;">
+    <div class="flash-message-container">
         <!-- CORRECTED: Access flash attributes directly from the model, not session -->
         <div th:if="${successMessage}" class="auth-success" th:text="${successMessage}"></div>
         <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}"></div>
@@ -31,9 +31,9 @@
         <div class="product-actions">
             <form th:action="@{/admin/inventory/update}" method="post">
                 <input type="hidden" name="productId" th:value="*{id}"/>
-                <div class="form-group" style="display:flex; align-items:center; gap: 15px;">
+                <div class="form-group stock-update-group">
                     <label for="quantity">Set New Quantity:</label>
-                    <input type="number" id="quantity" name="quantity" th:value="*{productQuantity}" min="0" style="width: 100px; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                    <input type="number" id="quantity" name="quantity" th:value="*{productQuantity}" min="0" class="stock-update-input">
                     <button type="submit" class="btn btn-primary btn-large">Update Stock</button>
                 </div>
             </form>
