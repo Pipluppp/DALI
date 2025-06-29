@@ -30,7 +30,6 @@ public class PasswordResetController {
 
     @PostMapping("/forgot-password")
     public String processForgotPassword(@RequestParam("email") String email, RedirectAttributes redirectAttributes) {
-        // Use the new service method
         Account account = accountService.findByEmail(email);
         if (account == null) {
             redirectAttributes.addFlashAttribute("error", "No account found with that email address.");
@@ -38,7 +37,6 @@ public class PasswordResetController {
         }
 
         String token = UUID.randomUUID().toString();
-        // Use the new service method
         accountService.createPasswordResetTokenForUser(account, token);
         emailService.sendPasswordResetEmail(account.getEmail(), token);
 
@@ -48,7 +46,6 @@ public class PasswordResetController {
 
     @GetMapping("/reset-password")
     public String showResetPasswordForm(@RequestParam("token") String token, Model model) {
-        // Use the new service method
         Account account = accountService.findByResetPasswordToken(token);
         if (account == null) {
             model.addAttribute("error", "Invalid or expired password reset token.");
@@ -69,10 +66,9 @@ public class PasswordResetController {
             return "redirect:/login";
         }
 
-        // Use setPasswordHash to match your entity's field name
         account.setPasswordHash(passwordEncoder.encode(newPassword));
-        account.setResetPasswordToken(null); // Invalidate the token
-        accountService.save(account); // Use the new service method to save
+        account.setResetPasswordToken(null);
+        accountService.save(account);
 
         redirectAttributes.addFlashAttribute("message", "You have successfully reset your password. Please log in.");
         return "redirect:/login";

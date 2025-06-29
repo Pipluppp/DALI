@@ -42,7 +42,6 @@ public class Product {
     public Product() {
     }
 
-    // Getters and Setters (No Lombok)
     public Integer getId() {
         return id;
     }
