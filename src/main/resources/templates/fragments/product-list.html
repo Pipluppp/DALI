@@ -23,10 +23,13 @@
                 <th:block th:with="availableToAdd=${availableQuantities.get(product.id)}">
 
                     <!-- Case 1: Product has stock and user can add more -->
-                    <div th:if="${availableToAdd != null and availableToAdd > 0}" style="display: flex; align-items: center; gap: 10px;">
+                    <!-- MODIFIED: Replaced inline styles with a new class 'product-card-quantity-form' -->
+                    <div th:if="${availableToAdd != null and availableToAdd > 0}" class="product-card-quantity-form">
+                        <!-- MODIFIED: Replaced inline styles with a new class 'product-card-quantity-input' -->
                         <input type="number" name="quantity" value="1" min="1" th:max="${availableToAdd}"
-                               style="width: 55px; padding: 10px; text-align: center; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
-                        <button type="submit" class="add-to-cart-btn" style="width: auto; flex-grow: 1;">Add</button>
+                               class="product-card-quantity-input">
+                        <!-- MODIFIED: Removed inline styles, now handled by CSS targeting .product-card-quantity-form .add-to-cart-btn -->
+                        <button type="submit" class="add-to-cart-btn">Add</button>
                     </div>
 
                     <!-- Case 2: Product is out of stock OR user has all available stock in cart -->

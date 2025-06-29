@@ -1,7 +1,11 @@
-
+/**
+ * FINAL, ROBUST VERSION
+ * This script enhances address dropdowns and prevents form submission bugs.
+ * It runs a universal check after EVERY htmx swap to find and fix any
+ * address forms on the page, covering all cases (Add, Edit, and dynamic loads).
+ */
 (function() {
 
-    // Configuration for how the dropdowns should look and behave.
     const choicesConfig = {
         searchEnabled: true,
         shouldSort: false,
@@ -9,46 +13,54 @@
         position: 'bottom',
     };
 
-    /**
-     * A function that takes a select element and turns it into a
-     * searchable dropdown, but only if it hasn't been done before.
-     * @param {HTMLElement} selectElement The <select> element to enhance.
-     */
     function enhanceDropdown(selectElement) {
-        // If the element doesn't exist or has already been initialized, do nothing.
+        // If the element doesn't exist or is already enhanced, do nothing.
         if (!selectElement || selectElement.dataset.choicesInitialized === 'true') {
             return;
         }
-
-        // Initialize the searchable dropdown.
         new Choices(selectElement, {
             ...choicesConfig,
             placeholderValue: selectElement.querySelector('option[value=""]').textContent || 'Select...'
         });
-
-        // Mark the element as initialized so we don't do it again.
+        // Mark it as done.
         selectElement.dataset.choicesInitialized = 'true';
     }
 
-    /**
-     * This function runs after any HTMX swap and enhances any new
-     * address dropdowns that have appeared in the swapped content.
-     * @param {HTMLElement} targetContainer The element that received the new HTML.
-     */
-    function processSwappedContent(targetContainer) {
-        // Find all potential address dropdowns inside the new content.
-        // This works even if the targetContainer is the select element itself.
-        if (targetContainer.matches('#province-select, #city-select, #barangay-select')) {
-            enhanceDropdown(targetContainer);
-        } else {
-            targetContainer.querySelectorAll('#province-select, #city-select, #barangay-select').forEach(enhanceDropdown);
+    function preventDoubleSubmission(formElement) {
+        // If the form doesn't exist or already has the fix, do nothing.
+        if (!formElement || formElement.dataset.submitListenerAdded === 'true') {
+            return;
         }
+        formElement.addEventListener('submit', function() {
+            const button = formElement.querySelector('button[type="submit"]');
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'Saving...';
+            }
+        });
+        // Mark it as done.
+        formElement.dataset.submitListenerAdded = 'true';
     }
 
-    // --- Main Logic ---
-    // Listen for the HTMX event that fires after content has been swapped into the page.
-    document.body.addEventListener('htmx:afterSwap', function(event) {
-        processSwappedContent(event.detail.target);
-    });
+    /**
+     * The main controller function.
+     * Scans the ENTIRE document for any address forms and dropdowns
+     * that have not yet been processed.
+     */
+    function initializeAllAddressForms() {
+        // Find all address dropdowns on the page.
+        document.querySelectorAll('#province-select, #city-select, #barangay-select').forEach(enhanceDropdown);
+
+        // Find all address forms on the page.
+        document.querySelectorAll('.address-form').forEach(preventDoubleSubmission);
+    }
+
+    // --- Main Event Listeners ---
+
+    // 1. Run once when the page first loads.
+    document.addEventListener('DOMContentLoaded', initializeAllAddressForms);
+
+    // 2. Run again after EVERY successful HTMX swap.
+    document.body.addEventListener('htmx:afterSwap', initializeAllAddressForms);
 
 })();
