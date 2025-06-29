@@ -3,12 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>My Profile - DALI</title>
-
-    <!-- FIX: CSRF Meta Tags for HTMX and JavaScript -->
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-
-    <!-- CSS and other head elements -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,14 +14,9 @@
 
     <!-- HTMX -->
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.5/dist/htmx.min.js"></script>
-
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <!-- Leaflet JS (place before our custom script) -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <!-- Our custom, modularized script for the map. 'defer' ensures it runs after the DOM is parsed. -->
     <script th:src="@{/js/address-map-locator.js}" defer></script>
-
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
@@ -33,7 +24,7 @@
 <main class="profile-page">
     <div class="container" th:if="${account}" th:object="${account}">
 
-        <div class="profile-header">
+        <div class="profile-header card">
             <div>
                 <p>Hello,</p>
                 <h1 th:text="*{getFullName()}">John Doe</h1>
@@ -47,7 +38,7 @@
         <div th:if="${param.error == 'access_denied'}" class="auth-error">You do not have permission to view that order.</div>
 
         <div class="profile-content">
-            <aside class="profile-sidebar">
+            <aside class="profile-sidebar card">
                 <h3>My Account</h3>
                 <ul>
                     <li><a href="#orders">My Orders</a></li>
@@ -57,85 +48,89 @@
             </aside>
 
             <div class="profile-main">
-                <section id="orders">
-                    <div class="section-header">
+                <section id="orders" class="card">
+                    <div class="section-header" style="padding: 30px 30px 15px; margin: 0;">
                         <h2>My Orders</h2>
                     </div>
-                    <div th:if="${!hasOrders}" class="no-content-notice">
-                        You have not placed any orders yet.
-                    </div>
-                    <div th:if="${hasOrders}" class="admin-order-grid" style="grid-template-columns: 1fr;">
-                        <div th:each="order : ${orders}" class="admin-order-card">
-                            <div class="order-card-icon">
-                                <img th:src="@{/images/order-icon.png}" alt="Order Icon">
-                            </div>
-                            <div class="order-card-details">
-                                <h3 th:text="'Order #' + ${order.orderId}">Order #12345</h3>
-                                <p class="order-card-meta">
-                                    <span th:text="${#temporals.format(order.createdAt, 'dd MMM yyyy')}"></span> •
-                                    <span th:text="${order.getTotalItemCount()} + ' items'"></span> •
-                                    <span th:text="${order.paymentMethod}"></span>
-                                </p>
-                                <p class="order-card-price" th:text="'₱' + ${#numbers.formatDecimal(order.totalPrice, 1, 'COMMA', 2, 'POINT')}">₱2,350.50</p>
-                            </div>
-                            <div class="order-card-footer">
-                                <div class="order-card-status">
-                                    <span class="status-dot" th:classappend="${order.shippingStatus.cssClass}"></span>
-                                    <span th:text="${order.shippingStatus.description}"></span>
-                                </div>
-                                <div class="order-card-actions">
-                                    <a th:href="@{'/order/' + ${order.orderId}}" class="btn btn-secondary btn-small">View Details</a>
-                                </div>
-                            </div>
+                    <div style="padding: 0 30px 30px;">
+                        <div th:if="${!hasOrders}" class="no-content-notice">
+                            You have not placed any orders yet.
                         </div>
-                    </div>
-                </section>
-
-                <section id="addresses" style="margin-top: 40px;">
-                    <div class="section-header">
-                        <h2>My Addresses</h2>
-                    </div>
-                    <div th:if="*{addresses.isEmpty()}" class="no-content-notice">
-                        You have no saved addresses.
-                    </div>
-                    <div id="address-list-container">
-                        <div th:each="addr : *{addresses}" th:id="'address-block-' + ${addr.addressId}" class="address-box">
-                            <div style="display: flex; justify-content: space-between; align-items: start;">
-                                <div>
-                                    <p>
-                                        <strong th:text="*{getFullName()}"></strong>
-                                        | <span th:text="${addr.phoneNumber}"></span>
+                        <div th:if="${hasOrders}" class="admin-order-grid" style="grid-template-columns: 1fr;">
+                            <div th:each="order : ${orders}" class="admin-order-card">
+                                <div class="order-card-icon">
+                                    <img th:src="@{/images/order-icon.png}" alt="Order Icon">
+                                </div>
+                                <div class="order-card-details">
+                                    <h3 th:text="'Order #' + ${order.orderId}">Order #12345</h3>
+                                    <p class="order-card-meta">
+                                        <span th:text="${#temporals.format(order.createdAt, 'dd MMM yyyy')}"></span> •
+                                        <span th:text="${order.getTotalItemCount()} + ' items'"></span> •
+                                        <span th:text="${order.paymentMethod}"></span>
                                     </p>
-                                    <p th:text="${addr.getFullAddress()}"></p>
-                                    <div class="address-tags">
-                                        <span class="tag-default" th:if="${addr.isDefault()}">Default Address</span>
+                                    <p class="order-card-price" th:text="'₱' + ${#numbers.formatDecimal(order.totalPrice, 1, 'COMMA', 2, 'POINT')}">₱2,350.50</p>
+                                </div>
+                                <div class="order-card-footer">
+                                    <div class="order-card-status">
+                                        <span class="status-dot" th:classappend="${order.shippingStatus.cssClass}"></span>
+                                        <span th:text="${order.shippingStatus.description}"></span>
+                                    </div>
+                                    <div class="order-card-actions">
+                                        <a th:href="@{'/order/' + ${order.orderId}}" class="btn btn-secondary btn-small">View Details</a>
                                     </div>
                                 </div>
-                                <a href="#" class="edit-link"
-                                   th:attr="hx-get=@{/address/edit/{id}(id=${addr.addressId}, context='profile')},
-                                            hx-target='#address-block-' + ${addr.addressId}"
-                                   hx-swap="outerHTML">Edit</a>
                             </div>
                         </div>
                     </div>
-                    <div id="add-address-target">
-                        <a href="#" class="add-new-address-link"
-                           th:attr="hx-get=@{/address/new(context='profile')}, hx-target='#add-address-target'"
-                           hx-swap="innerHTML">
-                            + Add New Address
-                        </a>
+                </section>
+
+                <section id="addresses" class="card" style="margin-top: 30px;">
+                    <div class="section-header" style="padding: 30px 30px 15px; margin: 0;">
+                        <h2>My Addresses</h2>
+                    </div>
+                    <div style="padding: 0 30px 30px;">
+                        <div th:if="*{addresses.isEmpty()}" class="no-content-notice">
+                            You have no saved addresses.
+                        </div>
+                        <div id="address-list-container">
+                            <div th:each="addr : *{addresses}" th:id="'address-block-' + ${addr.addressId}" class="address-box" style="border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start;">
+                                    <div>
+                                        <p>
+                                            <strong th:text="*{getFullName()}"></strong>
+                                            | <span th:text="${addr.phoneNumber}"></span>
+                                        </p>
+                                        <p th:text="${addr.getFullAddress()}"></p>
+                                        <div class="address-tags">
+                                            <span class="tag-default" th:if="${addr.isDefault()}">Default Address</span>
+                                        </div>
+                                    </div>
+                                    <a href="#" class="edit-link"
+                                       th:attr="hx-get=@{/address/edit/{id}(id=${addr.addressId}, context='profile')},
+                                                hx-target='#address-block-' + ${addr.addressId}"
+                                       hx-swap="outerHTML">Edit</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="add-address-target">
+                            <a href="#" class="add-new-address-link"
+                               th:attr="hx-get=@{/address/new(context='profile')}, hx-target='#add-address-target'"
+                               hx-swap="innerHTML">
+                                + Add New Address
+                            </a>
+                        </div>
                     </div>
                 </section>
 
-                <section id="details" style="margin-top: 40px;">
-                    <div class="section-header">
+                <section id="details" class="card" style="margin-top: 30px;">
+                    <div class="section-header" style="padding: 30px 30px 15px; margin: 0;">
                         <h2>Personal Details</h2>
                         <a href="#" class="edit-link"
                            th:hx-get="@{/profile/details/edit}"
                            hx-target="#profile-details-container"
                            hx-swap="innerHTML">Edit</a>
                     </div>
-                    <div id="profile-details-container">
+                    <div id="profile-details-container" style="padding: 0 30px 30px;">
                         <div th:replace="~{fragments/profile-details-view :: details-view}"></div>
                     </div>
                 </section>
@@ -156,13 +151,10 @@
 
 <footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
 
-<!-- FIX: JavaScript to configure HTMX with the CSRF token -->
 <script>
     document.body.addEventListener('htmx:configRequest', function(evt) {
         const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-
-        // Add the CSRF token to the request headers for state-changing methods
         if (evt.detail.verb !== 'get') {
             evt.detail.headers[csrfHeader] = csrfToken;
         }

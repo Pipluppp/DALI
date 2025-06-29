@@ -26,7 +26,6 @@
         <div th:if="${successMessage}" class="auth-success" th:text="${successMessage}"></div>
         <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}"></div>
 
-
         <div class="order-detail-card">
             <div class="order-detail-header">
                 <h1 th:text="'Order #' + *{orderId}">Order #2200113271</h1>
@@ -98,7 +97,7 @@
             <div class="order-products-section">
                 <h3>Products</h3>
                 <div class="product-list-header">
-                    <div class="product-col"></div>
+                    <div class="product-col">Product</div>
                     <div>Price</div>
                     <div>Quantity</div>
                     <div>Total Price</div>

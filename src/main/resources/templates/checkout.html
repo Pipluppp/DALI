@@ -162,13 +162,13 @@
     <div class="checkout-summary-panel">
         <h3>Your Cart</h3>
         <div class="cart-items-summary">
-            <div th:each="item : ${cartItems}" class="cart-item-summary-row">
-                <img th:src="@{'/images/products/' + ${item.product.image}}">
-                <div class="item-details">
-                    <p class="name" th:text="${item.product.name}"></p>
-                    <p class="qty" th:text="'Qty: ' + ${item.quantity}"></p>
+            <div th:each="item : ${cartItems}" class="cart-item-summary-row" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                <img th:src="@{'/images/products/' + ${item.product.image}}" style="width: 60px; height: 60px; border-radius: 5px;">
+                <div class="item-details" style="flex-grow: 1;">
+                    <p class="name" style="font-weight: 600; font-size: 0.9rem;" th:text="${item.product.name}"></p>
+                    <p class="qty" style="color: #666; font-size: 0.8rem;" th:text="'Qty: ' + ${item.quantity}"></p>
                 </div>
-                <p class="price" th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 'COMMA', 2, 'POINT')}"></p>
+                <p class="price" style="font-weight: 600;" th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 'COMMA', 2, 'POINT')}"></p>
             </div>
         </div>
         <hr>

@@ -29,7 +29,7 @@
         <p class="product-stock-level" th:text="'Current Stock: ' + *{productQuantity}">Current Stock: 55</p>
 
         <div class="product-actions">
-            <form th:action="@{/admin/inventory/update}" method="post">
+            <form th:action="@{/admin/inventory/update}" method="post" class="form-group" style="display:flex; align-items:center; gap: 15px;">
                 <input type="hidden" name="productId" th:value="*{id}"/>
                 <div class="form-group stock-update-group">
                     <label for="quantity">Set New Quantity:</label>

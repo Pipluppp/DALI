@@ -10,52 +10,50 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
-<body>
+<body class="auth-page-wrapper">
 
-<div class="auth-page-wrapper">
-    <div class="auth-card">
-        <!-- Image Panel -->
-        <div class="auth-image-panel">
-            <a th:href="@{/shop}" class="back-to-shop-btn">
-                <span><</span>   Back to shop
-            </a>
-            <img th:src="@{/images/login.png}" alt="Shopping cart with groceries">
+<div class="auth-card">
+    <!-- Image Panel -->
+    <div class="auth-image-panel">
+        <a th:href="@{/shop}" class="back-to-shop-btn">
+            <span><</span>&nbsp;Back to shop
+        </a>
+        <img th:src="@{/images/login.png}" alt="Shopping cart with groceries">
+    </div>
+
+    <!-- Form Panel -->
+    <div class="auth-form-panel">
+        <h2>Login</h2>
+
+        <div th:if="${param.error}" class="auth-error">
+            Invalid email or password.
+        </div>
+        <div th:if="${success}" class="auth-success" th:text="${success}">
+            Registration successful!
         </div>
 
-        <!-- Form Panel -->
-        <div class="auth-form-panel">
-            <h2>Login</h2>
-
-            <div th:if="${param.error}" class="auth-error">
-                Invalid email or password.
+        <form th:action="@{/login}" method="post">
+            <div class="form-group">
+                <label for="username">Email</label>
+                <input type="text" id="username" name="username" required autofocus>
             </div>
-            <div th:if="${success}" class="auth-success" th:text="${success}">
-                Registration successful!
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
             </div>
+            <a th:href="@{/forgot-password}" class="forgot-password-link">Forgot Password?</a>
+            <button type="submit" class="btn btn-primary" style="width: 100%; border-radius: 8px;">Login</button>
+        </form>
 
-            <form th:action="@{/login}" method="post">
-                <div class="form-group">
-                    <label for="username">Email</label>
-                    <input type="text" id="username" name="username" required autofocus>
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                <a th:href="@{/forgot-password}" class="forgot-password-link">Forgot Password?</a>
-                <button type="submit" class="auth-btn">Login</button>
-            </form>
-
-            <div class="or-separator">OR</div>
+        <div class="or-separator">OR</div>
 
             <!-- The inline style has been replaced with the 'auth-secondary-action' class -->
             <a th:href="@{/admin/login}" class="btn btn-secondary auth-secondary-action">
                 Admin Login
             </a>
 
-            <div class="switch-auth-link">
-                Don't have an account? <a th:href="@{/register}">Sign up</a>
-            </div>
+        <div class="switch-auth-link">
+            Don't have an account? <a th:href="@{/register}">Sign up</a>
         </div>
     </div>
 </div>

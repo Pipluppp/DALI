@@ -9,21 +9,16 @@
 
     <h3 th:text="${address.addressId != null} ? 'Edit Address' : 'Add a New Address'">Add a New Address</h3>
 
-    <!-- Dynamic Form Action -->
     <form th:action="${address.addressId != null} ? @{/address/update/{id}(id=${address.addressId})} : @{/address/add}"
           th:object="${address}" method="post" class="address-form">
 
-        <!-- Hidden fields for coordinates -->
         <input type="hidden" id="latitude" th:field="*{latitude}">
         <input type="hidden" id="longitude" th:field="*{longitude}">
 
-        <!-- Phone Number -->
         <div class="form-group">
             <label for="phone-number">Phone number</label>
             <input type="tel" id="phone-number" th:field="*{phoneNumber}" required>
         </div>
-
-        <!-- Province Dropdown -->
         <div class="form-group">
             <label for="province-select">Province</label>
             <select id="province-select" name="provinceId" required
@@ -34,8 +29,6 @@
                 <option th:each="p : ${provinces}" th:value="${p.id}" th:text="${p.name}" th:selected="${p.id == address.province?.id}"></option>
             </select>
         </div>
-
-        <!-- City Dropdown -->
         <div class="form-group" id="city-select-wrapper">
             <label for="city-select">City / Municipality</label>
             <select id="city-select" name="cityId" required
@@ -45,8 +38,6 @@
                 <option th:each="c : ${cities}" th:value="${c.id}" th:text="${c.name}" th:selected="${c.id == address.city?.id}"></option>
             </select>
         </div>
-
-        <!-- Barangay Dropdown -->
         <div class="form-group" id="barangay-select-wrapper">
             <label for="barangay-select">Barangay</label>
             <select id="barangay-select" name="barangayId" required th:disabled="${barangays == null or barangays.isEmpty()}">
@@ -54,14 +45,10 @@
                 <option th:each="b : ${barangays}" th:value="${b.id}" th:text="${b.name}" th:selected="${b.id == address.barangay?.id}"></option>
             </select>
         </div>
-
-        <!-- Additional Info / Street Address -->
         <div class="form-group">
             <label for="additionalInfo">Street Name, Building, House No.</label>
             <input type="text" id="additionalInfo" th:field="*{additionalInfo}" required>
         </div>
-
-        <!-- Set as Default Checkbox -->
         <div class="form-group-checkbox">
             <input type="checkbox" id="isDefault" th:field="*{default}">
             <label for="isDefault">Set as default address</label>
@@ -80,6 +67,5 @@
         <button type="submit" class="btn btn-primary">Save Address</button>
     </form>
 </div>
-
 </body>
 </html>

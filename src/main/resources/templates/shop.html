@@ -15,10 +15,6 @@
 
 <header class="header" th:replace="~{fragments/header :: header}"></header>
 
-<!--
-  FIXED: Added hx-include to explicitly tell HTMX which form inputs to send
-  with the GET request, since the parent is a <div> and not a <form>.
--->
 <div class="shop-container container"
      hx-get="/shop/products"
      hx-trigger="keyup changed delay:200ms from:#search-input, change from:[name='category']"
