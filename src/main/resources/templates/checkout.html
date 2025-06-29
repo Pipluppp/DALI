@@ -102,12 +102,12 @@
                     <div class="delivery-option">
                         <input type="radio" name="deliveryMethod" value="Standard Delivery" id="del-standard"
                                th:checked="${checkoutDetails['deliveryMethod'] == 'Standard Delivery' or checkoutDetails['deliveryMethod'] == null}">
-                        <label for="del-standard"><strong>Standard Delivery</strong><p>Within the day</p></label>
+                        <label for="del-standard"><strong>Standard Delivery</strong><p>Within 2-3 days</p></label>
                     </div>
                     <div class="delivery-option">
                         <input type="radio" name="deliveryMethod" value="Priority Delivery" id="del-priority" required
                                th:checked="${checkoutDetails['deliveryMethod'] == 'Priority Delivery'}">
-                        <label for="del-priority"><strong>Priority Delivery</strong><p>Within hours (+P<span th:text="${#numbers.formatDecimal(priorityFeeAddition, 1, 2)}">150.00</span>)</p></label>
+                        <label for="del-priority"><strong>Priority Delivery</strong><p>Within the day (+P<span th:text="${#numbers.formatDecimal(priorityFeeAddition, 1, 2)}">150.00</span>)</p></label>
                     </div>
                     <div class="delivery-option">
                         <input type="radio" name="deliveryMethod" value="Pickup Delivery" id="del-pickup" required
