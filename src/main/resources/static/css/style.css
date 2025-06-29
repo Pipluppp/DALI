@@ -401,6 +401,12 @@ body {
     padding: 0;
 }
 
+.filter-sidebar .subcategory-list {
+    padding-left: 20px; /* This creates the indentation */
+    margin-top: 8px; /* Adds some space below the parent category */
+    margin-bottom: 8px;
+}
+
 
 .filter-sidebar ul li input[type="radio"] {
     display: none; 
