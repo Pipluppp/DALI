@@ -10,6 +10,49 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+            /* === NEW AND IMPROVED STYLES FOR THE FILTER SIDEBAR === */
+        .filter-sidebar h5 { color: #888; font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 10px; }
+        .filter-sidebar a.reset-link { color: #b21984; text-decoration: none; display: block; margin-bottom: 15px; font-weight: 600; }
+        .filter-sidebar a.reset-link:hover { text-decoration: underline; }
+        .category-list { list-style: none; padding: 0; margin: 0; }
+        .category-item label { /* This is now the clickable header */
+            display: block;
+            width: 100%;
+            padding: 10px 5px;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .category-item label:hover { background-color: #f9f9f9; }
+        .category-item label::after { /* The dropdown arrow */
+            content: '›';
+            position: absolute;
+            right: 10px;
+            font-size: 1.5em;
+            transform: rotate(90deg);
+            transition: transform 0.2s ease;
+        }
+        /* Style for the "active" or "open" category header */
+        .category-item input[type="radio"]:checked + label::after {
+            transform: rotate(-90deg); /* Point the arrow down */
+        }
+        .category-item input[type="radio"] { display: none; /* Hide the radio button itself */ }
+        .subcategory-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+            background-color: #fafafa;
+        }
+        /* When the main category radio is checked, expand the container */
+        .category-item input[type="radio"]:checked ~ .subcategory-container {
+            max-height: 500px; /* Animate open to reveal subcategories */
+        }
+        .subcategory-list { list-style: none; padding: 5px 0 10px 25px; }
+        .subcategory-list li { padding: 5px 0; }
+        .subcategory-list input[type="radio"] { margin-right: 8px; }
+    </style>
 </head>
 <body>
 
@@ -20,21 +63,33 @@
      hx-trigger="keyup changed delay:200ms from:#search-input, change from:[name='category']"
      hx-target="#product-grid-results"
      hx-swap="innerHTML"
-     hx-include="[name='query'], [name='category']">
+     hx-include="[name='query'], [name='category']:checked, [name='subcategory']:checked">
 
     <!-- Filter Sidebar -->
     <aside class="filter-sidebar">
         <h4>Filters</h4>
         <div class="filter-group">
             <h5>CATEGORY</h5>
-            <ul>
-                <li>
-                    <input type="radio" name="category" value="" id="cat-all" checked="checked">
-                    <label for="cat-all">All</label>
-                </li>
-                <li th:each="cat, iterStat : ${categories}">
-                    <input type="radio" name="category" th:value="${cat}" th:id="'cat-' + ${iterStat.index}">
-                    <label th:for="'cat-' + ${iterStat.index}" th:text="${cat}">Category Name</label>
+            <!-- This link now reloads the page to reset all filters -->
+            <a href="/shop" class="reset-link">All Categories</a>
+
+            <ul id="category-list">
+                <!-- Loop through main categories -->
+                <li th:each="cat : ${categories}" class="category-item">
+                    <!-- The radio button is now hidden. Clicking the LABEL will toggle it. -->
+                    <input type="radio" name="category" th:value="${cat}" th:id="'cat-' + ${cat}"
+                           hx-get="/shop/subcategories"
+                           hx-target="next .subcategory-container"
+                           hx-swap="innerHTML"
+                           hx-include="this">
+
+                    <!-- This label is the visible, clickable part -->
+                    <label th:for="'cat-' + ${cat}" th:text="${cat}">Category Name</label>
+
+                    <!-- This container is where subcategories will be loaded by HTMX -->
+                    <div class="subcategory-container">
+                        <!-- Content will be injected here -->
+                    </div>
                 </li>
             </ul>
         </div>

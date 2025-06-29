@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="subcategory-list-fragment">
+
+
+  <ul class="subcategory-list"
+      hx-get="/shop/products"
+      hx-trigger="change"
+      hx-target="#product-grid-results"
+      hx-swap="innerHTML"
+      hx-include="[name='query'], [name='category']:checked, [name='subcategory']:checked">
+
+    <li>
+      <!-- The 'checked' attribute makes this the default selection when the list loads -->
+      <input type="radio" name="subcategory" value="" th:id="'subcat-' + ${selectedCategory} + '-all'" checked>
+      <label th:for="'subcat-' + ${selectedCategory} + '-all'" th:text="'All ' + ${selectedCategory}"></label>
+    </li>
+
+    <!-- Loop through specific subcategories -->
+    <li th:each="subcat : ${subcategories}">
+      <input type="radio" name="subcategory" th:value="${subcat}" th:id="'subcat-' + ${selectedCategory} + '-' + ${subcat}">
+      <label th:for="'subcat-' + ${selectedCategory} + '-' + ${subcat}" th:text="${subcat}"></label>
+    </li>
+  </ul>
+</div>
+
+</body>
+</html>
