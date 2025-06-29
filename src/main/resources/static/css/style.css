@@ -20,7 +20,7 @@ body {
 }
 
 /* =================================
-   2. Reusable Components (Header, Footer, Buttons)
+   Reusable Components (Header, Footer, Buttons)
    ================================= */
 .header {
     background-color: #fff;
@@ -38,6 +38,12 @@ body {
     flex-shrink: 0;
 }
 
+.header .logo img {
+    height: 60px;
+    width: auto; 
+    vertical-align: middle;
+}
+
 .header .nav {
     display: flex;
     align-items: center;
@@ -48,6 +54,44 @@ body {
     margin-left: auto;
     display: flex;
     align-items: center;
+}
+
+.header-actions form {
+    display: inline;
+}
+
+.admin-header .container,
+.admin-header-left,
+.admin-header-right {
+    display: flex;
+    align-items: center;
+}
+
+.admin-header .container {
+    justify-content: space-between;
+}
+
+.admin-header-left {
+    gap: 40px;
+}
+
+.admin-header-right {
+    gap: 20px;
+}
+
+.admin-header-right form {
+    margin: 0;
+}
+
+.store-display {
+    font-weight: 600;
+    color: #555;
+    display: inline-flex; 
+    align-items: center;
+}
+
+.store-display svg {
+    margin-right: 5px;
 }
 
 .nav a {
@@ -106,7 +150,7 @@ body {
     font-size: 0.875rem;
 }
 /* =================================
-   3. Homepage Specific Styles
+   Homepage Specific Styles
    ================================= */
 .hero-section {
     background: linear-gradient(to right, #fff, #fdeff5);
@@ -226,14 +270,11 @@ body {
     margin-bottom: 20px;
 }
 
-
-
 /* =================================
-   4. Store Finder Page Styles
+   Store Finder Page Styles
    ================================= */
 .store-finder-container {
     display: flex;
-    /* Match the header and footer height to fill the screen */
     height: calc(100vh - 81px - 195px);
     min-height: calc(100vh - 81px - 61px);
     
@@ -244,17 +285,15 @@ body {
     padding: 40px;
     background-color: #fff;
     border-right: 1px solid #e0e0e0;
-    /* Make the panel scrollable */
     display: flex;
     flex-direction: column;
-    overflow-y: hidden; /* Hide parent scrollbar */
+    overflow-y: hidden; 
 }
 
-/* New container for the list to make it scroll independently */
 #store-list-container {
     flex-grow: 1;
-    overflow-y: auto; /* Enable scrolling on this container */
-    margin-right: -20px; /* Hide scrollbar visually */
+    overflow-y: auto; 
+    margin-right: -20px; 
     padding-right: 20px;
 }
 
@@ -291,12 +330,10 @@ body {
 .store-item h3 {
     font-size: 1.1rem;
     font-weight: 700;
-    /* Style to match image */
     text-transform: uppercase;
 }
 
 .store-item p {
-    /* This style for location is no longer needed but kept for other potential uses */
     color: #666;
     margin-top: 5px;
 }
@@ -307,7 +344,7 @@ body {
 }
 
 /* =================================
-   5. Shop Page & HTMX Search Styles
+   Shop Page & HTMX Search Styles
    ================================= */
 .search-banner {
     background-color: #b21984;
@@ -364,9 +401,9 @@ body {
     padding: 0;
 }
 
-/* START: Updated styles for category filter */
+
 .filter-sidebar ul li input[type="radio"] {
-    display: none; /* Hide the actual radio button */
+    display: none; 
 }
 
 .filter-sidebar ul li label {
@@ -387,7 +424,6 @@ body {
     color: #b21984;
     font-weight: 700;
 }
-/* END: Updated styles for category filter */
 
 .product-grid-container {
     flex-grow: 1;
@@ -464,6 +500,26 @@ body {
 .product-card-actions {
     padding: 0 20px 20px;
 }
+
+.product-card-quantity-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.product-card-quantity-input {
+    width: 55px;
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.product-card-quantity-form .add-to-cart-btn {
+    width: auto;
+    flex-grow: 1;
+}
 .add-to-cart-btn {
     width: 100%;
     padding: 10px;
@@ -486,18 +542,17 @@ body {
 }
 
 /* =================================
-   6. Product Detail Page Styles
+   Product Detail Page Styles
    ================================= */
 .product-detail-container {
     display: flex;
     gap: 40px;
     padding-top: 40px;
     padding-bottom: 50px;
-    min-height: calc(100vh - 81px - 61px); /* Ensures content area fills the screen, pushing footer down */
+    min-height: calc(100vh - 81px - 61px); 
     align-items: flex-start;
 }
 
-/* Product Image Styling */
 .product-detail-image {
     flex-basis: 40%;
     max-width: 450px;
@@ -598,7 +653,7 @@ body {
 }
 
 /* =================================
-   7. Authentication Page Styles (NEW)
+   Authentication Page Styles 
    ================================= */
 .auth-page-wrapper {
     background-color: #b21984;
@@ -726,13 +781,13 @@ body {
     background-color: #9e1673;
 }
 
-/* NEW: Styles for the full-width secondary button */
+
 .auth-secondary-action {
     width: 100%;
     box-sizing: border-box;
     text-align: center;
     display: block;
-    margin-right: 0; /* Override default button margin */
+    margin-right: 0; 
 }
 
 .forgot-password-link {
@@ -751,6 +806,7 @@ body {
     color: #aaa;
     position: relative;
 }
+
 .or-separator::before,
 .or-separator::after {
     content: '';
@@ -776,7 +832,7 @@ body {
     text-decoration: none;
 }
 
-/* NEW: Container for flash messages */
+
 .flash-message-container {
     width: 100%;
     position: absolute;
@@ -786,10 +842,27 @@ body {
     box-sizing: border-box;
 }
 
-.auth-error { color: #dc3545; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center; font-size: 0.9rem; }
-.auth-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center; font-size: 0.9rem; }
+.auth-error { 
+    color: #dc3545; 
+    background-color: #f8d7da; 
+    border: 1px solid #f5c6cb; 
+    padding: 10px; 
+    border-radius: 5px; 
+    margin-bottom: 20px; 
+    text-align: center; 
+    font-size: 0.9rem; 
+}
+.auth-success { 
+    color: #155724; 
+    background-color: #d4edda; 
+    border-color: #c3e6cb; 
+    padding: 10px; 
+    border-radius: 5px; 
+    margin-bottom: 20px; 
+    text-align: center; 
+    font-size: 0.9rem; 
+}
 
-/* The personal information label for sign up page */
 .form-section-label {
     font-weight: 700;
     color: #333;
@@ -797,45 +870,151 @@ body {
     display: block;
 }
 
+/* =================================
+   Cart Page Styles
+   ================================= */
+.cart-page { 
+    padding: 50px 0; 
+}
+.cart-page h1 { 
+    margin-bottom: 30px; 
+}
+.cart-container { 
+    display: grid; 
+    grid-template-columns: 2fr 1fr; 
+    gap: 30px; 
+    align-items: flex-start; 
+    min-height: calc(100vh - 81px - 61px); 
+}
+.cart-items-panel { 
+    background: #fff; 
+    padding: 20px; 
+    border-radius: 8px; 
+}
+.cart-item-header { 
+    display: grid; 
+    grid-template-columns: 3fr 1fr 1fr 0.5fr; 
+    padding: 10px 20px; 
+    font-weight: 600; 
+    color: #888; 
+    border-bottom: 1px solid #eee; 
+}
+.cart-item-row { 
+    display: grid; 
+    grid-template-columns: 3fr 1fr 1fr 0.5fr; 
+    align-items: center; 
+    padding: 20px; 
+    border-bottom: 1px solid #eee; 
+}
+.cart-product-info { 
+    display: flex; 
+    align-items: center; 
+    gap: 20px; 
+}
+.cart-product-info img { 
+    width: 80px; 
+    height: 80px; 
+    object-fit: cover; 
+    border-radius: 5px; 
+}
+.cart-product-info .product-name { 
+    font-weight: 600; 
+    margin-bottom: 5px; 
+}
+.cart-product-info .product-price { 
+    color: #666; 
+}
+.cart-quantity-selector input { 
+    width: 60px; 
+    text-align: center; 
+    padding: 8px; 
+    border-radius: 5px; 
+    border: 1px solid #ccc; 
+}
+.cart-item-total { 
+    font-weight: 600; 
+}
+.remove-btn { background: none; 
+    border: none; 
+    font-size: 1.5rem; 
+    color: #aaa; 
+    cursor: pointer; 
+}
+.cart-summary-panel { 
+    background: #fff; 
+    padding: 30px; 
+    border-radius: 8px; 
+    top: 20px; 
+}
+.cart-summary-panel h2 { 
+    margin-bottom: 20px; 
+}
+.summary-row { 
+    display: flex; 
+    justify-content: space-between; 
+    margin-bottom: 15px; 
+}
+.total-row { 
+    font-weight: 700; 
+    font-size: 1.2rem; }
+.checkout-btn { 
+    width: 100%; 
+    text-align: center;
+    margin-top: 20px; 
+    padding: 15px; 
+}
+.cart-empty { 
+    text-align: center; 
+    padding: 80px 0; 
+    min-height: calc(100vh - 81px - 61px);
+}
+.cart-empty h2 { 
+    font-size: 2rem; 
+    margin-bottom: 20px; 
+}
+.cart-empty p { 
+    margin-bottom: 30px; 
+    color: #666; 
+}
 
 /* =================================
-   8. Cart Page Styles
+   Checkout Page Styles
    ================================= */
-.cart-page { padding: 50px 0; }
-.cart-page h1 { margin-bottom: 30px; }
-.cart-container { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; align-items: flex-start; min-height: calc(100vh - 81px - 61px); }
-.cart-items-panel { background: #fff; padding: 20px; border-radius: 8px; }
-.cart-item-header { display: grid; grid-template-columns: 3fr 1fr 1fr 0.5fr; padding: 10px 20px; font-weight: 600; color: #888; border-bottom: 1px solid #eee; }
-.cart-item-row { display: grid; grid-template-columns: 3fr 1fr 1fr 0.5fr; align-items: center; padding: 20px; border-bottom: 1px solid #eee; }
-.cart-product-info { display: flex; align-items: center; gap: 20px; }
-.cart-product-info img { width: 80px; height: 80px; object-fit: cover; border-radius: 5px; }
-.cart-product-info .product-name { font-weight: 600; margin-bottom: 5px; }
-.cart-product-info .product-price { color: #666; }
-.cart-quantity-selector input { width: 60px; text-align: center; padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
-.cart-item-total { font-weight: 600; }
-.remove-btn { background: none; border: none; font-size: 1.5rem; color: #aaa; cursor: pointer; }
-.cart-summary-panel { background: #fff; padding: 30px; border-radius: 8px; top: 20px; }
-.cart-summary-panel h2 { margin-bottom: 20px; }
-.summary-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
-.total-row { font-weight: 700; font-size: 1.2rem; }
-.checkout-btn { width: 100%; text-align: center; margin-top: 20px; padding: 15px; }
-.cart-empty { text-align: center; padding: 80px 0; min-height: calc(100vh - 81px - 61px);}
-.cart-empty h2 { font-size: 2rem; margin-bottom: 20px; }
-.cart-empty p { margin-bottom: 30px; color: #666; }
+.checkout-page-wrapper { 
+    display: flex; 
+    min-height: 100vh; 
+    background-color: #fff; 
+}
+.checkout-main-panel { 
+    flex: 3; 
+    padding: 40px 60px; 
+    overflow-y: auto; 
+}
+.checkout-summary-panel { 
+    flex: 2; 
+    background-color: #f8f9fa; 
+    padding: 40px; 
+    border-left: 1px solid #e0e0e0; 
+}
+.checkout-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 40px; 
+}
 
-/* =================================
-   9. Checkout Page Styles
-   ================================= */
-.checkout-page-wrapper { display: flex; min-height: 100vh; background-color: #fff; }
-.checkout-main-panel { flex: 3; padding: 40px 60px; overflow-y: auto; }
-.checkout-summary-panel { flex: 2; background-color: #f8f9fa; padding: 40px; border-left: 1px solid #e0e0e0; }
-.checkout-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+.checkout-header .logo img { 
+    height: 50px; 
+}
+.checkout-steps { 
+    font-size: 0.9rem; 
+    color: #888; 
+}
+.checkout-steps .active { 
+    color: #333; 
+    font-weight: 600; 
+}
 
-.checkout-header .logo img { height: 50px; }
-.checkout-steps { font-size: 0.9rem; color: #888; }
-.checkout-steps .active { color: #333; font-weight: 600; }
-
-/* NEW: Style for the 'back' links */
 .checkout-back-link {
     margin-bottom: 20px;
     display: inline-block;
@@ -847,9 +1026,10 @@ body {
     color: #b21984;
 }
 
-.checkout-content h2 { margin-bottom: 25px; }
+.checkout-content h2 { 
+    margin-bottom: 25px; 
+}
 
-/* NEW: Styles for the shipping fee notice box */
 .shipping-fee-notice {
     margin-bottom: 20px;
     border: 1px solid #eee;
@@ -869,18 +1049,78 @@ body {
     padding: 0 5px;
 }
 
-/* NEW: Styles for the pickup selector container */
 #store-pickup-selector {
-    display: none; /* Initially hidden, controlled by JS */
+    display: none; 
     margin-top: 20px;
     padding: 20px;
     border: 1px dashed #ccc;
     border-radius: 8px;
 }
-.address-selection .address-option, .delivery-selection .delivery-option, .payment-selection .payment-option {
-    border: 1px solid #ccc; border-radius: 8px; margin-bottom: 15px; display: flex;
+
+#store-pickup-selector h4 {
+    margin-bottom: 15px;
 }
-/* THIS IS THE FIX: The selector is now more specific */
+
+#pickup-store-map {
+    height: 300px;
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+}
+
+#store-pickup-selector #store-search-input {
+    margin-bottom: 15px;
+    border-radius: 30px;
+}
+
+#store-list-results {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 10px; 
+}
+
+#store-list-results input[type="radio"] {
+    display: none;
+}
+
+#store-list-results .delivery-option {
+    margin-bottom: 10px;
+    display: flex;
+}
+
+#store-list-results .delivery-option:last-child {
+    margin-bottom: 0;
+}
+
+#store-list-results .delivery-option label {
+    display: block;
+    padding: 15px;
+    width: 100%;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+}
+
+#store-list-results .delivery-option label:hover {
+    border-color: #adadad;
+}
+
+#store-list-results input[type="radio"]:checked + label {
+    border-color: #b21984;
+    box-shadow: 0 0 0 2px rgba(178, 25, 132, 0.2);
+    font-weight: bold;
+}
+.address-selection .address-option, .delivery-selection .delivery-option, .payment-selection .payment-option {
+    border: 1px solid #ccc; 
+    border-radius: 8px; 
+    margin-bottom: 15px; 
+    display: flex;
+}
+
 .address-selection input[type="radio"],
 .delivery-selection input[type="radio"],
 .payment-selection input[type="radio"] {
@@ -905,7 +1145,7 @@ body {
 
 
 /* =================================
-   10. Order Success Page Styles
+   Order Success Page Styles
    ================================= */
 .order-success-page { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f8f9fa; }
 .success-card { background: #fff; padding: 50px; border-radius: 15px; text-align: center; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
@@ -916,7 +1156,7 @@ body {
 .success-actions .btn { border-radius: 8px; }
 
 /* =================================
-   11. New Address Form & Layout Styles
+   New Address Form & Layout Styles
    ================================= */
 .checkout-section-header { margin-bottom: 20px; }
 .checkout-section-header h2 { font-size: 1.8rem; }
@@ -933,12 +1173,12 @@ body {
 .no-address-notice { padding: 20px; background-color: #fef3cd; border: 1px solid #ffeeba; color: #856404; border-radius: 8px; margin-bottom: 20px; }
 .address-form-container { margin-top: 10px; padding: 30px; border: 1px dashed #ccc; border-radius: 8px; position: relative; }
 
-/* CORRECTED: New styles for address form to match image */
+
 .address-form-container .address-form { display: flex; flex-direction: column; gap: 25px; }
 .address-form .form-group { margin-bottom: 0; }
 .address-form label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 1.1rem; color: #333; }
 
-/* This rule applies the boxed style to text and telephone inputs in the address form */
+
 .address-form input[type="text"],
 .address-form input[type="tel"] {
     width: 100%;
@@ -1030,7 +1270,7 @@ body {
 }
 
 /* =================================
-   12. Order Detail Page Styles (NEW / MODIFIED)
+   Order Detail Page Styles 
    ================================= */
 .order-detail-page {
     background: #f8f9fa;
@@ -1049,7 +1289,7 @@ body {
     border: 1px solid #e0e0e0;
     border-radius: 12px;
     padding: 40px;
-    margin-top: 20px; /* NEW: Moved from inline style */
+    margin-top: 20px; 
 }
 .order-detail-header {
     padding-bottom: 20px;
@@ -1062,7 +1302,7 @@ body {
 .order-meta {
     color: #666;
 }
-/* NEW: Styles for Click & Collect info box */
+
 .pickup-info-box {
     background: #fefce8;
     padding: 15px;
@@ -1079,7 +1319,17 @@ body {
     margin: 5px 0 0;
     color: #854d0e;
 }
-/* NEW: Style for shipping address text */
+
+#pickup-location-map {
+    height: 250px;
+    width: 100%;
+    border-radius: 8px;
+    margin-top: 15px;
+    border: 1px solid #ddd;
+    z-index: 0; 
+}
+
+
 .shipping-address-info {
     margin-top: 15px;
 }
@@ -1098,7 +1348,7 @@ body {
     border-top: 1px solid #eee;
     border-bottom: 1px solid #eee;
 }
-/* MODIFIED: Added .order-actions-section h3 for consistency */
+
 .payment-method-section h3, .order-summary-section h3, .order-status-section h3, .order-products-section h3, .order-actions-section h3 {
     font-size: 1.2rem;
     margin-bottom: 15px;
@@ -1115,7 +1365,7 @@ body {
 .payment-box img {
     height: 24px;
 }
-/* NEW: Payment status styles */
+
 .payment-status-line {
     margin-top: 10px;
     font-weight: 600;
@@ -1207,7 +1457,7 @@ body {
 .product-list-item .product-col {
     text-align: left;
 }
-/* NEW: Styles for the customer actions section */
+
 .order-actions-section {
     border-top: 1px solid #eee;
     padding-top: 25px;
@@ -1225,15 +1475,15 @@ body {
 }
 
 .btn-collected {
-    background-color: #16a34a; /* A success green */
+    background-color: #16a34a;
 }
 
 .btn-collected:hover {
-    background-color: #15803d; /* A darker green for hover */
+    background-color: #15803d; 
 }
 
 /* =================================
-   13. Admin Inventory Page Styles (NEW)
+   Admin Inventory Page Styles 
    ================================= */
 .inventory-update-form {
     display: flex;
@@ -1267,7 +1517,6 @@ body {
     margin-bottom: 20px;
 }
 
-/* NEW: Styles for Admin Product Detail page form */
 .stock-update-group {
     display: flex;
     align-items: center;
@@ -1281,7 +1530,6 @@ body {
     border: 1px solid #ccc;
 }
 
-/* NEW: Styles for Admin Inventory Banner */
 .admin-inventory-banner {
     padding-top: 20px;
     padding-bottom: 20px;
@@ -1293,7 +1541,7 @@ body {
 
 
 /* =================================
-   14. Admin Orders Page Styles (NEW)
+   Admin Orders Page Styles (NEW)
    ================================= */
 .admin-orders-page-container {
     padding-top: 40px;
@@ -1357,18 +1605,18 @@ body {
     color: #b21984;
 }
 .order-card-footer {
-    grid-column: 1 / -1; /* Span full width */
+    grid-column: 1 / -1; 
     padding-top: 20px;
     margin-top: 20px;
     border-top: 1px solid #eee;
     display: flex;
     justify-content: space-between;
-    align-items: flex-end; /* Align items to the bottom of the flex container */
+    align-items: flex-end; 
 }
 .order-card-actions {
     display: flex;
-    flex-direction: column; /* Stack buttons vertically */
-    gap: 8px; /* Add space between the buttons */
+    flex-direction: column; 
+    gap: 8px; 
 }
 .order-card-actions .btn {
     margin-right: 0;
@@ -1389,7 +1637,7 @@ body {
 }
 
 /* =================================
-   Admin Dashboard (NEW)
+   Admin Dashboard 
    ================================= */
 .admin-dashboard-main {
     padding-top: 40px;
@@ -1409,7 +1657,6 @@ body {
     margin-right: 10px;
     border: none;
     cursor: pointer;
-    /* Enhanced transitions */
     transition: all 0.3s ease;
     transform: translateY(0);
 }
@@ -1448,7 +1695,6 @@ body {
     box-shadow: 0 4px 10px rgba(178, 25, 132, 0.1);
 }
 
-/* Enhanced transitions for other button types */
 .add-to-cart-btn {
     width: 100%;
     padding: 10px;
@@ -1458,7 +1704,6 @@ body {
     border-radius: 5px;
     cursor: pointer;
     font-weight: 600;
-    /* Add transitions */
     transition: all 0.3s ease;
     transform: translateY(0);
 }
@@ -1485,7 +1730,6 @@ body {
     border-radius: 8px;
     cursor: pointer;
     margin-top: 10px;
-    /* Enhanced transition */
     transition: all 0.3s ease;
     transform: translateY(0);
 }
@@ -1506,7 +1750,6 @@ body {
     text-align: center;
     margin-top: 20px;
     padding: 15px;
-    /* Add transitions */
     transition: all 0.3s ease;
     transform: translateY(0);
 }
@@ -1527,7 +1770,6 @@ body {
     text-decoration: none;
     color: #333;
     font-weight: 600;
-    /* Enhanced transition */
     transition: all 0.3s ease;
     transform: translateY(0);
 }
@@ -1565,14 +1807,13 @@ body {
 .category-card h3 {
     color: #333;
     margin-bottom: 10px;
-    /* Add transition for color change */
+    
     transition: color 0.3s ease;
 }
 
 .category-card p {
     color: #777;
     margin-bottom: 20px;
-    /* Add transition for potential color changes */
     transition: color 0.3s ease;
 }
 
@@ -1580,7 +1821,6 @@ body {
     color: #b21984;
     text-decoration: none;
     font-weight: 600;
-    /* Add transition */
     transition: all 0.3s ease;
     position: relative;
 }
@@ -1589,7 +1829,6 @@ body {
     color: #9e1673;
 }
 
-/* Add a subtle underline animation for category card links */
 .category-card a::after {
     content: '';
     position: absolute;
@@ -1651,7 +1890,6 @@ body {
 .store-item {
     padding: 20px 0;
     border-bottom: 1px solid #eee;
-    /* Add transitions */
     transition: all 0.3s ease;
     cursor: pointer;
 }
@@ -1669,7 +1907,6 @@ body {
     text-decoration: none;
     color: #555;
     font-weight: 600;
-    /* Add transitions */
     transition: all 0.3s ease;
     position: relative;
 }
@@ -1678,7 +1915,7 @@ body {
     color: #b21984;
 }
 
-/* Add underline animation for navigation links */
+
 .nav a::after, .header-actions a::after {
     content: '';
     position: absolute;
@@ -1705,7 +1942,6 @@ body {
     border: 1px solid #ccc;
     border-radius: 5px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    /* Add transitions */
     transition: all 0.3s ease;
 }
 
@@ -1723,7 +1959,6 @@ body {
     border-radius: 30px;
     border: 1px solid #ccc;
     box-sizing: border-box;
-    /* Add transitions */
     transition: all 0.3s ease;
 }
 
@@ -1755,7 +1990,6 @@ body {
     color: #b21984;
 }
 
-/* Underline animation for logout button (similar to nav a and header-actions a) */
 .logout-button-linkstyle::after {
     content: '';
     position: absolute;
@@ -1887,7 +2121,7 @@ body {
 @media (max-width: 768px) {
     .footer-container {
         flex-direction: column;
-        align-items: center; /* Center items on smaller screens */
+        align-items: center; 
         text-align: center;
     }
     .footer-left, .footer-right {
@@ -1900,7 +2134,7 @@ body {
         margin-right: auto;
     }
     .social-icons {
-        justify-content: center; /* Center icons */
+        justify-content: center; 
     }
     .footer-right {
         margin-top: 30px;
@@ -1965,7 +2199,6 @@ body {
     z-index: 1;
 }
 
-/* Match colors from the status dots */
 .timeline-dot.processing { background-color: #ffc107; }
 .timeline-dot.shipped { background-color: #17a2b8; }
 .timeline-dot.delivered { background-color: #28a745; }
@@ -1988,7 +2221,7 @@ body {
 
 .timeline-notes {
     font-size: 0.85rem;
-    color: #6c757d; /* A muted grey color */
+    color: #6c757d; 
     margin: 4px 0 0;
     font-style: italic;
     padding-left: 2px;
@@ -1998,19 +2231,18 @@ body {
    Profile Page - Personal Details
    ================================= */
 
-/* Read-only view styling for the details grid */
 .details-grid {
     display: grid;
-    grid-template-columns: 140px 1fr; /* Fixed width for labels */
-    gap: 15px 20px; /* Row gap and column gap */
+    grid-template-columns: 140px 1fr; 
+    gap: 15px 20px; 
     align-items: center;
     font-size: 0.95rem;
 }
 
 .details-grid dt {
     font-weight: 600;
-    color: #666; /* Muted color for labels */
-    text-align: right; /* Align labels to the right for a clean look */
+    color: #666; 
+    text-align: right; 
 }
 
 .details-grid dd {
@@ -2019,7 +2251,6 @@ body {
     font-weight: 500;
 }
 
-/* Edit form styling specifically within the profile section */
 .profile-main .form-group {
     margin-bottom: 15px;
 }
@@ -2050,7 +2281,6 @@ body {
     box-shadow: 0 0 0 2px rgba(178, 25, 132, 0.2);
 }
 
-/* Container for the form action buttons */
 .profile-main .form-actions {
     margin-top: 25px;
     display: flex;
@@ -2082,7 +2312,7 @@ body {
 .admin-image-panel {
     flex-basis: 45%;
     padding: 40px;
-    background: linear-gradient(160deg, #fef08a, #f9a8d4, #a5f3fc); /* Yellow, Pink, Teal */
+    background: linear-gradient(160deg, #fef08a, #f9a8d4, #a5f3fc); 
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -2144,7 +2374,7 @@ body {
     font-size: 0.875rem;
     color: #6b7280;
     text-decoration: none;
-    margin-top: -8px; /* Pull it up a bit */
+    margin-top: -8px; 
     margin-bottom: 24px;
 }
 .login-btn {
@@ -2170,7 +2400,6 @@ body {
     font-size: 0.875rem;
 }
 
-/* Styles specific to profile page for better layout */
 .profile-page { padding: 40px 0; background-color: #f7f3f6; }
 .profile-page .container { max-width: 1100px; }
 .profile-header {
@@ -2246,22 +2475,77 @@ body {
     border-radius: 8px;
     margin-bottom: 15px;
         }
-.no-content-notice { text-align: center; color: #666; padding: 40px 0; }
-.edit-link { color: #b21984; text-decoration: none; font-weight: 600; }
-.tag-default { border: 1px solid #b21984; color: #b21984; background-color: #fff; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; }
-.add-new-address-link { color: #b21984; font-weight: 700; text-decoration: none; display: inline-block; margin-top: 10px; cursor: pointer; }
+.no-content-notice { 
+    text-align: center; 
+    color: #666; 
+    padding: 40px 0; 
+}
+.edit-link { 
+    color: #b21984; 
+    text-decoration: none; 
+    font-weight: 600; 
+}
+.tag-default { 
+    border: 1px solid #b21984; 
+    color: #b21984; 
+    background-color: #fff; 
+    font-size: 0.7rem; 
+    padding: 2px 8px; 
+    border-radius: 10px; 
+}
+.add-new-address-link { 
+    color: #b21984; 
+    font-weight: 700; 
+    text-decoration: none; 
+    display: inline-block; 
+    margin-top: 10px; 
+    cursor: pointer; 
+}
 
 /* Map Modal Styles */
-.map-modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-.map-modal-content { background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; position: relative; }
-.map-modal-close { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
-        #map { height: 400px; width: 100%; margin-top: 15px; }
+.map-modal-overlay { 
+    display: none; 
+    position: fixed; 
+    z-index: 1000; 
+    left: 0; 
+    top: 0; 
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.5); 
+    justify-content: center; 
+    align-items: center; 
+}
+.map-modal-content { 
+    background-color: #fefefe; 
+    margin: auto; 
+    padding: 20px; 
+    border: 1px solid #888; 
+    width: 80%; 
+    max-width: 600px; 
+    border-radius: 8px; 
+    position: relative; 
+}
+.map-modal-close { 
+    color: #aaa; 
+    position: absolute; 
+    top: 10px; 
+    right: 20px; 
+    font-size: 28px; 
+    font-weight: bold; 
+    cursor: pointer; 
+}
+#map { 
+    height: 400px; 
+    width: 100%; 
+    margin-top: 15px; 
+}
 
-/* NEW: Styles for the confirm button inside the modal */
+
 #confirm-pin-btn {
     margin-top: 15px;
 }
-/* NEW: Styles specific to the shipping map modal */
+
 #shipping-map-modal .map-modal-content {
     max-width: 800px;
 }
@@ -2272,11 +2556,9 @@ body {
     border-radius: 5px;
 }
 
-
 /* =================================
    Custom Searchable Dropdown (Choices.js) Styles
    ================================= */
-
 
 .address-form .choices .choices__inner {
     background-color: #fff;
