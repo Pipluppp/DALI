@@ -16,15 +16,6 @@
     <script th:src="@{/js/address-map-locator.js}" defer></script>
     <script th:src="@{/js/shipping-map-preview.js}" defer></script>
     <script th:src="@{/js/checkout.js}" defer></script>
-    <style>
-        .map-modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .map-modal-content { background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; position: relative; }
-        .map-modal-close { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
-        #map { height: 400px; width: 100%; margin-top: 15px; }
-        #shipping-map-modal .map-modal-content { max-width: 800px; }
-        #shipping-map { height: 450px; width: 100%; margin-top: 15px; border-radius: 5px; }
-        .location-map-btn { background: none; border: none; color: #b21984; text-decoration: underline; cursor: pointer; font-size: 0.9rem; padding: 0 5px; }
-    </style>
 </head>
 <body>
 <div class="checkout-page-wrapper">
@@ -120,8 +111,7 @@
                 </div>
 
                 <!-- Store chooser for pickup -->
-                <div id="store-pickup-selector" style="display: none; margin-top: 20px; padding: 20px; border: 1px dashed #ccc; border-radius: 8px;">
-                    <!-- REFACTORED: Replaced all picker code with a single fragment include -->
+                <div id="store-pickup-selector">
                     <div th:replace="~{fragments/pickup-store-selector :: selector(stores=${stores}, selectedStoreId=${checkoutDetails['storeId']})}"></div>
                 </div>
 
@@ -164,13 +154,13 @@
     <div class="checkout-summary-panel">
         <h3>Your Cart</h3>
         <div class="cart-items-summary">
-            <div th:each="item : ${cartItems}" class="cart-item-summary-row">
-                <img th:src="@{'/images/products/' + ${item.product.image}}">
-                <div class="item-details">
-                    <p class="name" th:text="${item.product.name}"></p>
-                    <p class="qty" th:text="'Qty: ' + ${item.quantity}"></p>
+            <div th:each="item : ${cartItems}" class="cart-item-summary-row" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                <img th:src="@{'/images/products/' + ${item.product.image}}" style="width: 60px; height: 60px; border-radius: 5px;">
+                <div class="item-details" style="flex-grow: 1;">
+                    <p class="name" style="font-weight: 600; font-size: 0.9rem;" th:text="${item.product.name}"></p>
+                    <p class="qty" style="color: #666; font-size: 0.8rem;" th:text="'Qty: ' + ${item.quantity}"></p>
                 </div>
-                <p class="price" th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 'COMMA', 2, 'POINT')}"></p>
+                <p class="price" style="font-weight: 600;" th:text="'₱' + ${#numbers.formatDecimal(item.getSubtotal(), 1, 'COMMA', 2, 'POINT')}"></p>
             </div>
         </div>
         <hr>

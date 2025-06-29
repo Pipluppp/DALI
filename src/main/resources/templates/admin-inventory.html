@@ -14,10 +14,6 @@
 
 <header th:replace="~{fragments/admin-header :: header}"></header>
 
-<!--
-  FIXED: Added hx-include to explicitly tell HTMX which form inputs to send
-  with the GET request, since the parent is a <div> and not a <form>.
--->
 <div class="shop-container container"
      hx-get="/admin/inventory/products"
      hx-trigger="keyup changed delay:200ms from:#search-input, change from:[name='category']"
@@ -47,11 +43,9 @@
 
     <!-- Main Content Area -->
     <main class="product-grid-container">
-        <section class="search-banner" style="background-color: #b21984; padding-top: 20px; padding-bottom: 20px;">
-            <div style="padding: 20px;">
-                <div th:if="${successMessage}" class="auth-success" th:text="${successMessage}"></div>
-                <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}"></div>
-            </div>
+        <section class="search-banner" style="padding: 20px;">
+            <div th:if="${successMessage}" class="auth-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}"></div>
 
             <input type="search"
                    id="search-input"

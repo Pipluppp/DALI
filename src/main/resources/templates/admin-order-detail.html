@@ -26,8 +26,7 @@
         <div th:if="${successMessage}" class="auth-success" th:text="${successMessage}"></div>
         <div th:if="${errorMessage}" class="auth-error" th:text="${errorMessage}"></div>
 
-
-        <div class="order-detail-card" style="margin-top: 20px;">
+        <div class="order-detail-card">
             <div class="order-detail-header">
                 <h1 th:text="'Order #' + *{orderId}">Order #2200113271</h1>
                 <p class="order-meta">
@@ -38,12 +37,9 @@
                 </p>
 
                 <!-- PICKUP INFO HIGHLIGHT -->
-                <div th:if="*{deliveryMethod == 'Pickup Delivery' and orderPickup != null}" style="background: #fefce8; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #eab308;">
-                    <h4 style="margin:0; font-size: 1.1rem; color: #854d0e;">Click & Collect Order</h4>
-                    <p style="margin:5px 0 0; color: #854d0e;">
-                        Customer will pick up from: <strong th:text="*{orderPickup.store.name}"></strong>
-                    </p>
-                    <!-- REUSABLE FRAGMENT: Replace old map code with this single line -->
+                <div th:if="*{deliveryMethod == 'Pickup Delivery' and orderPickup != null}" class="info-box info-box--pickup">
+                    <h4>Click & Collect Order</h4>
+                    <p>Customer will pick up from: <strong th:text="*{orderPickup.store.name}"></strong></p>
                     <div th:if="*{orderPickup.store.latitude != null and orderPickup.store.longitude != null}"
                          th:replace="~{fragments/pickup-location-map :: map-fragment(lat=*{orderPickup.store.latitude}, lng=*{orderPickup.store.longitude}, name=*{orderPickup.store.name})}">
                     </div>
@@ -98,7 +94,7 @@
             <div class="order-products-section">
                 <h3>Products</h3>
                 <div class="product-list-header">
-                    <div class="product-col"></div>
+                    <div class="product-col">Product</div>
                     <div>Price</div>
                     <div>Quantity</div>
                     <div>Total Price</div>
@@ -115,37 +111,37 @@
             </div>
 
             <!-- Admin Status Update Section -->
-            <div class="order-status-section" style="border-top: 1px solid #eee; padding-top: 25px; margin-top:25px;">
+            <div class="order-actions-section">
                 <h3>Update Shipping Status</h3>
                 <div th:object="${order}">
                     <!-- Form for PROCESSING state -->
-                    <form th:if="*{shippingStatus.name() == 'PROCESSING'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
+                    <form th:if="*{shippingStatus.name() == 'PROCESSING'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" class="form-actions" style="margin-top: 0;">
                         <button type="submit" name="status" th:value="PREPARING_FOR_SHIPMENT" class="btn btn-primary">Start Preparing</button>
                         <button type="submit" name="status" th:value="CANCELLED" class="btn btn-secondary">Cancel Order</button>
                     </form>
 
                     <!-- Form for PREPARING_FOR_SHIPMENT state -->
-                    <form th:if="*{shippingStatus.name() == 'PREPARING_FOR_SHIPMENT'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
+                    <form th:if="*{shippingStatus.name() == 'PREPARING_FOR_SHIPMENT'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" class="form-actions" style="margin-top: 0;">
                         <button th:if="*{deliveryMethod != 'Pickup Delivery'}" type="submit" name="status" th:value="IN_TRANSIT" class="btn btn-primary">Mark as In Transit</button>
                         <button th:if="*{deliveryMethod == 'Pickup Delivery'}" type="submit" name="status" th:value="DELIVERED" class="btn btn-primary">Mark as Ready for Pickup</button>
                         <button type="submit" name="status" th:value="CANCELLED" class="btn btn-secondary">Cancel Order</button>
                     </form>
 
                     <!-- Form for IN_TRANSIT state -->
-                    <form th:if="*{shippingStatus.name() == 'IN_TRANSIT'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
+                    <form th:if="*{shippingStatus.name() == 'IN_TRANSIT'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" class="form-actions" style="margin-top: 0;">
                         <button type="submit" name="status" th:value="DELIVERED" class="btn btn-primary">Mark as Delivered</button>
                         <button type="submit" name="status" th:value="DELIVERY_FAILED" class="btn btn-secondary">Mark Delivery Failed</button>
                         <button type="submit" name="status" th:value="CANCELLED" class="btn btn-secondary">Cancel / Return</button>
                     </form>
 
                     <!-- Form for DELIVERY_FAILED state -->
-                    <form th:if="*{shippingStatus.name() == 'DELIVERY_FAILED'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
+                    <form th:if="*{shippingStatus.name() == 'DELIVERY_FAILED'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" class="form-actions" style="margin-top: 0;">
                         <button type="submit" name="status" th:value="IN_TRANSIT" class="btn btn-primary">Re-attempt Delivery</button>
                         <button type="submit" name="status" th:value="CANCELLED" class="btn btn-secondary">Cancel Order</button>
                     </form>
 
                     <!-- Form for DELIVERED (Pickup) state -->
-                    <form th:if="*{shippingStatus.name() == 'DELIVERED' and deliveryMethod == 'Pickup Delivery'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" style="display: flex; gap: 10px;">
+                    <form th:if="*{shippingStatus.name() == 'DELIVERED' and deliveryMethod == 'Pickup Delivery'}" th:action="@{/admin/order/{id}/update-status(id=*{orderId})}" method="post" class="form-actions" style="margin-top: 0;">
                         <button type="submit" name="status" th:value="COLLECTED" class="btn btn-primary" style="background-color: #16a34a;">Mark as Collected by Customer</button>
                     </form>
 

@@ -10,9 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <!-- Leaflet JS (must be before our custom script) -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 <body>
@@ -22,10 +20,12 @@
 <main class="store-finder-container">
     <div class="store-list-panel">
         <h1>Find a DALI Store</h1>
-        <div class="search-bar">
+        <div class="form-group">
             <input type="search"
                    name="query"
                    placeholder="Search store name..."
+                   class="form-group"
+                   style="border-radius: 30px;"
                    hx-get="/stores/search"
                    hx-trigger="keyup changed delay:200ms, search"
                    hx-target="#store-list-container"
@@ -33,21 +33,15 @@
             >
         </div>
 
-        <!-- This div is the target for HTMX search updates -->
         <div id="store-list-container">
-            <!-- Load the initial list via fragment -->
             <div th:replace="~{fragments/store-list :: store-list-fragment}"></div>
         </div>
 
     </div>
-    <div id="stores-map" class="map-panel">
-        <!-- The map will be initialized here by JavaScript -->
-    </div>
+    <div id="stores-map" class="map-panel"></div>
 </main>
 
 <footer class="footer" th:replace="~{fragments/footer :: footer}"></footer>
-
-<!-- Link to our new custom JS file -->
 <script th:src="@{/js/stores-map.js}"></script>
 </body>
 </html>

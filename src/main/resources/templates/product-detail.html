@@ -30,17 +30,15 @@
                 <input type="hidden" name="productId" th:value="*{id}"/>
 
                 <!-- Case 1: Product is available and user can add more to cart -->
-                <!-- CORRECTED SYNTAX: Reference properties of the selection object (*) and model variables ($) separately. -->
                 <th:block th:if="*{productQuantity > 0} and ${maxAllowedToAdd > 0}">
                     <div class="quantity-selector">
                         <label for="quantity">Quantity:</label>
-                        <input type="number" id="quantity" name="quantity" value="1" min="1" th:max="${maxAllowedToAdd}">
+                        <input type="number" class="form-group" id="quantity" name="quantity" value="1" min="1" th:max="${maxAllowedToAdd}">
                     </div>
                     <button type="submit" class="btn btn-primary btn-large">Add to Cart</button>
                 </th:block>
 
                 <!-- Case 2: Product is out of stock or user has all available stock in cart -->
-                <!-- CORRECTED SYNTAX: Same as above for the 'or' condition. -->
                 <th:block th:if="*{productQuantity <= 0} or ${maxAllowedToAdd <= 0}">
                     <button type="button" class="btn-disabled btn-large" disabled
                             th:text="*{productQuantity > 0} ? 'All stock in cart' : 'Out of Stock'">
