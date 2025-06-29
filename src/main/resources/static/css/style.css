@@ -402,8 +402,8 @@ body {
 }
 
 .filter-sidebar .subcategory-list {
-    padding-left: 20px; /* This creates the indentation */
-    margin-top: 8px; /* Adds some space below the parent category */
+    padding-left: 20px; 
+    margin-top: 8px; 
     margin-bottom: 8px;
 }
 
