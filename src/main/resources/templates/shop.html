@@ -10,8 +10,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="icon" href="/images/favicon.png" type="image/png" />
     <style>
-        /* === NEW AND IMPROVED STYLES FOR THE FILTER SIDEBAR === */
+        /* Di ko ma fix kaya hiwalawy nalang */
         .filter-sidebar h5 { color: #888; font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 10px; }
         .filter-sidebar a.reset-link { color: #b21984; text-decoration: none; display: block; margin-bottom: 15px; font-weight: 600; }
         .filter-sidebar a.reset-link:hover { text-decoration: underline; }
@@ -34,7 +35,6 @@
             transform: rotate(90deg);
             transition: transform 0.2s ease;
         }
-        /* Style for the "active" or "open" category header */
         .category-item input[type="radio"]:checked + label::after {
             transform: rotate(-90deg); /* Point the arrow down */
         }
@@ -45,7 +45,6 @@
             transition: max-height 0.3s ease-in-out;
             background-color: #fafafa;
         }
-        /* When the main category radio is checked, expand the container */
         .category-item input[type="radio"]:checked ~ .subcategory-container {
             max-height: 500px; /* Animate open to reveal subcategories */
         }
