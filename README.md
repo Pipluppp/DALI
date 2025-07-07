@@ -2,6 +2,8 @@
 
 This is a Spring Boot application for the DALI e-commerce site.
 
+https://dali-delm.onrender.com/
+
 ## Getting Started
 
 ### Prerequisites
