@@ -2,7 +2,6 @@
 
 This is a Spring Boot application for the DALI e-commerce site.
 
-https://dali-delm.onrender.com/
 
 ![demo](https://github.com/user-attachments/assets/8a901788-6e96-4b30-aec4-ad5b55ba52e1)
 
